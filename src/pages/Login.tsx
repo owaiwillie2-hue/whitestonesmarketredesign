@@ -11,11 +11,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import * as OTPAuth from 'otpauth';
 import { saveLoginActivity } from '@/utils/deviceDetection';
+import { useTheme } from '@/contexts/ThemeContext';
 import logo from '@/assets/logo.png';
 
 const Login = () => {
   const navigate = useNavigate();
   const { t, language, setLanguage } = useLanguage();
+  const { theme, toggleTheme } = useTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -154,8 +156,13 @@ const Login = () => {
              </select>
           </div>
           {/* Dark Mode Toggle */}
-          <button className="p-2 rounded-full text-on-surface-variant hover:bg-slate-50 active:scale-90 transition-all duration-150">
-            <span className="material-symbols-outlined">dark_mode</span>
+          <button 
+            onClick={toggleTheme}
+            className="p-2 rounded-full text-on-surface-variant hover:bg-slate-50 active:scale-90 transition-all duration-150"
+          >
+            <span className="material-symbols-outlined">
+              {theme === 'dark' ? 'light_mode' : 'dark_mode'}
+            </span>
           </button>
         </div>
       </header>

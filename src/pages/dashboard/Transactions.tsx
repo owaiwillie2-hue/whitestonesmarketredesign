@@ -349,7 +349,7 @@ const Transactions = () => {
           <h2 className="font-headline-md text-headline-md text-on-surface">Transactions</h2>
           <p className="font-label-md text-label-md text-on-surface-variant opacity-70">Review your capital flow</p>
         </div>
-        <button onClick={exportToCSV} className="bg-secondary-container text-white p-3 rounded-full shadow-lg active:scale-90 transition-all flex items-center gap-2">
+        <button onClick={exportToCSV} className="bg-primary text-white p-3 rounded-full shadow-lg active:scale-90 transition-all flex items-center gap-2">
           <span className="material-symbols-outlined text-[20px]">ios_share</span>
           <span className="font-label-md text-sm">CSV</span>
         </button>

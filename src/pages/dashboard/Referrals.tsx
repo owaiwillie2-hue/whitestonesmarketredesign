@@ -87,7 +87,7 @@ const Referrals = () => {
             <label className="block font-label-md text-on-surface-variant mb-2">Referral Code</label>
             <div className="flex items-center justify-between bg-surface-container-low border border-outline-variant rounded-xl p-4">
               <span className="font-data-mono text-data-mono text-primary tracking-widest uppercase">{referralCode}</span>
-              <button onClick={() => copyToClipboard(referralCode, 'Referral code')} className="text-secondary-container active:scale-90 transition-all">
+              <button onClick={() => copyToClipboard(referralCode, 'Referral code')} className="text-primary active:scale-90 transition-all hover:text-primary/80">
                 <span className="material-symbols-outlined">content_copy</span>
               </button>
             </div>
@@ -97,7 +97,7 @@ const Referrals = () => {
             <label className="block font-label-md text-on-surface-variant mb-2">Unique Link</label>
             <div className="flex items-center justify-between bg-surface-container-low border border-outline-variant rounded-xl p-4 overflow-hidden">
               <span className="font-label-md text-on-surface-variant truncate mr-4">{referralLink}</span>
-              <button onClick={() => copyToClipboard(referralLink, 'Referral link')} className="text-secondary-container active:scale-90 transition-all flex-shrink-0">
+              <button onClick={() => copyToClipboard(referralLink, 'Referral link')} className="text-primary active:scale-90 transition-all flex-shrink-0 hover:text-primary/80">
                 <span className="material-symbols-outlined">share</span>
               </button>
             </div>
@@ -132,7 +132,7 @@ const Referrals = () => {
           </div>
           {/* Step 3 */}
           <div className="flex gap-4 relative">
-            <div className="w-11 h-11 rounded-full bg-secondary-container flex items-center justify-center text-white z-10 shrink-0">
+            <div className="w-11 h-11 rounded-full bg-primary/10 flex items-center justify-center text-primary z-10 shrink-0">
               <span className="material-symbols-outlined">payments</span>
             </div>
             <div className="pt-2">

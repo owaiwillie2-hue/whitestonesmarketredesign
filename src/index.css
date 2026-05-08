@@ -257,3 +257,27 @@ All colors MUST be HSL.
     border: 1px solid #E2E8F0;
   }
 }
+
+@layer utilities {
+  .dark .text-primary,
+  .dark .text-slate-900,
+  .dark .text-slate-800,
+  .dark .text-gray-900,
+  .dark .text-gray-800,
+  .dark .text-on-surface {
+    color: hsl(var(--foreground)) !important;
+  }
+  
+  .dark .text-on-surface-variant {
+    color: hsl(var(--muted-foreground)) !important;
+  }
+
+  .dark .bg-white {
+    background-color: hsl(var(--card)) !important;
+  }
+
+  .dark .border-slate-100,
+  .dark .border-slate-200 {
+    border-color: hsl(var(--border)) !important;
+  }
+}

@@ -87,7 +87,7 @@ const Settings = () => {
             </div>
             <button
               onClick={handlePasswordChange}
-              className="w-full py-4 bg-secondary-container text-on-secondary-container font-label-md rounded-full active:scale-[0.98] transition-all shadow-lg shadow-blue-100 flex items-center justify-center gap-2"
+              className="w-full py-4 bg-primary text-white font-label-md rounded-full active:scale-[0.98] transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2"
             >
               Update Password
             </button>

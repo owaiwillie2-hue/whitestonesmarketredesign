@@ -124,6 +124,7 @@ const Deposit = () => {
         isRejected={isRejected}
         rejectionReason={rejectionReason || ''}
         actionName="Deposit"
+        isLoading={kycLoading}
       >
         {/* Bitcoin Instructions Card */}
         <div className="glass-card border border-outline-variant rounded-2xl p-6 mb-6 shadow-sm">
@@ -213,7 +214,7 @@ const Deposit = () => {
           <button 
             type="submit" 
             disabled={loading}
-            className="w-full bg-secondary-container text-white py-5 rounded-full font-headline-md shadow-lg shadow-secondary-container/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-70"
+            className="w-full bg-primary text-white py-5 rounded-full font-headline-md shadow-lg shadow-primary/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-70"
           >
             {loading ? 'Submitting...' : 'Complete Deposit'}
             <span className="material-symbols-outlined">arrow_forward</span>

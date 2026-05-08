@@ -172,7 +172,7 @@ const Plans = () => {
       </section>
 
       {/* KYC Alert */}
-      {!kycApproved && (
+      {!kycApproved && !kycLoading && (
         <section className="bg-error-container/10 p-4 rounded-xl border border-error/20 flex items-start gap-4">
           <div className="text-error">
             <span className="material-symbols-outlined">warning</span>
@@ -272,10 +272,10 @@ const Plans = () => {
 
                 <button 
                   onClick={() => window.location.href = `/dashboard/invest?planId=${plan.id}${upgradeMode ? '&upgrade=true' : ''}`}
-                  disabled={!kycApproved || isDisabled}
+                  disabled={kycLoading || !kycApproved || isDisabled}
                   className={`w-full py-4 rounded-xl font-bold text-sm ${styles.buttonClass} relative z-10 disabled:opacity-70 disabled:cursor-not-allowed`}
                 >
-                  {!kycApproved ? 'KYC Required' : isDisabled ? 'Locked' : upgradeMode ? (plan.min_amount === currentActivePlan?.investment_plans.min_amount ? 'Invest Again' : 'Upgrade to This Plan') : 'Invest Now'}
+                  {kycLoading ? 'Loading...' : !kycApproved ? 'KYC Required' : isDisabled ? 'Locked' : upgradeMode ? (plan.min_amount === currentActivePlan?.investment_plans.min_amount ? 'Invest Again' : 'Upgrade to This Plan') : 'Invest Now'}
                 </button>
               </div>
             );

@@ -526,9 +526,9 @@ const KYC = () => {
             />
             <div className="absolute inset-4 border-2 border-white/50 rounded-xl pointer-events-none" />
           </div>
-          <div className="flex gap-3 justify-center pt-2">
-            <button onClick={capturePhoto} className="flex-1 py-4 bg-secondary-container text-on-secondary-container font-label-md rounded-full active:scale-95 transition-all shadow-md flex items-center justify-center gap-2">
-              <span className="material-symbols-outlined">camera</span> Capture
+          <div className="flex gap-4">
+            <button onClick={capturePhoto} className="flex-1 py-4 bg-primary text-white font-label-md rounded-full active:scale-95 transition-all shadow-md shadow-primary/20 flex items-center justify-center gap-2">
+              <span className="material-symbols-outlined">photo_camera</span> Capture
             </button>
             <button onClick={stopCamera} className="px-6 py-4 bg-surface-container-highest text-on-surface font-label-md rounded-full active:scale-95 transition-all">
               Cancel
@@ -619,7 +619,7 @@ const KYC = () => {
                 <button 
                   type="submit" 
                   disabled={loading || !idFrontFile || !idBackFile || !selfieFile}
-                  className="w-full h-14 bg-secondary-container text-on-secondary-container font-headline-md rounded-full shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                  className="w-full h-14 bg-primary text-white font-headline-md rounded-full shadow-lg shadow-primary/20 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                 >
                   {loading ? (
                     <><span className="material-symbols-outlined animate-spin">progress_activity</span> Submitting...</>

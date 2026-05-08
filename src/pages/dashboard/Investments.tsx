@@ -17,7 +17,7 @@ const Investments = () => {
   const [loading, setLoading] = useState(true);
   const [completingId, setCompletingId] = useState<string | null>(null);
   const { toast } = useToast();
-  const { isApproved: kycApproved, isPending: kycPending } = useKYCStatus();
+  const { isApproved: kycApproved, isPending: kycPending, initialLoading: kycLoading } = useKYCStatus();
 
   useEffect(() => {
     fetchInvestments();
@@ -219,7 +219,7 @@ const Investments = () => {
                 <div className="h-full bg-secondary-container w-full"></div>
               </div>
             </div>
-            <KYCGuard isApproved={kycApproved} isPending={kycPending} isRejected={false} actionName="claim profits">
+            <KYCGuard isApproved={kycApproved} isPending={kycPending} isRejected={false} actionName="claim profits" isLoading={kycLoading} compactSkeleton showAlert={false}>
               <button 
                 onClick={() => handleClaimProfit(investment.id)}
                 disabled={completingId === investment.id || !kycApproved}

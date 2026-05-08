@@ -11,12 +11,15 @@ import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { countries } from '@/utils/countries';
 import { TermsModal } from '@/components/TermsModal';
+import { saveLoginActivity } from '@/utils/deviceDetection';
+import { useTheme } from '@/contexts/ThemeContext';
 import logo from '@/assets/logo.png';
 
 const Signup = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { t, language, setLanguage } = useLanguage();
+  const { theme, toggleTheme } = useTheme();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -153,8 +156,13 @@ const Signup = () => {
              </select>
           </div>
           {/* Dark/Light Toggle */}
-          <button className="w-10 h-10 rounded-full flex items-center justify-center bg-slate-50 text-slate-600 active:scale-90 transition-all">
-            <span className="material-symbols-outlined text-xl">dark_mode</span>
+          <button 
+            onClick={toggleTheme}
+            className="w-10 h-10 rounded-full flex items-center justify-center bg-slate-50 text-slate-600 active:scale-90 transition-all"
+          >
+            <span className="material-symbols-outlined text-xl">
+              {theme === 'dark' ? 'light_mode' : 'dark_mode'}
+            </span>
           </button>
         </div>
       </header>

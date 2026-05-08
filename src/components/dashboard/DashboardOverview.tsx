@@ -97,9 +97,9 @@ const DashboardOverview = () => {
         if (investments) {
           const activeInvs = investments.filter(i => i.status === 'active');
           
-          // Get the highest tier active investment plan (plan with highest min_amount)
-          if (activeInvs.length > 0) {
-            const highestTierInvestment = activeInvs.sort((a, b) => {
+          // Get the highest tier investment plan from ALL investments
+          if (investments.length > 0) {
+            const highestTierInvestment = [...investments].sort((a, b) => {
               const planA = (a as any).investment_plans;
               const planB = (b as any).investment_plans;
               return (planB?.min_amount || 0) - (planA?.min_amount || 0);
@@ -196,17 +196,37 @@ const DashboardOverview = () => {
   };
 
   if (loading) {
-    return null;
+    return (
+      <div className="space-y-6 animate-pulse">
+        <div className="flex gap-2 items-center">
+          <div className="h-8 bg-slate-200 dark:bg-slate-800 rounded w-1/2"></div>
+        </div>
+        <div className="h-48 bg-slate-200 dark:bg-slate-800 rounded-2xl w-full"></div>
+        <div className="grid grid-cols-3 gap-3">
+          <div className="h-24 bg-slate-200 dark:bg-slate-800 rounded-2xl"></div>
+          <div className="h-24 bg-slate-200 dark:bg-slate-800 rounded-2xl"></div>
+          <div className="h-24 bg-slate-200 dark:bg-slate-800 rounded-2xl"></div>
+        </div>
+        <div className="h-32 bg-slate-200 dark:bg-slate-800 rounded-2xl w-full"></div>
+      </div>
+    );
   }
+
+  const getPlanProgress = (planName: string | null) => {
+    const plans = ['Starter', 'Platinum', 'Executive', 'Apex'];
+    const currentIndex = planName ? plans.findIndex(p => planName.includes(p)) : -1;
+    return { plans, currentIndex };
+  };
+  const { plans: planSteps, currentIndex: currentPlanIndex } = getPlanProgress(currentPlan);
 
   return (
     <>
       {/* Welcome Section */}
       <section className="flex flex-col gap-1">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           <h1 className="font-headline-md text-headline-md text-primary">Welcome back, {userName || 'User'}</h1>
           {isApproved && (
-            <span className="material-symbols-outlined text-secondary text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
+            <span className="material-symbols-outlined text-secondary text-[22px] translate-y-[1px]" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
           )}
         </div>
         <div className="flex items-center gap-2">
@@ -223,7 +243,7 @@ const DashboardOverview = () => {
         </div>
         <p className="text-on-surface-variant font-label-md uppercase tracking-widest text-[10px]">Total Combined Balance</p>
         <h2 className="text-display-lg font-display-lg text-primary mt-1">
-          ${balance ? (Number(balance.main_balance) + Number(balance.profit_balance) + stats.totalInvested).toFixed(2) : '0.00'}
+          ${balance ? (Number(balance.main_balance) + Number(balance.profit_balance)).toFixed(2) : '0.00'}
         </h2>
         
         <div className="mt-8 space-y-4">
@@ -258,15 +278,15 @@ const DashboardOverview = () => {
       {/* Quick Actions - BELOW THE CARD */}
       <section className="flex flex-col gap-3">
         <h3 className="font-headline-md text-primary px-1">Quick Actions</h3>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <button 
             onClick={() => setShowTransferModal(true)} 
-            className="flex flex-col items-center justify-center gap-2 py-4 bg-white border border-outline-variant rounded-2xl font-bold active:scale-95 transition-all duration-200 shadow-sm"
+            className="flex flex-col items-center justify-center gap-2 py-4 bg-white dark:bg-slate-800 border border-outline-variant dark:border-slate-700 rounded-2xl font-bold active:scale-95 transition-all duration-200 shadow-sm"
           >
-            <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center">
-              <span className="material-symbols-outlined text-blue-600">swap_horiz</span>
+            <div className="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center">
+              <span className="material-symbols-outlined text-blue-600 dark:text-blue-400">swap_horiz</span>
             </div>
-            <span className="text-xs text-primary">Transfer</span>
+            <span className="text-xs text-primary dark:text-white">Transfer</span>
           </button>
           <button 
             onClick={() => window.location.href = '/dashboard/deposit'} 
@@ -278,13 +298,22 @@ const DashboardOverview = () => {
             <span className="text-xs">Deposit</span>
           </button>
           <button 
-            onClick={() => window.location.href = '/dashboard/withdraw'} 
-            className="flex flex-col items-center justify-center gap-2 py-4 bg-white border border-outline-variant rounded-2xl font-bold active:scale-95 transition-all duration-200 shadow-sm"
+            onClick={() => window.location.href = '/dashboard/invest'} 
+            className="flex flex-col items-center justify-center gap-2 py-4 bg-primary text-white rounded-2xl font-bold active:scale-95 transition-all duration-200 shadow-sm"
           >
-            <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center">
-              <span className="material-symbols-outlined text-red-600">account_balance_wallet</span>
+            <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
+              <span className="material-symbols-outlined text-white">trending_up</span>
             </div>
-            <span className="text-xs text-primary">Withdraw</span>
+            <span className="text-xs">Invest</span>
+          </button>
+          <button 
+            onClick={() => window.location.href = '/dashboard/withdraw'} 
+            className="flex flex-col items-center justify-center gap-2 py-4 bg-white dark:bg-slate-800 border border-outline-variant dark:border-slate-700 rounded-2xl font-bold active:scale-95 transition-all duration-200 shadow-sm"
+          >
+            <div className="w-10 h-10 rounded-full bg-red-50 dark:bg-red-900/30 flex items-center justify-center">
+              <span className="material-symbols-outlined text-red-600 dark:text-red-400">account_balance_wallet</span>
+            </div>
+            <span className="text-xs text-primary dark:text-white">Withdraw</span>
           </button>
         </div>
       </section>
@@ -297,17 +326,47 @@ const DashboardOverview = () => {
         </div>
         
         {currentPlan ? (
-          <div className="bg-primary-container text-on-primary-fixed-variant rounded-2xl p-5 shadow-lg relative overflow-hidden">
-            <div className="flex justify-between items-start mb-6">
+          <div className="bg-primary-container text-on-primary-fixed-variant rounded-2xl p-5 shadow-lg relative overflow-hidden flex flex-col gap-4">
+            <div className="absolute top-0 right-0 p-4 opacity-10">
+              <span className="material-symbols-outlined text-6xl">military_tech</span>
+            </div>
+            
+            <div className="flex justify-between items-start z-10">
               <div>
                 <span className="bg-secondary-container/20 text-on-secondary-container px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border border-secondary-container/30">Current Tier</span>
                 <h4 className="text-white text-2xl font-bold mt-2 font-display-lg">{currentPlan}</h4>
               </div>
-              <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center">
+              <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center backdrop-blur-sm border border-white/10">
                 <span className="material-symbols-outlined text-white text-3xl">rocket_launch</span>
               </div>
             </div>
-            <button onClick={() => window.location.href = '/dashboard/plans?upgrade=true'} className="w-full bg-white text-primary py-3 rounded-full font-bold text-sm active:scale-95 transition-all mt-4">
+
+            {/* Plan Progression Widget */}
+            <div className="mt-2 pt-4 border-t border-white/10 z-10">
+              <p className="text-[10px] font-bold uppercase tracking-widest opacity-80 mb-3 text-white">Tier Progression</p>
+              <div className="flex justify-between items-center relative px-2 mb-2">
+                <div className="absolute left-6 right-6 top-1/2 -translate-y-1/2 h-1 bg-white/10 rounded-full z-0"></div>
+                <div 
+                  className="absolute left-6 top-1/2 -translate-y-1/2 h-1 bg-primary rounded-full z-0 transition-all duration-500"
+                  style={{ width: `${currentPlanIndex >= 0 ? (currentPlanIndex / (planSteps.length - 1)) * 100 : 0}%`, left: '1.5rem', right: '1.5rem', maxWidth: 'calc(100% - 3rem)' }}
+                ></div>
+                
+                {planSteps.map((step, idx) => (
+                  <div key={step} className="flex flex-col items-center gap-1 z-10">
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold transition-colors ${idx <= currentPlanIndex ? 'bg-primary text-white shadow-lg shadow-primary/50 ring-2 ring-primary-container' : 'bg-white/10 text-white/50 ring-2 ring-primary-container'}`}>
+                      {idx < currentPlanIndex ? <span className="material-symbols-outlined text-[14px]">check</span> : idx + 1}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="flex justify-between items-center px-1">
+                {planSteps.map((step, idx) => (
+                  <span key={step} className={`text-[9px] font-bold uppercase tracking-wider ${idx <= currentPlanIndex ? 'text-white' : 'text-white/50'}`}>{step}</span>
+                ))}
+              </div>
+            </div>
+
+            <button onClick={() => window.location.href = '/dashboard/plans?upgrade=true'} className="w-full bg-white text-primary py-3 rounded-full font-bold text-sm active:scale-95 transition-all mt-2 z-10 hover:bg-slate-50">
               Upgrade Plan
             </button>
           </div>

@@ -134,7 +134,7 @@ const Profile = () => {
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-4 bg-secondary-container text-on-secondary-container font-label-md rounded-full active:scale-[0.98] transition-all shadow-lg shadow-blue-100 flex items-center justify-center gap-2 disabled:opacity-70"
+          className="w-full py-4 bg-primary text-white font-label-md rounded-full active:scale-[0.98] transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2 disabled:opacity-70"
         >
           <span className="material-symbols-outlined text-[20px]">check_circle</span>
           {loading ? 'Updating...' : 'Update Profile'}

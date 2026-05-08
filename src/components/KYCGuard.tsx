@@ -13,6 +13,8 @@ interface KYCGuardProps {
   children: React.ReactNode;
   actionName: string; // e.g., "Deposit", "Withdraw", "Invest"
   showAlert?: boolean;
+  isLoading?: boolean;
+  compactSkeleton?: boolean;
 }
 
 export const KYCGuard: React.FC<KYCGuardProps> = ({
@@ -23,8 +25,26 @@ export const KYCGuard: React.FC<KYCGuardProps> = ({
   children,
   actionName,
   showAlert = true,
+  isLoading = false,
+  compactSkeleton = false,
 }) => {
   const navigate = useNavigate();
+
+  if (isLoading) {
+    if (compactSkeleton) {
+      return (
+        <div className="animate-pulse w-full">
+          <div className="h-12 bg-slate-200 dark:bg-slate-800 rounded-xl w-full"></div>
+        </div>
+      );
+    }
+    return (
+      <div className="space-y-4 animate-pulse p-2">
+        <div className="h-16 bg-slate-200 dark:bg-slate-800 rounded-lg w-full"></div>
+        <div className="h-32 bg-slate-200 dark:bg-slate-800 rounded-2xl w-full"></div>
+      </div>
+    );
+  }
 
   if (isApproved) {
     return <>{children}</>;

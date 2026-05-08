@@ -173,9 +173,7 @@ const Withdraw = () => {
     }
   };
 
-  if (kycLoading || accountsLoading || planLoading) {
-    return null;
-  }
+
 
   return (
     <>
@@ -191,6 +189,7 @@ const Withdraw = () => {
         isRejected={isRejected}
         rejectionReason={rejectionReason || ''}
         actionName="Withdraw"
+        isLoading={kycLoading}
       >
         {highestPlanName.includes('Starter') && (
           <div className="p-4 bg-error-container/10 border border-error/20 rounded-xl flex gap-3 items-start mb-6">
