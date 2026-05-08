@@ -242,9 +242,7 @@ const Investments = () => {
     );
   };
 
-  if (loading) {
-    return null;
-  }
+
 
   // Calculate total assets (active investments + expected profit)
   const totalAssetsValue = investments

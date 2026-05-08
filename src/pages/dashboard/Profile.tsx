@@ -73,9 +73,7 @@ const Profile = () => {
     }
   };
 
-  if (initialLoading) {
-    return null;
-  }
+
 
   if (!profile) return null;
 

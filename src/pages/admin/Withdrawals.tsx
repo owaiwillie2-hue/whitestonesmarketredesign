@@ -105,9 +105,7 @@ export const AdminWithdrawals = () => {
     }
   };
 
-  if (loading) {
-    return null;
-  }
+
 
   return (
     <div className="space-y-6 max-w-full overflow-x-hidden">

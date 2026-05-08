@@ -507,9 +507,7 @@ const KYC = () => {
     </div>
   );
 
-  if (initialLoading) {
-    return null;
-  }
+
 
   if (cameraMode) {
     return (

@@ -140,9 +140,7 @@ const Plans = () => {
     };
   };
 
-  if (kycLoading) {
-    return null;
-  }
+
 
   const eligibility = getEligibilityMessage();
 

@@ -56,9 +56,7 @@ const ActivityLog = () => {
     return 'Unknown Browser';
   };
 
-  if (loading) {
-    return null;
-  }
+
 
   return (
     <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm space-y-4">

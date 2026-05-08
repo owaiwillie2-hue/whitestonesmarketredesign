@@ -36,73 +36,103 @@ export const AdminLayout = () => {
     { icon: Settings, label: 'Settings', path: '/admin/settings' },
   ];
 
-  const isActive = (path: string) => location.pathname === path;
+  const isActive = (path: string) => location.pathname === path || (path !== '/admin' && location.pathname.startsWith(path));
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Top Navigation */}
-      <header className="sticky top-0 z-50 bg-card border-b border-border">
-        <div className="flex items-center justify-between px-4 h-16">
-          <div className="flex items-center space-x-4">
-            <button
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="lg:hidden"
-            >
-              {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
-            </button>
-            <Link to="/admin/dashboard" className="flex items-center space-x-2">
-              <img src={logo} alt="Whitestones Markets" className="h-8" />
-              <span className="font-bold text-lg hidden sm:inline">Admin Panel</span>
-            </Link>
-          </div>
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 font-body-md text-slate-900 dark:text-slate-100 flex flex-col md:flex-row">
+      {/* Mobile Header */}
+      <header className="md:hidden sticky top-0 z-50 bg-primary text-white border-b border-primary/20 flex items-center justify-between px-4 h-16 shadow-sm">
+        <div className="flex items-center space-x-3">
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="p-1 rounded-md hover:bg-white/10 active:scale-95 transition-all"
+          >
+            {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+          <Link to="/admin/dashboard" className="flex items-center space-x-2">
+            <div className="w-8 h-8 bg-white rounded-lg p-1 flex items-center justify-center">
+              <img src={logo} alt="Whitestones" className="max-w-full max-h-full object-contain" />
+            </div>
+            <span className="font-bold text-lg font-display-lg">Admin</span>
+          </Link>
+        </div>
+        <Button variant="ghost" size="icon" onClick={toggleTheme} className="text-white hover:bg-white/10 rounded-full">
+          {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+        </Button>
+      </header>
 
+      {/* Sidebar */}
+      <aside className={`
+        fixed md:sticky top-0 left-0 z-40 h-screen w-64
+        bg-primary text-white transition-transform duration-300 md:translate-x-0 shadow-2xl md:shadow-none
+        flex flex-col
+        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+      `}>
+        <div className="h-20 flex items-center px-6 border-b border-white/10 shrink-0">
+          <Link to="/admin/dashboard" className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-white rounded-xl p-1.5 flex items-center justify-center shadow-lg shadow-black/10">
+              <img src={logo} alt="Whitestones" className="max-w-full max-h-full object-contain" />
+            </div>
+            <span className="font-bold text-xl font-display-lg tracking-tight">Whitestones</span>
+          </Link>
+        </div>
+
+        <nav className="flex-1 overflow-y-auto py-6 px-4 space-y-1 custom-scrollbar">
+          {menuItems.map((item) => (
+            <Link
+              key={item.path}
+              to={item.path}
+              onClick={() => setSidebarOpen(false)}
+              className={`
+                flex items-center space-x-3 px-4 py-3.5 rounded-xl transition-all font-label-md
+                ${isActive(item.path) 
+                  ? 'bg-white text-primary shadow-md font-bold scale-[1.02]' 
+                  : 'text-blue-100 hover:bg-white/10 hover:text-white'
+                }
+              `}
+            >
+              <item.icon className={`h-5 w-5 ${isActive(item.path) ? 'text-primary' : 'text-blue-200'}`} />
+              <span>{item.label}</span>
+            </Link>
+          ))}
+        </nav>
+
+        <div className="p-4 border-t border-white/10 shrink-0">
+          <button 
+            onClick={handleLogout}
+            className="w-full flex items-center space-x-3 px-4 py-3.5 rounded-xl text-red-300 hover:bg-red-500/10 hover:text-red-200 transition-all font-label-md"
+          >
+            <LogOut className="h-5 w-5" />
+            <span>Logout</span>
+          </button>
+        </div>
+      </aside>
+
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col min-h-screen overflow-hidden">
+        {/* Desktop Header */}
+        <header className="hidden md:flex sticky top-0 z-30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 h-20 items-center justify-between px-8 shadow-sm">
+          <div>
+            <h2 className="text-xl font-bold text-primary dark:text-white font-display-lg">Admin Dashboard</h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400">Manage your platform efficiently</p>
+          </div>
           <div className="flex items-center space-x-4">
             <Button
-              variant="ghost"
+              variant="outline"
               size="icon"
               onClick={toggleTheme}
-              className="rounded-full"
+              className="rounded-full bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
             >
               {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
             </Button>
-            <Button variant="outline" onClick={handleLogout}>
-              <LogOut className="mr-2 h-4 w-4" />
-              Logout
-            </Button>
+            <div className="w-10 h-10 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-bold">
+              A
+            </div>
           </div>
-        </div>
-      </header>
-
-      <div className="flex">
-        {/* Sidebar */}
-        <aside className={`
-          fixed lg:sticky top-16 left-0 z-40 h-[calc(100vh-4rem)] w-64
-          bg-card border-r border-border transition-transform duration-300 lg:translate-x-0
-          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-        `}>
-          <nav className="p-4 space-y-2">
-            {menuItems.map((item) => (
-              <Link
-                key={item.path}
-                to={item.path}
-                onClick={() => setSidebarOpen(false)}
-                className={`
-                  flex items-center space-x-3 px-4 py-3 rounded-lg transition-all
-                  ${isActive(item.path) 
-                    ? 'bg-primary text-primary-foreground' 
-                    : 'hover:bg-accent text-foreground'
-                  }
-                `}
-              >
-                <item.icon className="h-5 w-5" />
-                <span className="font-medium">{item.label}</span>
-              </Link>
-            ))}
-          </nav>
-        </aside>
+        </header>
 
         {/* Main Content */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-x-hidden">
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-x-hidden overflow-y-auto w-full max-w-7xl mx-auto">
           <Outlet />
         </main>
       </div>
@@ -110,7 +140,7 @@ export const AdminLayout = () => {
       {/* Mobile Overlay */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-30 lg:hidden"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-30 md:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}

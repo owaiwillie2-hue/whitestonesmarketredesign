@@ -294,9 +294,7 @@ const Transactions = () => {
     setProofImageUrl(null);
   };
 
-  if (loading) {
-    return null;
-  }
+
 
   const filteredTransactions = filterByDate(transactions);
   const filteredDeposits = filterByDate(deposits);

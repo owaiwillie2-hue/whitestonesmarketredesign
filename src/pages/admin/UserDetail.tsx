@@ -127,9 +127,7 @@ export const AdminUserDetail = () => {
     }
   };
 
-  if (loading) {
-    return null;
-  }
+
 
   if (!user) {
     return (

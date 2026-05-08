@@ -174,41 +174,7 @@ const Withdraw = () => {
   };
 
   if (kycLoading || accountsLoading || planLoading) {
-    return (
-      <div className="space-y-6 max-w-7xl">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div className="space-y-2">
-            <Skeleton className="h-8 w-48" />
-            <Skeleton className="h-4 w-64" />
-          </div>
-          <div className="flex items-center gap-2">
-            <Skeleton className="h-9 w-24" />
-            <Skeleton className="h-9 w-32" />
-          </div>
-        </div>
-
-        <Card>
-          <CardHeader>
-            <Skeleton className="h-6 w-48" />
-            <Skeleton className="h-4 w-56" />
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Skeleton className="h-4 w-40" />
-            </div>
-            <div className="space-y-2">
-              <Skeleton className="h-4 w-36" />
-              <Skeleton className="h-10 w-full" />
-            </div>
-            <div className="space-y-2">
-              <Skeleton className="h-4 w-24" />
-              <Skeleton className="h-10 w-full" />
-            </div>
-            <Skeleton className="h-10 w-full" />
-          </CardContent>
-        </Card>
-      </div>
-    );
+    return null;
   }
 
   return (
@@ -330,7 +296,7 @@ const Withdraw = () => {
               type="submit" 
               disabled={loading || !canWithdraw || accounts.length === 0}
               title={withdrawDisabledReason}
-              className="w-full py-4 bg-[#00A3FF] text-white rounded-full text-label-md font-bold shadow-[0_8px_20px_rgba(0,163,255,0.3)] active:scale-[0.98] transition-all duration-150 disabled:opacity-70 disabled:shadow-none"
+              className="w-full py-4 bg-primary text-white rounded-full text-label-md font-bold shadow-lg shadow-primary/30 active:scale-[0.98] transition-all duration-150 disabled:opacity-70 disabled:shadow-none"
             >
               {loading ? 'Submitting...' : 'Submit Withdrawal Request'}
             </button>
