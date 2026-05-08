@@ -9,7 +9,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { useKYCStatus } from '@/hooks/useKYCStatus';
 import { useNavigate } from 'react-router-dom';
 import { BonusCard } from './BonusCard';
-import { toast } from 'sonner';
+import { WithdrawModal } from './WithdrawModal';
+import { toast } from '@/lib/toast';
 
 const DashboardOverview = () => {
   const { user } = useAuth();
@@ -30,6 +31,7 @@ const DashboardOverview = () => {
 
   // Transfer modal state
   const [showTransferModal, setShowTransferModal] = useState(false);
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [transferAmount, setTransferAmount] = useState('');
   const [transferring, setTransferring] = useState(false);
 
@@ -337,7 +339,7 @@ const DashboardOverview = () => {
             <span className="text-xs">Invest</span>
           </button>
           <button 
-            onClick={() => navigate('/dashboard/withdraw')} 
+            onClick={() => setShowWithdrawModal(true)} 
             className="flex flex-col items-center justify-center gap-2 py-4 bg-white dark:bg-slate-800 border border-outline-variant dark:border-slate-700 rounded-2xl font-bold active:scale-95 transition-all duration-200 shadow-sm"
           >
             <div className="w-10 h-10 rounded-full bg-red-50 dark:bg-red-900/30 flex items-center justify-center">
@@ -521,6 +523,11 @@ const DashboardOverview = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      <WithdrawModal 
+        isOpen={showWithdrawModal} 
+        onClose={() => setShowWithdrawModal(false)} 
+      />
     </>
   );
 };

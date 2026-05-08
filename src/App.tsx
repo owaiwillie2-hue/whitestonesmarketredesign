@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { LanguageProvider } from "./contexts/LanguageContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import { ModalProvider } from "./contexts/ModalContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import TidioChat from "./components/Tidio";
 import Index from "./pages/Index";
@@ -26,7 +27,6 @@ import InvestmentsPage from "./pages/Investments";
 import Company from "./pages/Company";
 import DashboardOverview from "./components/dashboard/DashboardOverview";
 import Deposit from "./pages/dashboard/Deposit";
-import Withdraw from "./pages/dashboard/Withdraw";
 import Transactions from "./pages/dashboard/Transactions";
 import Investments from "./pages/dashboard/Investments";
 import Plans from "./pages/dashboard/Plans";
@@ -59,9 +59,10 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
-      <LanguageProvider>
-        <TooltipProvider>
-          <Toaster />
+      <ModalProvider>
+        <LanguageProvider>
+          <TooltipProvider>
+            <Toaster />
           <Sonner />
           <BrowserRouter>
             <TidioChat />
@@ -102,7 +103,6 @@ const App = () => (
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>}>
                 <Route index element={<DashboardOverview />} />
                 <Route path="deposit" element={<Deposit />} />
-                <Route path="withdraw" element={<Withdraw />} />
                 <Route path="transactions" element={<Transactions />} />
                 <Route path="investments" element={<Investments />} />
                 <Route path="plans" element={<Plans />} />
@@ -121,8 +121,9 @@ const App = () => (
           </BrowserRouter>
         </TooltipProvider>
       </LanguageProvider>
-    </ThemeProvider>
-  </QueryClientProvider>
+    </ModalProvider>
+  </ThemeProvider>
+</QueryClientProvider>
 );
 
 export default App;

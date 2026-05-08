@@ -1,4 +1,5 @@
 import * as React from "react";
+import { globalModal } from "@/contexts/ModalContext";
 
 import type { ToastActionElement, ToastProps } from "@/components/ui/toast";
 
@@ -135,6 +136,20 @@ function dispatch(action: Action) {
 type Toast = Omit<ToasterToast, "id">;
 
 function toast({ ...props }: Toast) {
+  if (globalModal) {
+    if (props.variant === 'destructive') {
+      globalModal.showError(props.title?.toString() || 'Error', props.description?.toString());
+    } else {
+      globalModal.showSuccess(props.title?.toString() || 'Success', props.description?.toString());
+    }
+    // Return dummy object to prevent the small toast from rendering since we show a modal
+    return {
+      id: 'modal-' + Math.random().toString(),
+      dismiss: () => {},
+      update: () => {}
+    };
+  }
+
   const id = genId();
 
   const update = (props: ToasterToast) =>

@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import logo from '@/assets/logo.png';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import { useTheme } from '@/contexts/ThemeContext';
 
 export const AdminLayout = () => {
