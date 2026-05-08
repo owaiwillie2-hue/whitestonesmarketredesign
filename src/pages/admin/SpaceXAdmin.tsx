@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import AdminLayout from '@/components/admin/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
@@ -55,11 +54,19 @@ const SpaceXAdmin = () => {
   };
 
   return (
-    <AdminLayout>
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Space X Retirement Funds Backend</h1>
-          <p className="text-muted-foreground mt-2">Manage retirement program members, real-time statistics, and deposits.</p>
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 p-4 md:p-8 font-body-md text-slate-900 dark:text-white">
+      <div className="max-w-7xl mx-auto space-y-6">
+        <div className="flex items-center justify-between bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm mb-8">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Space X Retirement Funds Backend</h1>
+            <p className="text-muted-foreground mt-1">Manage retirement program members, real-time statistics, and deposits.</p>
+          </div>
+          <button 
+            onClick={() => window.location.href = '/admin'} 
+            className="px-4 py-2 bg-slate-100 dark:bg-slate-700 rounded-xl font-bold text-sm hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
+          >
+            Back to Main Admin
+          </button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -155,7 +162,7 @@ const SpaceXAdmin = () => {
           </CardContent>
         </Card>
       </div>
-    </AdminLayout>
+    </div>
   );
 };
 

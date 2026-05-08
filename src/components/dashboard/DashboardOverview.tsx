@@ -256,7 +256,7 @@ const DashboardOverview = () => {
       {/* Welcome Section */}
       <section className="flex flex-col gap-1">
         <div className="flex items-center gap-1">
-          <h1 className="font-headline-md text-xl font-bold text-primary">Welcome back, {userName || 'User'}</h1>
+          <h1 className="font-headline-sm text-lg font-bold text-primary">Welcome back, {userName || 'User'}</h1>
           {isApproved && (
             <span className="material-symbols-outlined text-secondary text-[22px] translate-y-[1px]" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
           )}
@@ -268,40 +268,58 @@ const DashboardOverview = () => {
         </div>
       </section>
 
+      {/* SpaceX Promo Banner */}
+      <section 
+        className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl p-4 relative overflow-hidden shadow-lg cursor-pointer transform hover:scale-[1.02] transition-transform active:scale-95"
+        onClick={() => navigate('/dashboard/spacex')}
+      >
+        <div className="absolute right-[-10px] top-[-10px] opacity-20">
+          <span className="material-symbols-outlined text-[100px]">rocket_launch</span>
+        </div>
+        <div className="relative z-10">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="px-2 py-0.5 bg-white/20 text-white rounded-full text-[10px] font-bold uppercase tracking-wider">Premium</span>
+            <span className="text-white/90 text-xs font-medium">Age 40+ Only</span>
+          </div>
+          <h3 className="text-white font-bold text-lg leading-tight mb-1">Space X Retirement Funds</h3>
+          <p className="text-blue-100 text-xs">Secure your future with our exclusive weekly payout program.</p>
+        </div>
+      </section>
+
       {/* Main Account Overview Card - AT THE TOP */}
-      <section className="glass-card rounded-2xl p-6 relative overflow-hidden">
+      <section className="glass-card rounded-2xl p-4 relative overflow-hidden">
         <div className="absolute top-0 right-0 p-4 opacity-10">
-          <span className="material-symbols-outlined text-6xl">payments</span>
+          <span className="material-symbols-outlined text-5xl">payments</span>
         </div>
         <p className="text-on-surface-variant font-label-md uppercase tracking-widest text-[10px]">Total Combined Balance</p>
-        <h2 className="text-3xl font-bold text-primary mt-1">
+        <h2 className="text-2xl font-bold text-primary mt-1">
           ${balance ? (Number(balance.main_balance) + Number(balance.profit_balance)).toFixed(2) : '0.00'}
         </h2>
         
-        <div className="mt-8 space-y-4">
+        <div className="mt-6 space-y-3">
           <div className="flex justify-between items-end">
             <div>
-              <p className="text-on-surface-variant text-xs">Main Wallet</p>
-              <p className="text-headline-md font-headline-md text-primary">
+              <p className="text-on-surface-variant text-[10px] uppercase">Main Wallet</p>
+              <p className="text-lg font-bold text-primary">
                 ${balance ? Number(balance.main_balance).toFixed(2) : '0.00'}
               </p>
             </div>
             <div className="text-right">
-              <p className="text-on-surface-variant text-xs">Investment Wallet</p>
-              <p className="text-headline-md font-headline-md text-primary">
+              <p className="text-on-surface-variant text-[10px] uppercase">Investment Wallet</p>
+              <p className="text-lg font-bold text-primary">
                 ${balance ? Number(balance.investment_balance).toFixed(2) : '0.00'}
               </p>
             </div>
           </div>
           
-          <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-100">
+          <div className="grid grid-cols-2 gap-3 pt-3 border-t border-slate-100">
             <div>
-              <p className="text-on-surface-variant text-xs">Active Investments</p>
-              <p className="text-body-lg font-bold text-primary">${stats.totalInvested.toFixed(2)}</p>
+              <p className="text-on-surface-variant text-[10px] uppercase">Active Investments</p>
+              <p className="text-base font-bold text-primary">${stats.totalInvested.toFixed(2)}</p>
             </div>
-            <div>
-              <p className="text-on-surface-variant text-xs">Profit Balance</p>
-              <p className="text-body-lg font-bold text-on-tertiary-container">+${balance ? Number(balance.profit_balance).toFixed(2) : '0.00'}</p>
+            <div className="text-right">
+              <p className="text-on-surface-variant text-[10px] uppercase">Total Profit Returns</p>
+              <p className="text-base font-bold text-secondary">${balance?.profit_balance ? Number(balance.profit_balance).toFixed(2) : '0.00'}</p>
             </div>
           </div>
         </div>

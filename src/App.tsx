@@ -102,8 +102,9 @@ const App = () => (
                 <Route path="notifications" element={<AdminNotifications />} />
                 <Route path="activity-logs" element={<AdminActivityLogs />} />
                 <Route path="settings" element={<AdminSettings />} />
-                <Route path="spacex" element={<SpaceXAdmin />} />
               </Route>
+              
+              <Route path="/admin/spacex" element={<ProtectedRoute requireAdmin><SpaceXAdmin /></ProtectedRoute>} />
               
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>}>
                 <Route index element={<DashboardOverview />} />
