@@ -140,6 +140,34 @@ const DashboardOverview = () => {
     };
 
     fetchData();
+
+    // Set up Real-time Subscriptions (SSE-style WebSockets via Supabase)
+    if (user?.id) {
+      const channel = supabase
+        .channel('dashboard-overview-realtime')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'account_balances', filter: `user_id=eq.${user.id}` },
+          (payload) => {
+            if (payload.new) setBalance(payload.new);
+          }
+        )
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'transactions', filter: `user_id=eq.${user.id}` },
+          () => fetchData()
+        )
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'investments', filter: `user_id=eq.${user.id}` },
+          () => fetchData()
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
   }, [user]);
 
   const handleTransfer = async () => {

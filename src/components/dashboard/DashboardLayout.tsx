@@ -1,9 +1,11 @@
-import { ReactNode, useState } from 'react';
+import { ReactNode, useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import logo from '@/assets/logo.png';
 import { useTheme } from '@/contexts/ThemeContext';
+import { supabase } from '@/integrations/supabase/client';
+import { formatDistanceToNow } from 'date-fns';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -34,10 +36,47 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     { icon: 'settings', label: 'Settings', path: '/dashboard/settings' },
   ];
 
-  const notifications = [
-    { id: 1, title: 'Welcome to Whitestones', desc: 'Your account has been created.', time: 'Just now' },
-    { id: 2, title: 'Complete KYC', desc: 'Please verify your identity to start investing.', time: '2 mins ago' },
-  ];
+  const [notifications, setNotifications] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const fetchNotifications = async () => {
+      const { data } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(10);
+      if (data) setNotifications(data);
+    };
+
+    fetchNotifications();
+
+    const channel = supabase
+      .channel('public:notifications')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` },
+        (payload) => {
+          setNotifications((prev) => [payload.new, ...prev].slice(0, 10));
+          toast.info(payload.new.title, { description: payload.new.message });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
+
+  const unreadCount = notifications.filter(n => !n.is_read).length;
+
+  const markAllAsRead = async () => {
+    if (!user?.id) return;
+    await supabase.from('notifications').update({ is_read: true }).eq('user_id', user.id).eq('is_read', false);
+    setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+  };
 
   return (
     <div className="bg-background text-on-background font-body-md min-h-screen flex flex-col lg:flex-row">
@@ -68,7 +107,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
               className="w-8 h-8 rounded-full flex items-center justify-center text-on-surface-variant hover:text-primary active:scale-95 transition-all"
             >
               <span className="material-symbols-outlined text-[20px]">notifications</span>
-              <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-red-500 rounded-full"></span>
+              {unreadCount > 0 && <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-red-500 rounded-full"></span>}
             </button>
             {/* Mobile Dropdown Menu */}
             {showNotifications && (
@@ -82,16 +121,20 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                     </button>
                   </div>
                   <div className="max-h-64 overflow-y-auto">
-                    {notifications.map((notif) => (
-                      <div key={notif.id} className="p-3 border-b border-outline-variant/20 hover:bg-surface-variant/50 cursor-pointer transition-colors">
-                        <p className="font-label-md font-bold text-on-surface text-sm">{notif.title}</p>
-                        <p className="text-xs text-on-surface-variant mt-0.5 leading-relaxed">{notif.desc}</p>
-                        <p className="text-[9px] text-outline mt-1">{notif.time}</p>
-                      </div>
-                    ))}
+                    {notifications.length === 0 ? (
+                      <div className="p-4 text-center text-xs text-slate-500">No notifications</div>
+                    ) : (
+                      notifications.map((notif) => (
+                        <div key={notif.id} className={`p-3 border-b border-outline-variant/20 cursor-pointer transition-colors ${notif.is_read ? 'opacity-70' : 'bg-primary/5 hover:bg-surface-variant/50'}`}>
+                          <p className="font-label-md font-bold text-on-surface text-sm">{notif.title}</p>
+                          <p className="text-xs text-on-surface-variant mt-0.5 leading-relaxed">{notif.message || notif.desc}</p>
+                          <p className="text-[9px] text-outline mt-1">{formatDistanceToNow(new Date(notif.created_at), { addSuffix: true })}</p>
+                        </div>
+                      ))
+                    )}
                   </div>
                   <div className="p-2 bg-surface-variant/30 border-t border-outline-variant/30 text-center">
-                    <button className="text-xs font-bold text-primary hover:underline">Mark all as read</button>
+                    <button onClick={markAllAsRead} className="text-xs font-bold text-primary hover:underline">Mark all as read</button>
                   </div>
                 </div>
               </>
@@ -192,7 +235,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                 className="w-10 h-10 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95 transition-all"
               >
                 <span className="material-symbols-outlined">notifications</span>
-                <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full"></span>
+                {unreadCount > 0 && <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full"></span>}
               </button>
 
               {/* Dropdown Menu */}
@@ -207,15 +250,20 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                       </button>
                     </div>
                     <div className="max-h-80 overflow-y-auto">
-                      {notifications.map((notif) => (
-                        <div key={notif.id} className="p-4 border-b border-outline-variant/20 hover:bg-surface-variant/50 cursor-pointer transition-colors">
-                          <p className="font-label-md font-bold text-on-surface">{notif.title}</p>
-                          <p className="text-xs text-on-surface-variant mt-1 leading-relaxed">{notif.desc}</p>
-                          <p className="text-[10px] text-outline mt-2">{notif.time}</p>
-                        </div>
-                      ))}
+                      {notifications.length === 0 ? (
+                        <div className="p-4 text-center text-sm text-slate-500">No notifications</div>
+                      ) : (
+                        notifications.map((notif) => (
+                          <div key={notif.id} className={`p-4 border-b border-outline-variant/20 cursor-pointer transition-colors ${notif.is_read ? 'opacity-70 hover:bg-surface-variant/50' : 'bg-primary/5 hover:bg-primary/10'}`}>
+                            <p className="font-label-md font-bold text-on-surface">{notif.title}</p>
+                            <p className="text-xs text-on-surface-variant mt-1 leading-relaxed">{notif.message || notif.desc}</p>
+                            <p className="text-[10px] text-outline mt-2">{formatDistanceToNow(new Date(notif.created_at), { addSuffix: true })}</p>
+                          </div>
+                        ))
+                      )}
                     </div>
-                    <div className="p-3 text-center bg-surface-container-lowest">
+                    <div className="p-3 flex justify-between items-center bg-surface-container-lowest">
+                      <button onClick={markAllAsRead} className="text-xs font-bold text-primary hover:underline">Mark all read</button>
                       <Link to="/dashboard/notifications" className="text-xs font-bold text-secondary-container hover:underline">View all</Link>
                     </div>
                   </div>

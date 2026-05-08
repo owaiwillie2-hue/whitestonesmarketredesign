@@ -244,10 +244,14 @@ const Investments = () => {
 
 
 
-  // Calculate total assets (active investments + expected profit)
-  const totalAssetsValue = investments
+  // Calculate total active invested and total expected profit
+  const totalActiveInvested = investments
     .filter(inv => inv.status === 'active')
-    .reduce((sum, inv) => sum + Number(inv.amount) + Number(inv.expected_profit), 0);
+    .reduce((sum, inv) => sum + Number(inv.amount), 0);
+  
+  const totalExpectedProfit = investments
+    .filter(inv => inv.status === 'active')
+    .reduce((sum, inv) => sum + Number(inv.expected_profit), 0);
 
   const filteredInvestments = investments.filter(inv => inv.status === activeTab);
 
@@ -256,17 +260,25 @@ const Investments = () => {
       {/* Header Section */}
       <section className="mb-8">
         <div className="flex flex-col gap-1">
-          <p className="font-label-md text-on-primary-container uppercase tracking-widest text-[10px]">Your Portfolio</p>
-          <h2 className="font-headline-lg text-primary text-3xl">Investments</h2>
+          <h2 className="font-headline-lg text-primary text-2xl font-bold">Investments</h2>
         </div>
 
         {/* Summary Bento Grid-ish Header */}
         <div className="mt-6 grid grid-cols-2 gap-3">
-          <div className="col-span-2 bg-primary rounded-2xl p-5 text-white shadow-xl relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-secondary opacity-20 blur-3xl -mr-16 -mt-16 rounded-full"></div>
-            <p className="font-label-md opacity-80 text-xs mb-1">Total Expected Assets</p>
+          <div className="bg-primary rounded-2xl p-5 text-white shadow-lg relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-white/20 blur-3xl -mr-12 -mt-12 rounded-full"></div>
+            <p className="font-label-md opacity-80 text-[10px] uppercase tracking-wider mb-1">Active Invested</p>
             <div className="flex items-end gap-2">
-              <span className="font-headline-md text-3xl">${totalAssetsValue.toFixed(2)}</span>
+              <span className="font-headline-md text-3xl">${totalActiveInvested.toFixed(2)}</span>
+            </div>
+          </div>
+          <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 shadow-sm relative overflow-hidden">
+            <div className="absolute bottom-0 right-0 p-3 opacity-5">
+              <span className="material-symbols-outlined text-5xl">trending_up</span>
+            </div>
+            <p className="font-label-md text-on-surface-variant text-[10px] uppercase tracking-wider mb-1">Expected Returns</p>
+            <div className="flex items-end gap-2">
+              <span className="font-headline-md text-3xl text-primary dark:text-white">+${totalExpectedProfit.toFixed(2)}</span>
             </div>
           </div>
         </div>

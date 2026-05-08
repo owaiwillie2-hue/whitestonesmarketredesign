@@ -140,8 +140,8 @@ const WithdrawalAccounts = () => {
             onChange={(e) => setFormData({ ...formData, swiftCode: e.target.value })} 
           />
         </div>
-        <Button onClick={() => handleAddAccount('bank', formData)} className="w-full">
-          Add Account
+        <Button onClick={() => handleAddAccount('bank', formData)} className="w-full bg-primary text-white rounded-full py-6 font-bold hover:bg-primary/90">
+          Add Bank Account
         </Button>
       </div>
     );
@@ -173,8 +173,8 @@ const WithdrawalAccounts = () => {
             onChange={(e) => setFormData({ ...formData, address: e.target.value })} 
           />
         </div>
-        <Button onClick={() => handleAddAccount('crypto', formData)} className="w-full">
-          Add Wallet
+        <Button onClick={() => handleAddAccount('crypto', formData)} className="w-full bg-primary text-white rounded-full py-6 font-bold hover:bg-primary/90">
+          Add Crypto Wallet
         </Button>
       </div>
     );
@@ -194,18 +194,23 @@ const WithdrawalAccounts = () => {
             onChange={(e) => setFormData({ ...formData, name: 'PayPal', email: e.target.value })} 
           />
         </div>
-        <Button onClick={() => handleAddAccount('paypal', formData)} className="w-full">
-          Add PayPal
+        <Button onClick={() => handleAddAccount('paypal', formData)} className="w-full bg-primary text-white rounded-full py-6 font-bold hover:bg-primary/90">
+          Add PayPal Account
         </Button>
       </div>
     );
   };
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm space-y-4">
-      <div className="flex items-center gap-2 mb-2">
-        <span className="material-symbols-outlined text-secondary">account_balance_wallet</span>
-        <h2 className="font-headline-md text-headline-md">Withdrawal Methods</h2>
+    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm space-y-6">
+      <div className="flex items-center gap-3 mb-2">
+        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+          <span className="material-symbols-outlined">account_balance_wallet</span>
+        </div>
+        <div>
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white">Withdrawal Methods</h2>
+          <p className="text-sm text-slate-500">Manage where your funds are sent</p>
+        </div>
       </div>
 
       <div className="grid gap-3">
@@ -257,9 +262,9 @@ const WithdrawalAccounts = () => {
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-          <button className="w-full py-3 border-2 border-dashed border-outline-variant rounded-full text-on-surface-variant font-label-md flex items-center justify-center gap-2 hover:bg-slate-50 transition-colors">
-            <span className="material-symbols-outlined">add</span>
-            Add New Method
+          <button className="w-full py-4 border-2 border-dashed border-primary/30 rounded-2xl text-primary font-bold flex items-center justify-center gap-2 hover:bg-primary/5 dark:hover:bg-primary/10 active:scale-[0.98] transition-all">
+            <span className="material-symbols-outlined">add_circle</span>
+            Add New Payment Method
           </button>
         </DialogTrigger>
         <DialogContent>
