@@ -218,11 +218,7 @@ const Invest = () => {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <p className="text-muted-foreground">Loading...</p>
-      </div>
-    );
+    return null;
   }
 
   if (!plan) {
@@ -355,7 +351,7 @@ const Invest = () => {
           <button 
             type="submit" 
             disabled={submitting || !amount || parseFloat(amount) < plan.min_amount || parseFloat(amount) > investmentBalance}
-            className="w-full bg-secondary-container text-white py-4 rounded-2xl font-headline-md shadow-lg shadow-secondary-container/20 active:scale-[0.98] transition-all disabled:opacity-50 flex justify-center items-center gap-2"
+            className="w-full bg-secondary-container text-white py-4 rounded-full font-headline-md shadow-lg shadow-secondary-container/20 active:scale-[0.98] transition-all disabled:opacity-50 flex justify-center items-center gap-2"
           >
             {submitting ? (
               <><span className="material-symbols-outlined animate-spin">progress_activity</span> Processing...</>

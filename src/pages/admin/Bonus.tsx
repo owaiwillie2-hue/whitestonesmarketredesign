@@ -132,14 +132,7 @@ const Bonus = () => {
   };
 
   if (loading) {
-    return (
-      <div className="space-y-6 max-w-full overflow-x-hidden">
-        <div>
-          <h1 className="text-3xl font-bold">Bonus Management</h1>
-          <p className="text-muted-foreground">Loading users...</p>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   return (

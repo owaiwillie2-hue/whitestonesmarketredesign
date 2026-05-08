@@ -3,15 +3,18 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Check, X } from 'lucide-react';
+import { Check, X, Eye, Image as ImageIcon } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 export const AdminDeposits = () => {
   const [deposits, setDeposits] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedProof, setSelectedProof] = useState<{ url: string; deposit: any } | null>(null);
+  const [proofImageUrl, setProofImageUrl] = useState<string | null>(null);
+  const [loadingImage, setLoadingImage] = useState(false);
 
   useEffect(() => {
     fetchDeposits();
@@ -45,6 +48,36 @@ export const AdminDeposits = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleViewProof = async (deposit: any) => {
+    if (!deposit.proof_url) {
+      toast.error('No proof image uploaded for this deposit');
+      return;
+    }
+
+    setSelectedProof({ url: deposit.proof_url, deposit });
+    setLoadingImage(true);
+
+    try {
+      const { data, error } = await supabase.storage
+        .from('deposit-proofs')
+        .createSignedUrl(deposit.proof_url, 3600);
+
+      if (error) throw error;
+      setProofImageUrl(data.signedUrl);
+    } catch (error) {
+      console.error('Error loading proof image:', error);
+      setProofImageUrl(null);
+      toast.error('Failed to load proof image');
+    } finally {
+      setLoadingImage(false);
+    }
+  };
+
+  const closeProofModal = () => {
+    setSelectedProof(null);
+    setProofImageUrl(null);
   };
 
   const handleApprove = async (depositId: string, userId: string, amount: number) => {
@@ -97,48 +130,7 @@ export const AdminDeposits = () => {
   };
 
   if (loading) {
-    return (
-      <div className="space-y-6">
-        <div className="space-y-2">
-          <Skeleton className="h-9 w-64" />
-          <Skeleton className="h-5 w-96" />
-        </div>
-
-        <Card>
-          <CardHeader>
-            <Skeleton className="h-6 w-48" />
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  {['User', 'Amount', 'Method', 'Status', 'Date', 'Actions'].map((header, i) => (
-                    <TableHead key={i}>
-                      <Skeleton className="h-4 w-20" />
-                    </TableHead>
-                  ))}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <TableRow key={i}>
-                    <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                    <TableCell><Skeleton className="h-6 w-20" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-28" /></TableCell>
-                    <TableCell className="flex gap-2">
-                      <Skeleton className="h-8 w-16" />
-                      <Skeleton className="h-8 w-16" />
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      </div>
-    );
+    return null;
   }
 
   return (
@@ -159,6 +151,7 @@ export const AdminDeposits = () => {
                 <TableHead>User</TableHead>
                 <TableHead>Amount</TableHead>
                 <TableHead>Method</TableHead>
+                <TableHead>Proof</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Date</TableHead>
                 <TableHead>Actions</TableHead>
@@ -175,6 +168,24 @@ export const AdminDeposits = () => {
                   </TableCell>
                   <TableCell className="font-semibold">${deposit.amount}</TableCell>
                   <TableCell>{deposit.payment_method}</TableCell>
+                  <TableCell>
+                    {deposit.proof_url ? (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex items-center gap-1.5"
+                        onClick={() => handleViewProof(deposit)}
+                      >
+                        <Eye className="h-3.5 w-3.5" />
+                        View Proof
+                      </Button>
+                    ) : (
+                      <span className="text-xs text-muted-foreground flex items-center gap-1">
+                        <ImageIcon className="h-3.5 w-3.5" />
+                        No proof
+                      </span>
+                    )}
+                  </TableCell>
                   <TableCell>
                     <Badge variant={
                       deposit.status === 'approved' ? 'default' :
@@ -214,6 +225,89 @@ export const AdminDeposits = () => {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Proof Image Modal */}
+      <Dialog open={!!selectedProof} onOpenChange={closeProofModal}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Payment Proof</DialogTitle>
+          </DialogHeader>
+
+          {selectedProof && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <p className="text-muted-foreground text-xs uppercase tracking-wider font-medium">User</p>
+                  <p className="font-semibold">{selectedProof.deposit.profiles?.full_name}</p>
+                  <p className="text-xs text-muted-foreground">{selectedProof.deposit.profiles?.email}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground text-xs uppercase tracking-wider font-medium">Amount</p>
+                  <p className="text-xl font-bold">${selectedProof.deposit.amount}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground text-xs uppercase tracking-wider font-medium">Status</p>
+                  <Badge variant={
+                    selectedProof.deposit.status === 'approved' ? 'default' :
+                    selectedProof.deposit.status === 'pending' ? 'secondary' :
+                    'destructive'
+                  } className="mt-1">
+                    {selectedProof.deposit.status}
+                  </Badge>
+                </div>
+                <div>
+                  <p className="text-muted-foreground text-xs uppercase tracking-wider font-medium">Date</p>
+                  <p className="font-medium">{formatDistanceToNow(new Date(selectedProof.deposit.created_at), { addSuffix: true })}</p>
+                </div>
+              </div>
+
+              <div className="border rounded-xl overflow-hidden bg-muted/30">
+                {loadingImage ? (
+                  <div className="flex items-center justify-center h-96">
+                    <p className="text-muted-foreground">Loading image...</p>
+                  </div>
+                ) : proofImageUrl ? (
+                  <img
+                    src={proofImageUrl}
+                    alt="Payment Proof"
+                    className="w-full h-auto max-h-[600px] object-contain"
+                  />
+                ) : (
+                  <div className="flex items-center justify-center h-96 text-muted-foreground">
+                    <p>Unable to load image</p>
+                  </div>
+                )}
+              </div>
+
+              {selectedProof.deposit.status === 'pending' && (
+                <div className="flex gap-3 pt-2">
+                  <Button
+                    className="flex-1"
+                    onClick={() => {
+                      handleApprove(selectedProof.deposit.id, selectedProof.deposit.user_id, selectedProof.deposit.amount);
+                      closeProofModal();
+                    }}
+                  >
+                    <Check className="h-4 w-4 mr-2" />
+                    Approve Deposit
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    className="flex-1"
+                    onClick={() => {
+                      handleReject(selectedProof.deposit.id);
+                      closeProofModal();
+                    }}
+                  >
+                    <X className="h-4 w-4 mr-2" />
+                    Reject Deposit
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

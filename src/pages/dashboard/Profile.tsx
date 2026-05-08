@@ -74,24 +74,10 @@ const Profile = () => {
   };
 
   if (initialLoading) {
-    return (
-      <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm space-y-4">
-        <div className="space-y-2 mb-4">
-          <Skeleton className="h-6 w-48" />
-        </div>
-        <div className="space-y-4">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="space-y-2">
-              <Skeleton className="h-4 w-24" />
-              <Skeleton className="h-12 w-full rounded-xl" />
-            </div>
-          ))}
-        </div>
-      </div>
-    );
+    return null;
   }
 
-  if (!profile) return <div>Loading...</div>;
+  if (!profile) return null;
 
   return (
     <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm space-y-4">
@@ -150,7 +136,7 @@ const Profile = () => {
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-4 bg-secondary-container text-on-secondary-container font-label-md rounded-xl active:scale-[0.98] transition-all shadow-lg shadow-blue-100 flex items-center justify-center gap-2 disabled:opacity-70"
+          className="w-full py-4 bg-secondary-container text-on-secondary-container font-label-md rounded-full active:scale-[0.98] transition-all shadow-lg shadow-blue-100 flex items-center justify-center gap-2 disabled:opacity-70"
         >
           <span className="material-symbols-outlined text-[20px]">check_circle</span>
           {loading ? 'Updating...' : 'Update Profile'}

@@ -128,11 +128,7 @@ export const AdminUserDetail = () => {
   };
 
   if (loading) {
-    return (
-      <div className="flex justify-center items-center p-8">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    );
+    return null;
   }
 
   if (!user) {

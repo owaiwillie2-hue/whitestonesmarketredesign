@@ -257,7 +257,7 @@ const WithdrawalAccounts = () => {
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-          <button className="w-full py-3 border-2 border-dashed border-outline-variant rounded-xl text-on-surface-variant font-label-md flex items-center justify-center gap-2 hover:bg-slate-50 transition-colors">
+          <button className="w-full py-3 border-2 border-dashed border-outline-variant rounded-full text-on-surface-variant font-label-md flex items-center justify-center gap-2 hover:bg-slate-50 transition-colors">
             <span className="material-symbols-outlined">add</span>
             Add New Method
           </button>

@@ -201,7 +201,7 @@ const Investments = () => {
               <div className="h-full bg-blue-500 rounded-full" style={{ width: progressStr }}></div>
             </div>
             <div className="mt-4">
-              <button disabled className="w-full bg-slate-100 text-slate-400 font-headline-md text-sm py-3.5 rounded-xl cursor-not-allowed">
+              <button disabled className="w-full bg-slate-100 text-slate-400 font-headline-md text-sm py-3.5 rounded-full cursor-not-allowed">
                 Claim Profit (Locked)
               </button>
             </div>
@@ -223,7 +223,7 @@ const Investments = () => {
               <button 
                 onClick={() => handleClaimProfit(investment.id)}
                 disabled={completingId === investment.id || !kycApproved}
-                className="w-full bg-secondary-container text-on-secondary-container font-headline-md text-sm py-3.5 rounded-xl active:scale-[0.98] transition-all duration-200 shadow-md shadow-blue-200 disabled:opacity-70"
+                className="w-full bg-primary text-white font-headline-md text-sm py-3.5 rounded-xl active:scale-[0.98] transition-all duration-200 shadow-md shadow-blue-200 disabled:opacity-70"
               >
                 {completingId === investment.id ? 'Claiming...' : 'Claim Profit'}
               </button>
@@ -243,13 +243,7 @@ const Investments = () => {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <div className="text-center">
-          <p className="text-muted-foreground">Loading investments...</p>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   // Calculate total assets (active investments + expected profit)
@@ -306,7 +300,7 @@ const Investments = () => {
             {activeTab === 'active' && (
               <button 
                 onClick={() => window.location.href = '/dashboard/plans'}
-                className="mt-4 bg-secondary-container text-white px-6 py-2 rounded-xl text-sm font-bold active:scale-95 transition-all"
+                className="mt-4 bg-primary text-white px-6 py-2 rounded-xl text-sm font-bold active:scale-95 transition-all"
               >
                 View Plans
               </button>

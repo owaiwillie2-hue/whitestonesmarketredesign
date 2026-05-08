@@ -426,7 +426,7 @@ const KYC = () => {
           <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
             <button
               type="button"
-              className="bg-white text-error px-4 py-2 rounded-xl font-label-md flex items-center gap-2 active:scale-95 transition-all"
+              className="bg-white text-error px-4 py-2 rounded-full font-label-md flex items-center gap-2 active:scale-95 transition-all"
               onClick={() => {
                 if (type === 'front') {
                   setIdFrontFile(null);
@@ -482,14 +482,14 @@ const KYC = () => {
           <div className="flex gap-2 z-10 relative">
             <button
               type="button"
-              className="px-4 py-2 bg-white rounded-lg shadow-sm font-label-md text-sm border border-slate-200 flex items-center gap-2"
+              className="px-4 py-2 bg-white rounded-full shadow-sm font-label-md text-sm border border-slate-200 flex items-center gap-2"
               onClick={() => startCamera(type)}
             >
               <span className="material-symbols-outlined text-[18px]">camera</span> Camera
             </button>
             <button
               type="button"
-              className="px-4 py-2 bg-white rounded-lg shadow-sm font-label-md text-sm border border-slate-200 flex items-center gap-2"
+              className="px-4 py-2 bg-white rounded-full shadow-sm font-label-md text-sm border border-slate-200 flex items-center gap-2"
               onClick={() => document.getElementById(`${type}-upload`)?.click()}
             >
               <span className="material-symbols-outlined text-[18px]">upload</span> Upload
@@ -508,14 +508,7 @@ const KYC = () => {
   );
 
   if (initialLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center space-y-4">
-          <span className="material-symbols-outlined animate-spin text-4xl text-secondary">progress_activity</span>
-          <p className="text-on-surface-variant font-label-md">Loading verification status...</p>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   if (cameraMode) {
@@ -536,10 +529,10 @@ const KYC = () => {
             <div className="absolute inset-4 border-2 border-white/50 rounded-xl pointer-events-none" />
           </div>
           <div className="flex gap-3 justify-center pt-2">
-            <button onClick={capturePhoto} className="flex-1 py-4 bg-secondary-container text-on-secondary-container font-label-md rounded-xl active:scale-95 transition-all shadow-md flex items-center justify-center gap-2">
+            <button onClick={capturePhoto} className="flex-1 py-4 bg-secondary-container text-on-secondary-container font-label-md rounded-full active:scale-95 transition-all shadow-md flex items-center justify-center gap-2">
               <span className="material-symbols-outlined">camera</span> Capture
             </button>
-            <button onClick={stopCamera} className="px-6 py-4 bg-surface-container-highest text-on-surface font-label-md rounded-xl active:scale-95 transition-all">
+            <button onClick={stopCamera} className="px-6 py-4 bg-surface-container-highest text-on-surface font-label-md rounded-full active:scale-95 transition-all">
               Cancel
             </button>
           </div>
@@ -628,7 +621,7 @@ const KYC = () => {
                 <button 
                   type="submit" 
                   disabled={loading || !idFrontFile || !idBackFile || !selfieFile}
-                  className="w-full h-14 bg-secondary-container text-on-secondary-container font-headline-md rounded-xl shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                  className="w-full h-14 bg-secondary-container text-on-secondary-container font-headline-md rounded-full shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                 >
                   {loading ? (
                     <><span className="material-symbols-outlined animate-spin">progress_activity</span> Submitting...</>

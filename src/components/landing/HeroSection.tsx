@@ -31,7 +31,7 @@ export const HeroSection = () => {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button asChild size="lg" className="bg-white text-navy hover:bg-white/90 shadow-glow">
+            <Button asChild size="lg" className="bg-white text-black hover:bg-white/90 shadow-glow">
               <Link to="/signup">
                 {t('hero.btn.openAccount')} <ArrowRight className="ml-2 w-5 h-5" />
               </Link>

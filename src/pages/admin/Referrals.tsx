@@ -42,7 +42,7 @@ export const AdminReferrals = () => {
     }
   };
 
-  if (loading) return <div className="flex justify-center p-8">Loading...</div>;
+  if (loading) return null;
 
   return (
     <div className="space-y-6 max-w-full overflow-x-hidden">

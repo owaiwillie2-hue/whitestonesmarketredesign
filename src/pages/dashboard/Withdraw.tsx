@@ -330,7 +330,7 @@ const Withdraw = () => {
               type="submit" 
               disabled={loading || !canWithdraw || accounts.length === 0}
               title={withdrawDisabledReason}
-              className="w-full py-4 bg-[#00A3FF] text-white rounded-2xl text-label-md font-bold shadow-[0_8px_20px_rgba(0,163,255,0.3)] active:scale-[0.98] transition-all duration-150 disabled:opacity-70 disabled:shadow-none"
+              className="w-full py-4 bg-[#00A3FF] text-white rounded-full text-label-md font-bold shadow-[0_8px_20px_rgba(0,163,255,0.3)] active:scale-[0.98] transition-all duration-150 disabled:opacity-70 disabled:shadow-none"
             >
               {loading ? 'Submitting...' : 'Submit Withdrawal Request'}
             </button>

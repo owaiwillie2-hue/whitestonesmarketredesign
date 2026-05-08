@@ -2,12 +2,13 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { DollarSign, TrendingUp, Clock, Award, CheckCircle2, Loader } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useKYCStatus } from '@/hooks/useKYCStatus';
-import WalletsOverview from './WalletsOverview';
 import { BonusCard } from './BonusCard';
+import { toast } from 'sonner';
 
 const DashboardOverview = () => {
   const { user } = useAuth();
@@ -24,6 +25,11 @@ const DashboardOverview = () => {
     totalDeposited: 0,
     totalWithdrawn: 0,
   });
+
+  // Transfer modal state
+  const [showTransferModal, setShowTransferModal] = useState(false);
+  const [transferAmount, setTransferAmount] = useState('');
+  const [transferring, setTransferring] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -134,46 +140,63 @@ const DashboardOverview = () => {
     fetchData();
   }, [user]);
 
-  const statCards = [
-    {
-      title: 'Main Balance',
-      value: `$${balance ? Number(balance.main_balance).toFixed(2) : '0.00'}`,
-      icon: DollarSign,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50',
-    },
-    {
-      title: 'Profit Balance',
-      value: `$${balance ? Number(balance.profit_balance).toFixed(2) : '0.00'}`,
-      icon: TrendingUp,
-      color: 'text-green-600',
-      bgColor: 'bg-green-50',
-    },
-    {
-      title: `Profits (${stats.daysActive}d)`,
-      value: `$${stats.totalProfit.toFixed(2)}`,
-      icon: Award,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-50',
-    },
-    {
-      title: 'Active Investments',
-      value: stats.activeInvestments,
-      icon: Clock,
-      color: 'text-orange-600',
-      bgColor: 'bg-orange-50',
-    },
-  ];
+  const handleTransfer = async () => {
+    const amount = parseFloat(transferAmount);
+    if (isNaN(amount) || amount <= 0) {
+      toast.error('Please enter a valid amount');
+      return;
+    }
+
+    const mainBal = balance ? Number(balance.main_balance) : 0;
+    if (amount > mainBal) {
+      toast.error('Insufficient balance in main wallet');
+      return;
+    }
+
+    setTransferring(true);
+    try {
+      if (!user) throw new Error('Not authenticated');
+
+      const newMainBalance = mainBal - amount;
+      const newInvestmentBalance = (balance ? Number(balance.investment_balance) : 0) + amount;
+
+      const { error } = await supabase
+        .from('account_balances')
+        .update({
+          main_balance: newMainBalance,
+          investment_balance: newInvestmentBalance,
+        })
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      // Log the transaction
+      await supabase.from('transactions').insert({
+        user_id: user.id,
+        type: 'transfer',
+        amount: -amount,
+        description: 'Transfer from Main Wallet to Investment Wallet',
+        status: 'completed',
+      });
+
+      setBalance({
+        ...balance,
+        main_balance: newMainBalance,
+        investment_balance: newInvestmentBalance,
+      });
+
+      toast.success(`$${amount.toFixed(2)} transferred to Investment Wallet`);
+      setTransferAmount('');
+      setShowTransferModal(false);
+    } catch (error: any) {
+      toast.error(error.message || 'Transfer failed');
+    } finally {
+      setTransferring(false);
+    }
+  };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <Loader className="h-8 w-8 animate-spin mx-auto mb-2 text-primary" />
-          <p className="text-muted-foreground">Loading dashboard...</p>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   return (
@@ -193,19 +216,7 @@ const DashboardOverview = () => {
         </div>
       </section>
 
-      {/* Quick Actions Grid */}
-      <section className="grid grid-cols-2 gap-4">
-        <button onClick={() => window.location.href = '/dashboard/deposit'} className="flex items-center justify-center gap-2 py-4 bg-secondary-container text-on-secondary-container rounded-xl font-bold active:scale-95 transition-all duration-200 shadow-sm">
-          <span className="material-symbols-outlined">add_circle</span>
-          <span>Deposit</span>
-        </button>
-        <button onClick={() => window.location.href = '/dashboard/withdraw'} className="flex items-center justify-center gap-2 py-4 bg-white border border-outline-variant text-primary rounded-xl font-bold active:scale-95 transition-all duration-200 shadow-sm">
-          <span className="material-symbols-outlined">account_balance_wallet</span>
-          <span>Withdraw</span>
-        </button>
-      </section>
-
-      {/* Main Account Overview */}
+      {/* Main Account Overview Card - AT THE TOP */}
       <section className="glass-card rounded-2xl p-6 relative overflow-hidden">
         <div className="absolute top-0 right-0 p-4 opacity-10">
           <span className="material-symbols-outlined text-6xl">payments</span>
@@ -223,9 +234,12 @@ const DashboardOverview = () => {
                 ${balance ? Number(balance.main_balance).toFixed(2) : '0.00'}
               </p>
             </div>
-            <button onClick={() => window.location.href = '/dashboard/invest'} className="bg-primary text-on-primary px-4 py-2 rounded-lg text-xs font-bold active:scale-95 transition-all">
-              Invest Now
-            </button>
+            <div className="text-right">
+              <p className="text-on-surface-variant text-xs">Investment Wallet</p>
+              <p className="text-headline-md font-headline-md text-primary">
+                ${balance ? Number(balance.investment_balance).toFixed(2) : '0.00'}
+              </p>
+            </div>
           </div>
           
           <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-100">
@@ -238,6 +252,40 @@ const DashboardOverview = () => {
               <p className="text-body-lg font-bold text-on-tertiary-container">+${balance ? Number(balance.profit_balance).toFixed(2) : '0.00'}</p>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Quick Actions - BELOW THE CARD */}
+      <section className="flex flex-col gap-3">
+        <h3 className="font-headline-md text-primary px-1">Quick Actions</h3>
+        <div className="grid grid-cols-3 gap-3">
+          <button 
+            onClick={() => setShowTransferModal(true)} 
+            className="flex flex-col items-center justify-center gap-2 py-4 bg-white border border-outline-variant rounded-2xl font-bold active:scale-95 transition-all duration-200 shadow-sm"
+          >
+            <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center">
+              <span className="material-symbols-outlined text-blue-600">swap_horiz</span>
+            </div>
+            <span className="text-xs text-primary">Transfer</span>
+          </button>
+          <button 
+            onClick={() => window.location.href = '/dashboard/deposit'} 
+            className="flex flex-col items-center justify-center gap-2 py-4 bg-primary text-white rounded-2xl font-bold active:scale-95 transition-all duration-200 shadow-sm"
+          >
+            <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
+              <span className="material-symbols-outlined text-white">add_circle</span>
+            </div>
+            <span className="text-xs">Deposit</span>
+          </button>
+          <button 
+            onClick={() => window.location.href = '/dashboard/withdraw'} 
+            className="flex flex-col items-center justify-center gap-2 py-4 bg-white border border-outline-variant rounded-2xl font-bold active:scale-95 transition-all duration-200 shadow-sm"
+          >
+            <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center">
+              <span className="material-symbols-outlined text-red-600">account_balance_wallet</span>
+            </div>
+            <span className="text-xs text-primary">Withdraw</span>
+          </button>
         </div>
       </section>
 
@@ -259,14 +307,14 @@ const DashboardOverview = () => {
                 <span className="material-symbols-outlined text-white text-3xl">rocket_launch</span>
               </div>
             </div>
-            <button onClick={() => window.location.href = '/dashboard/plans?upgrade=true'} className="w-full bg-white text-primary py-3 rounded-xl font-bold text-sm active:scale-95 transition-all mt-4">
+            <button onClick={() => window.location.href = '/dashboard/plans?upgrade=true'} className="w-full bg-white text-primary py-3 rounded-full font-bold text-sm active:scale-95 transition-all mt-4">
               Upgrade Plan
             </button>
           </div>
         ) : (
           <div className="glass-card rounded-2xl p-5 relative overflow-hidden">
             <p className="text-sm text-on-surface-variant mb-4">You don't have any active investment plans yet.</p>
-            <button onClick={() => window.location.href = '/dashboard/plans'} className="w-full bg-primary text-white py-3 rounded-xl font-bold text-sm active:scale-95 transition-all">
+            <button onClick={() => window.location.href = '/dashboard/plans'} className="w-full bg-primary text-white py-3 rounded-full font-bold text-sm active:scale-95 transition-all">
               Choose a Plan
             </button>
           </div>
@@ -311,28 +359,79 @@ const DashboardOverview = () => {
       {/* Bonus Card Component if applicable */}
       <BonusCard />
 
-      {/* Placeholder for analytics trend */}
-      <section className="glass-card rounded-2xl p-6 flex flex-col gap-4">
-        <div className="flex justify-between items-center">
-          <p className="font-bold text-primary">Earnings Overview</p>
-          <span className="material-symbols-outlined text-on-surface-variant">more_horiz</span>
-        </div>
-        <div className="h-32 w-full bg-slate-50 dark:bg-slate-900 rounded-xl flex items-center justify-center relative overflow-hidden">
-          <svg className="w-full h-full stroke-secondary fill-none stroke-[3] overflow-visible" viewBox="0 0 400 100">
-            <path d="M0 80 Q 50 70, 100 85 T 200 40 T 300 60 T 400 20" strokeLinecap="round"></path>
-            <path className="fill-secondary/5 stroke-none" d="M0 80 Q 50 70, 100 85 T 200 40 T 300 60 T 400 20 V 100 H 0 Z"></path>
-          </svg>
-        </div>
-        <div className="flex justify-between text-[10px] text-on-surface-variant font-bold uppercase tracking-widest">
-          <span>Mon</span>
-          <span>Tue</span>
-          <span>Wed</span>
-          <span>Thu</span>
-          <span>Fri</span>
-          <span>Sat</span>
-          <span>Sun</span>
-        </div>
-      </section>
+      {/* Transfer Modal */}
+      <Dialog open={showTransferModal} onOpenChange={setShowTransferModal}>
+        <DialogContent className="max-w-md bg-surface border-slate-200 rounded-3xl">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-primary">Transfer Funds</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-5 pt-2">
+            <div className="bg-blue-50/50 border border-blue-200 rounded-xl p-4 flex items-start gap-3">
+              <span className="material-symbols-outlined text-blue-500 mt-0.5">info</span>
+              <p className="text-sm text-blue-800 leading-relaxed">
+                Transfer funds from your <strong>Main Wallet</strong> to your <strong>Investment Wallet</strong> to purchase investment plans.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-surface-container-low rounded-xl p-4 border border-outline-variant/50">
+                <p className="text-[10px] uppercase tracking-wider font-bold text-on-surface-variant mb-1">From: Main Wallet</p>
+                <p className="text-lg font-bold text-primary">${balance ? Number(balance.main_balance).toFixed(2) : '0.00'}</p>
+              </div>
+              <div className="bg-surface-container-low rounded-xl p-4 border border-outline-variant/50">
+                <p className="text-[10px] uppercase tracking-wider font-bold text-on-surface-variant mb-1">To: Investment</p>
+                <p className="text-lg font-bold text-primary">${balance ? Number(balance.investment_balance).toFixed(2) : '0.00'}</p>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="font-label-md text-on-surface-variant ml-1">Amount (USD)</label>
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+                  <span className="font-headline-md text-on-surface-variant group-focus-within:text-primary transition-colors">$</span>
+                </div>
+                <input 
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  max={balance ? Number(balance.main_balance) : 0}
+                  value={transferAmount}
+                  onChange={(e) => setTransferAmount(e.target.value)}
+                  className="w-full bg-white border-2 border-outline-variant rounded-2xl py-4 pl-10 pr-4 font-headline-md focus:border-primary focus:ring-0 transition-all placeholder:text-outline-variant" 
+                  placeholder="0.00"
+                />
+              </div>
+              {balance && (
+                <button 
+                  type="button"
+                  onClick={() => setTransferAmount(Number(balance.main_balance).toString())}
+                  className="text-xs text-secondary font-bold ml-1 hover:underline"
+                >
+                  Transfer Max: ${Number(balance.main_balance).toFixed(2)}
+                </button>
+              )}
+            </div>
+
+            <button 
+              onClick={handleTransfer}
+              disabled={transferring || !transferAmount || parseFloat(transferAmount) <= 0}
+              className="w-full py-4 bg-primary text-white font-headline-md rounded-full shadow-lg shadow-primary/20 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {transferring ? (
+                <>
+                  <span className="material-symbols-outlined animate-spin">progress_activity</span>
+                  Transferring...
+                </>
+              ) : (
+                <>
+                  <span className="material-symbols-outlined">swap_horiz</span>
+                  Transfer to Investment Wallet
+                </>
+              )}
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

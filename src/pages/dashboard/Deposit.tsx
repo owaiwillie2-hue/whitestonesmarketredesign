@@ -54,56 +54,7 @@ const Deposit = () => {
   };
 
   if (kycLoading || settingsLoading) {
-    return (
-      <div className="space-y-6 max-w-7xl">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div className="space-y-2">
-            <Skeleton className="h-8 w-48" />
-            <Skeleton className="h-4 w-64" />
-          </div>
-          <div className="flex items-center gap-2">
-            <Skeleton className="h-9 w-24" />
-            <Skeleton className="h-9 w-32" />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-          <Card>
-            <CardHeader>
-              <Skeleton className="h-6 w-48" />
-              <Skeleton className="h-4 w-40" />
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex justify-center">
-                <Skeleton className="w-48 h-48 sm:w-56 sm:h-56 md:w-64 md:h-64 rounded-lg" />
-              </div>
-              <div className="space-y-2">
-                <Skeleton className="h-4 w-32" />
-                <Skeleton className="h-12 w-full rounded-lg" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <Skeleton className="h-6 w-48" />
-              <Skeleton className="h-4 w-56" />
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Skeleton className="h-4 w-24" />
-                <Skeleton className="h-10 w-full" />
-              </div>
-              <div className="space-y-2">
-                <Skeleton className="h-4 w-48" />
-                <Skeleton className="h-10 w-full" />
-              </div>
-              <Skeleton className="h-10 w-full" />
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -262,7 +213,7 @@ const Deposit = () => {
           <button 
             type="submit" 
             disabled={loading}
-            className="w-full bg-secondary-container text-white py-5 rounded-2xl font-headline-md shadow-lg shadow-secondary-container/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-70"
+            className="w-full bg-secondary-container text-white py-5 rounded-full font-headline-md shadow-lg shadow-secondary-container/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-70"
           >
             {loading ? 'Submitting...' : 'Complete Deposit'}
             <span className="material-symbols-outlined">arrow_forward</span>

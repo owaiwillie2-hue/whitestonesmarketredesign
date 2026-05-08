@@ -57,7 +57,7 @@ const ActivityLog = () => {
   };
 
   if (loading) {
-    return <div className="flex justify-center p-8">Loading activity...</div>;
+    return null;
   }
 
   return (

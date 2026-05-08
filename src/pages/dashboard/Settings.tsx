@@ -87,7 +87,7 @@ const Settings = () => {
             </div>
             <button
               onClick={handlePasswordChange}
-              className="w-full py-4 bg-secondary-container text-on-secondary-container font-label-md rounded-xl active:scale-[0.98] transition-all shadow-lg shadow-blue-100 flex items-center justify-center gap-2"
+              className="w-full py-4 bg-secondary-container text-on-secondary-container font-label-md rounded-full active:scale-[0.98] transition-all shadow-lg shadow-blue-100 flex items-center justify-center gap-2"
             >
               Update Password
             </button>
@@ -102,7 +102,7 @@ const Settings = () => {
       {/* Logout Button */}
       <button 
         onClick={handleSignOut}
-        className="w-full py-4 text-error font-label-md flex items-center justify-center gap-2 mt-4 active:bg-error/5 rounded-xl transition-all"
+        className="w-full py-4 text-error font-label-md flex items-center justify-center gap-2 mt-4 active:bg-error/5 rounded-full transition-all"
       >
         <span className="material-symbols-outlined">logout</span>
         Sign Out of Account

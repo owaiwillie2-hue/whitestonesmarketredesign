@@ -172,38 +172,7 @@ export const AdminInvestmentPlans = () => {
   };
 
   if (loading) {
-    return (
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <div className="space-y-2">
-            <Skeleton className="h-9 w-64" />
-            <Skeleton className="h-5 w-96" />
-          </div>
-          <Skeleton className="h-10 w-32" />
-        </div>
-
-        <Card>
-          <CardHeader>
-            <Skeleton className="h-6 w-48" />
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="border rounded-lg p-4 space-y-2">
-                  <Skeleton className="h-5 w-48" />
-                  <Skeleton className="h-4 w-full" />
-                  <div className="flex gap-4">
-                    <Skeleton className="h-4 w-24" />
-                    <Skeleton className="h-4 w-24" />
-                    <Skeleton className="h-4 w-24" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
+    return null;
   }
 
   return (

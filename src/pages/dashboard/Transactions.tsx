@@ -295,67 +295,7 @@ const Transactions = () => {
   };
 
   if (loading) {
-    return (
-      <div className="space-y-4 md:space-y-6 max-w-7xl">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-          <div className="space-y-2">
-            <Skeleton className="h-8 w-64" />
-            <Skeleton className="h-4 w-96" />
-          </div>
-          <Skeleton className="h-9 w-32" />
-        </div>
-
-        {/* Statistics Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-          {[1, 2, 3, 4].map((i) => (
-            <Card key={i}>
-              <CardContent className="p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <Skeleton className="h-4 w-4 rounded-full" />
-                  <Skeleton className="h-4 w-4 rounded-full" />
-                </div>
-                <Skeleton className="h-3 w-24" />
-                <Skeleton className="h-7 w-20" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        {/* Date Filters */}
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex gap-3 items-center">
-              <Skeleton className="h-4 w-24" />
-              <Skeleton className="h-9 w-[140px]" />
-              <Skeleton className="h-4 w-32 ml-auto" />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Tabs Skeleton */}
-        <div className="space-y-4">
-          <Skeleton className="h-10 w-full" />
-          <Card>
-            <CardHeader className="pb-3">
-              <Skeleton className="h-6 w-48" />
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="border rounded-lg p-4 space-y-2">
-                  <div className="flex justify-between items-start">
-                    <div className="space-y-2 flex-1">
-                      <Skeleton className="h-5 w-32" />
-                      <Skeleton className="h-4 w-48" />
-                    </div>
-                    <Skeleton className="h-6 w-20" />
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   const filteredTransactions = filterByDate(transactions);
@@ -411,7 +351,7 @@ const Transactions = () => {
           <h2 className="font-headline-md text-headline-md text-on-surface">Transactions</h2>
           <p className="font-label-md text-label-md text-on-surface-variant opacity-70">Review your capital flow</p>
         </div>
-        <button onClick={exportToCSV} className="bg-secondary-container text-white p-3 rounded-xl shadow-lg active:scale-90 transition-all flex items-center gap-2">
+        <button onClick={exportToCSV} className="bg-secondary-container text-white p-3 rounded-full shadow-lg active:scale-90 transition-all flex items-center gap-2">
           <span className="material-symbols-outlined text-[20px]">ios_share</span>
           <span className="font-label-md text-sm">CSV</span>
         </button>

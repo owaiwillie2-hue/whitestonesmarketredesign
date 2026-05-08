@@ -95,7 +95,7 @@ const Plans = () => {
         textClass: "text-primary",
         iconClass: "text-secondary-container",
         iconName: "stars",
-        buttonClass: "bg-secondary-container text-white active:scale-[0.98] transition-transform shadow-md",
+        buttonClass: "bg-primary text-white active:scale-[0.98] transition-transform shadow-md",
         statusText: "ELIGIBLE",
         isPremium: true
       };
@@ -141,13 +141,7 @@ const Plans = () => {
   };
 
   if (kycLoading) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <div className="text-center">
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   const eligibility = getEligibilityMessage();
@@ -295,7 +289,7 @@ const Plans = () => {
       <section className="bg-primary-container rounded-2xl p-6 text-center space-y-3">
         <h3 className="text-white font-headline-md text-lg">Custom Strategy?</h3>
         <p className="text-on-primary-container text-xs">For investments over $100,000, speak with a dedicated wealth advisor.</p>
-        <button onClick={() => window.location.href = 'mailto:support@whitestonesmarkets.com'} className="bg-secondary-container text-white px-6 py-2 rounded-full text-sm font-bold active:scale-95 transition-all">Contact Us</button>
+        <button onClick={() => window.location.href = 'mailto:support@whitestonesmarkets.com'} className="bg-primary text-white px-6 py-2 rounded-full text-sm font-bold active:scale-95 transition-all">Contact Us</button>
       </section>
     </div>
   );

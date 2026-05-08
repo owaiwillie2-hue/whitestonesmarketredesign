@@ -11,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import * as OTPAuth from 'otpauth';
 import { saveLoginActivity } from '@/utils/deviceDetection';
+import logo from '@/assets/logo.png';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -163,8 +164,8 @@ const Login = () => {
         <div className="w-full max-w-md mt-12">
           {/* Logo Section */}
           <div className="flex flex-col items-center mb-10">
-            <div className="w-16 h-16 bg-gradient-to-tr from-secondary to-secondary-container rounded-2xl flex items-center justify-center mb-6 shadow-xl shadow-secondary/20">
-              <span className="material-symbols-outlined text-white text-[32px]" style={{ fontVariationSettings: "'FILL' 1" }}>token</span>
+            <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center mb-6 shadow-xl shadow-secondary/10 overflow-hidden border border-slate-100 p-2">
+              <img src={logo} alt="Whitestones Markets" className="w-full h-full object-contain" />
             </div>
             <h1 className="font-headline-lg text-headline-lg text-center tracking-tight px-4">{t('auth.login')}</h1>
             <p className="text-on-surface-variant font-body-md text-center mt-2 px-6 opacity-70">Access your portfolio and manage your digital assets with institutional security.</p>
@@ -237,7 +238,7 @@ const Login = () => {
               <button 
                  type="submit" 
                  disabled={loading}
-                 className="w-full py-4 bg-secondary text-on-primary font-headline-md rounded-xl shadow-lg shadow-secondary/30 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-70"
+                 className="w-full py-4 bg-primary text-white font-headline-md rounded-full shadow-lg shadow-primary/30 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-70"
               >
                  {loading ? 'Loading...' : t('cta.login')}
                  <span className="material-symbols-outlined text-[20px]">login</span>
@@ -300,7 +301,7 @@ const Login = () => {
             </div>
             <button 
               onClick={handleVerify2FA}
-              className="w-full py-4 bg-secondary text-on-primary font-headline-md rounded-xl shadow-lg shadow-secondary/30 active:scale-[0.98] transition-all duration-200 disabled:opacity-50"
+              className="w-full py-4 bg-primary text-white font-headline-md rounded-full shadow-lg shadow-primary/30 active:scale-[0.98] transition-all duration-200 disabled:opacity-50"
               disabled={twoFactorCode.length !== 6 || loading}
             >
               Verify

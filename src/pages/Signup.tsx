@@ -11,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { countries } from '@/utils/countries';
 import { TermsModal } from '@/components/TermsModal';
+import logo from '@/assets/logo.png';
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -132,8 +133,8 @@ const Signup = () => {
       {/* Top AppBar (Simplified for Transactional Page) */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200 h-16 flex justify-between items-center px-4">
         <Link to="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-primary-container flex items-center justify-center">
-            <span className="material-symbols-outlined text-on-primary-container text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>diamond</span>
+          <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center overflow-hidden border border-slate-100 p-0.5">
+            <img src={logo} alt="Whitestones Markets" className="w-full h-full object-contain" />
           </div>
           <span className="text-lg font-bold text-slate-900 font-display-lg tracking-tight">Whitestones Markets</span>
         </Link>
@@ -368,7 +369,7 @@ const Signup = () => {
           <button 
             type="submit" 
             disabled={loading}
-            className="w-full bg-secondary hover:bg-secondary/90 text-white font-bold py-4 rounded-xl shadow-lg shadow-secondary/20 active:scale-[0.98] transition-all flex justify-center items-center gap-2 mt-4 group disabled:opacity-70"
+            className="w-full bg-primary hover:bg-primary/90 text-white font-bold py-4 rounded-full shadow-lg shadow-primary/20 active:scale-[0.98] transition-all flex justify-center items-center gap-2 mt-4 group disabled:opacity-70"
           >
             <span className="text-body-lg">{loading ? 'Creating Account...' : t('auth.signup')}</span>
             <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>
