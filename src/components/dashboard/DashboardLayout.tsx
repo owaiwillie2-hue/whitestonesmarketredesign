@@ -18,6 +18,8 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const { theme, toggleTheme } = useTheme();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [profile, setProfile] = useState<any>(null);
+  const [showSpaceXModal, setShowSpaceXModal] = useState(false);
 
   const handleLogout = async () => {
     await signOut();
@@ -25,11 +27,26 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     navigate('/');
   };
 
+  const calculateAge = (dob: string | null) => {
+    if (!dob) return 0;
+    const birthDate = new Date(dob);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
+  };
+
+  const isSpaceXEligible = calculateAge(profile?.date_of_birth) >= 40;
+
   const navItems = [
     { icon: 'dashboard', label: 'Dashboard', path: '/dashboard' },
     { icon: 'receipt_long', label: 'Activity', path: '/dashboard/transactions' },
     { icon: 'trending_up', label: 'Investments', path: '/dashboard/investments' },
     { icon: 'account_balance_wallet', label: 'Plans', path: '/dashboard/plans' },
+    ...(isSpaceXEligible ? [{ icon: 'rocket_launch', label: 'Space X Retirement', path: '/dashboard/spacex' }] : []),
     { icon: 'verified_user', label: 'KYC', path: '/dashboard/kyc' },
     { icon: 'group_add', label: 'Refer & Earn', path: '/dashboard/referrals' },
     { icon: 'account_circle', label: 'Profile', path: '/dashboard/profile' },
@@ -40,6 +57,21 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
   useEffect(() => {
     if (!user?.id) return;
+
+    const fetchProfile = async () => {
+      const { data } = await supabase.from('profiles').select('*').eq('user_id', user.id).single();
+      if (data) {
+        setProfile(data);
+        const age = calculateAge(data.date_of_birth);
+        if (age >= 40) {
+          const hasSeenModal = localStorage.getItem(`has_seen_spacex_${user.id}`);
+          if (!hasSeenModal) {
+            setShowSpaceXModal(true);
+          }
+        }
+      }
+    };
+    fetchProfile();
 
     const fetchNotifications = async () => {
       const { data } = await supabase
@@ -285,6 +317,42 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           {children}
         </main>
       </div>
+
+      {/* SpaceX Auto Popup Modal */}
+      {showSpaceXModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 max-w-md w-full shadow-2xl relative">
+            <div className="w-16 h-16 bg-blue-50 dark:bg-blue-900/20 text-blue-500 rounded-full flex items-center justify-center mb-6 animate-pulse">
+              <span className="material-symbols-outlined text-[32px]">rocket_launch</span>
+            </div>
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Exclusive Retirement Investment Opportunity</h2>
+            <p className="text-slate-500 dark:text-slate-400 mb-8 leading-relaxed">
+              You qualify for the Space X Retirement Funds program. Start preparing for retirement while earning weekly payouts directly to your bank account.
+            </p>
+            <div className="flex flex-col gap-3">
+              <button 
+                onClick={() => {
+                  localStorage.setItem(`has_seen_spacex_${user?.id}`, 'true');
+                  setShowSpaceXModal(false);
+                  navigate('/dashboard/spacex');
+                }}
+                className="w-full py-4 bg-primary text-white rounded-2xl font-bold active:scale-[0.98] transition-transform"
+              >
+                Learn More & Join
+              </button>
+              <button 
+                onClick={() => {
+                  localStorage.setItem(`has_seen_spacex_${user?.id}`, 'true');
+                  setShowSpaceXModal(false);
+                }}
+                className="w-full py-4 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white rounded-2xl font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+              >
+                Maybe Later
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

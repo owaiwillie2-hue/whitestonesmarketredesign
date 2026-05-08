@@ -38,6 +38,7 @@ import KYC from "./pages/dashboard/KYC";
 import Settings from "./pages/dashboard/Settings";
 import ActivityLog from "./pages/dashboard/ActivityLog";
 import WithdrawalAccounts from "./pages/dashboard/WithdrawalAccounts";
+import SpaceXRetirement from "./pages/dashboard/SpaceXRetirement";
 import Admin from "./pages/admin/Admin";
 import AdminAnalytics from "./pages/admin/Analytics";
 import AdminUsers from "./pages/admin/Users";
@@ -111,6 +112,7 @@ const App = () => (
                 <Route path="referrals" element={<Referrals />} />
                 <Route path="kyc" element={<KYC />} />
                 <Route path="settings" element={<Settings />} />
+                <Route path="spacex" element={<SpaceXRetirement />} />
                 <Route path="activity" element={<ActivityLog />} />
                 <Route path="withdrawal-accounts" element={<WithdrawalAccounts />} />
                 <Route path="notifications" element={<UserNotifications />} />
