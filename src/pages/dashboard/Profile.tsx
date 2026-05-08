@@ -81,7 +81,7 @@ const Profile = () => {
     <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm space-y-4">
       <div className="flex items-center gap-2 mb-2">
         <span className="material-symbols-outlined text-secondary">person_edit</span>
-        <h2 className="font-headline-md text-headline-md">Personal Information</h2>
+        <h2 className="font-headline-md text-xl font-bold">Personal Information</h2>
       </div>
       <form onSubmit={handleUpdate} className="space-y-4">
         <div className="relative">

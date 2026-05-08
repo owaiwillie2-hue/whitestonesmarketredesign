@@ -148,7 +148,7 @@ const Plans = () => {
     <div className="space-y-6 pb-20">
       {/* Wallet Overview Section */}
       <section className="space-y-4">
-        <h1 className="font-headline-lg text-headline-lg text-primary">
+        <h1 className="font-headline-lg text-2xl font-bold text-primary">
           {upgradeMode ? 'Upgrade Plan' : 'Investment Plans'}
         </h1>
         <div className="bg-primary p-6 rounded-2xl shadow-xl relative overflow-hidden">

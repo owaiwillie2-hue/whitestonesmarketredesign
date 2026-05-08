@@ -51,7 +51,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center overflow-hidden border border-slate-100 p-0.5 shrink-0">
             <img src={logo} alt="WhitestonesMarket" className="w-full h-full object-contain" />
           </div>
-          <span className="text-lg font-bold text-slate-900 dark:text-white font-['Plus_Jakarta_Sans'] tracking-tight">WhitestonesMarket</span>
+          <span className="text-sm font-bold text-slate-900 dark:text-white font-['Plus_Jakarta_Sans'] tracking-tight">WhitestonesMarket</span>
         </div>
         
         <div className="flex items-center gap-3">
@@ -61,6 +61,42 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
               {theme === 'dark' ? 'light_mode' : 'dark_mode'}
             </span>
           </button>
+          {/* Notification Bell Dropdown (Mobile) */}
+          <div className="relative">
+            <button 
+              onClick={() => setShowNotifications(!showNotifications)}
+              className="w-8 h-8 rounded-full flex items-center justify-center text-on-surface-variant hover:text-primary active:scale-95 transition-all"
+            >
+              <span className="material-symbols-outlined text-[20px]">notifications</span>
+              <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-red-500 rounded-full"></span>
+            </button>
+            {/* Mobile Dropdown Menu */}
+            {showNotifications && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setShowNotifications(false)}></div>
+                <div className="absolute right-0 mt-2 w-72 bg-surface dark:bg-slate-900 border border-outline-variant/30 rounded-2xl shadow-xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                  <div className="p-3 border-b border-outline-variant/30 flex justify-between items-center">
+                    <h3 className="font-headline-sm font-bold text-primary text-sm">Notifications</h3>
+                    <button onClick={() => setShowNotifications(false)} className="text-on-surface-variant hover:text-error">
+                      <span className="material-symbols-outlined text-sm">close</span>
+                    </button>
+                  </div>
+                  <div className="max-h-64 overflow-y-auto">
+                    {notifications.map((notif) => (
+                      <div key={notif.id} className="p-3 border-b border-outline-variant/20 hover:bg-surface-variant/50 cursor-pointer transition-colors">
+                        <p className="font-label-md font-bold text-on-surface text-sm">{notif.title}</p>
+                        <p className="text-xs text-on-surface-variant mt-0.5 leading-relaxed">{notif.desc}</p>
+                        <p className="text-[9px] text-outline mt-1">{notif.time}</p>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="p-2 bg-surface-variant/30 border-t border-outline-variant/30 text-center">
+                    <button className="text-xs font-bold text-primary hover:underline">Mark all as read</button>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
           {/* Mobile Profile Icon */}
           <div className="w-8 h-8 rounded-full bg-surface-container-highest overflow-hidden border border-primary-fixed shrink-0 cursor-pointer" onClick={() => navigate('/dashboard/profile')}>
             <div className="w-full h-full bg-primary flex items-center justify-center text-white font-bold text-sm">
@@ -133,7 +169,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         {/* Desktop Header */}
         <header className="hidden lg:flex bg-white/80 dark:bg-slate-950/80 backdrop-blur-md shadow-sm border-b border-slate-200 dark:border-slate-800 sticky top-0 z-30 h-20 items-center justify-between px-8">
           <div>
-            <h2 className="text-xl font-bold text-slate-900 dark:text-white font-display-lg capitalize">
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white capitalize">
               {location.pathname.split('/').pop() || 'Dashboard'}
             </h2>
           </div>

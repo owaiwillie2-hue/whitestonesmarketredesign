@@ -45,7 +45,7 @@ const Settings = () => {
     <div className="space-y-6 max-w-md mx-auto pb-24">
       {/* Page Title */}
       <section>
-        <h1 className="font-headline-lg text-headline-lg text-on-surface">Account Settings</h1>
+        <h1 className="font-headline-lg text-2xl font-bold text-on-surface">Account Settings</h1>
         <p className="font-body-md text-on-surface-variant mt-1">Manage your professional profile and security</p>
       </section>
 

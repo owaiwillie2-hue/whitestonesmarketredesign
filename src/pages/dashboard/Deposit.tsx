@@ -109,7 +109,7 @@ const Deposit = () => {
       {/* Page Title & History Link */}
       <div className="flex justify-between items-end mb-8">
         <div>
-          <h1 className="font-headline-lg text-headline-lg text-on-background">Deposit Funds</h1>
+          <h2 className="text-2xl font-bold text-primary">Deposit Funds</h2>
           <p className="font-body-md text-on-surface-variant">Top up your investment balance</p>
         </div>
         <button onClick={() => navigate('/dashboard/transactions?tab=deposits')} className="font-label-md text-secondary-container font-semibold flex items-center gap-1 mb-1">

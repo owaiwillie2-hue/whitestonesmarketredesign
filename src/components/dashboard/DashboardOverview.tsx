@@ -7,12 +7,14 @@ import { DollarSign, TrendingUp, Clock, Award, CheckCircle2, Loader } from 'luci
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useKYCStatus } from '@/hooks/useKYCStatus';
+import { useNavigate } from 'react-router-dom';
 import { BonusCard } from './BonusCard';
 import { toast } from 'sonner';
 
 const DashboardOverview = () => {
   const { user } = useAuth();
   const { isApproved } = useKYCStatus();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [userName, setUserName] = useState<string>('');
   const [balance, setBalance] = useState<any>(null);
@@ -224,7 +226,7 @@ const DashboardOverview = () => {
       {/* Welcome Section */}
       <section className="flex flex-col gap-1">
         <div className="flex items-center gap-1">
-          <h1 className="font-headline-md text-headline-md text-primary">Welcome back, {userName || 'User'}</h1>
+          <h1 className="font-headline-md text-xl font-bold text-primary">Welcome back, {userName || 'User'}</h1>
           {isApproved && (
             <span className="material-symbols-outlined text-secondary text-[22px] translate-y-[1px]" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
           )}
@@ -242,7 +244,7 @@ const DashboardOverview = () => {
           <span className="material-symbols-outlined text-6xl">payments</span>
         </div>
         <p className="text-on-surface-variant font-label-md uppercase tracking-widest text-[10px]">Total Combined Balance</p>
-        <h2 className="text-display-lg font-display-lg text-primary mt-1">
+        <h2 className="text-3xl font-bold text-primary mt-1">
           ${balance ? (Number(balance.main_balance) + Number(balance.profit_balance)).toFixed(2) : '0.00'}
         </h2>
         
@@ -289,7 +291,7 @@ const DashboardOverview = () => {
             <span className="text-xs text-primary dark:text-white">Transfer</span>
           </button>
           <button 
-            onClick={() => window.location.href = '/dashboard/deposit'} 
+            onClick={() => navigate('/dashboard/deposit')} 
             className="flex flex-col items-center justify-center gap-2 py-4 bg-primary text-white rounded-2xl font-bold active:scale-95 transition-all duration-200 shadow-sm"
           >
             <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
@@ -298,7 +300,7 @@ const DashboardOverview = () => {
             <span className="text-xs">Deposit</span>
           </button>
           <button 
-            onClick={() => window.location.href = '/dashboard/invest'} 
+            onClick={() => navigate('/dashboard/invest')} 
             className="flex flex-col items-center justify-center gap-2 py-4 bg-primary text-white rounded-2xl font-bold active:scale-95 transition-all duration-200 shadow-sm"
           >
             <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
@@ -307,7 +309,7 @@ const DashboardOverview = () => {
             <span className="text-xs">Invest</span>
           </button>
           <button 
-            onClick={() => window.location.href = '/dashboard/withdraw'} 
+            onClick={() => navigate('/dashboard/withdraw')} 
             className="flex flex-col items-center justify-center gap-2 py-4 bg-white dark:bg-slate-800 border border-outline-variant dark:border-slate-700 rounded-2xl font-bold active:scale-95 transition-all duration-200 shadow-sm"
           >
             <div className="w-10 h-10 rounded-full bg-red-50 dark:bg-red-900/30 flex items-center justify-center">

@@ -57,7 +57,9 @@ const Withdraw = () => {
           }
         });
 
-        setHighestPlanName(highest);
+        setHighestPlanName(highest || '');
+      } else {
+        setHighestPlanName('');
       }
     } catch (error) {
       console.error('Error fetching plan:', error);
@@ -179,7 +181,7 @@ const Withdraw = () => {
     <>
       {/* Page Header */}
       <div className="mt-4 mb-6">
-        <h2 className="text-headline-lg font-headline-lg text-primary">Withdraw Funds</h2>
+        <h2 className="text-2xl font-bold text-primary">Withdraw Funds</h2>
         <p className="text-on-surface-variant text-label-md font-label-md mt-1">Move your capital to your verified account.</p>
       </div>
 

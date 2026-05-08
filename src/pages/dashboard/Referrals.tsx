@@ -58,7 +58,7 @@ const Referrals = () => {
     <div className="space-y-6 max-w-md mx-auto pb-24">
       {/* Hero Section */}
       <section>
-        <h1 className="font-headline-lg text-headline-lg text-primary mb-2">Refer & Earn</h1>
+        <h1 className="font-headline-lg text-2xl font-bold text-primary mb-2">Refer & Earn</h1>
         <p className="text-on-surface-variant font-body-md">Share the wealth with your network and earn a 10% bonus on their first deposit.</p>
       </section>
 

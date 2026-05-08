@@ -543,7 +543,7 @@ const KYC = () => {
     <div className="space-y-6 max-w-md mx-auto pb-24">
       {/* Title Section */}
       <section className="mb-2">
-        <h1 className="font-headline-lg text-headline-lg text-on-background mb-2">Verify Identity</h1>
+        <h1 className="font-headline-lg text-2xl font-bold text-on-background mb-2">Verify Identity</h1>
         <p className="font-body-md text-body-md text-on-surface-variant leading-relaxed">
           To comply with financial regulations and secure your account, please complete your identity verification.
         </p>
