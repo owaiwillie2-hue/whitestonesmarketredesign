@@ -62,7 +62,11 @@ const Login = () => {
         }
       }
     } catch (error: any) {
-      toast.error(error.message || 'Login failed');
+      if (error.message?.includes('Email not confirmed')) {
+        navigate('/email-confirmation', { state: { email } });
+      } else {
+        toast.error(error.message || 'Login failed');
+      }
     } finally {
       setLoading(false);
     }

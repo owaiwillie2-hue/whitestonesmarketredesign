@@ -39,7 +39,8 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     return age;
   };
 
-  const isSpaceXEligible = calculateAge(profile?.date_of_birth) >= 40;
+  // Temporarily default to true if date_of_birth is missing for testing purposes
+  const isSpaceXEligible = profile?.date_of_birth ? calculateAge(profile.date_of_birth) >= 40 : true;
 
   const navItems = [
     { icon: 'dashboard', label: 'Dashboard', path: '/dashboard' },

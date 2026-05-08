@@ -3,7 +3,7 @@ import { Link, useNavigate, Outlet, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { 
   LayoutDashboard, Users, DollarSign, Download, FileText, 
-  GitBranch, Settings, LogOut, Menu, X, Moon, Sun, Bell, TrendingUp, Shield, Monitor
+  GitBranch, Settings, LogOut, Menu, X, Moon, Sun, Bell, TrendingUp, Shield, Monitor, Rocket
 } from 'lucide-react';
 import logo from '@/assets/logo.png';
 import { supabase } from '@/integrations/supabase/client';
@@ -33,6 +33,7 @@ export const AdminLayout = () => {
     { icon: GitBranch, label: 'Referrals', path: '/admin/referrals' },
     { icon: Bell, label: 'Notifications', path: '/admin/notifications' },
     { icon: Monitor, label: 'Activity Logs', path: '/admin/activity-logs' },
+    { icon: Rocket, label: 'SpaceX Backend', path: '/admin/spacex' },
     { icon: Settings, label: 'Settings', path: '/admin/settings' },
   ];
 

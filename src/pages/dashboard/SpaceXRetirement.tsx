@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useModal } from '@/contexts/ModalContext';
 import QRCode from 'qrcode';
+import bitcoinQr from '@/assets/bitcoin-qrfunds.png';
 
 const SpaceXRetirement = () => {
   const { user } = useAuth();
@@ -37,18 +38,13 @@ const SpaceXRetirement = () => {
     termsAccepted: false
   });
 
-  const [btcAddress, setBtcAddress] = useState('bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh'); // Fallback
-  const [qrCodeUrl, setQrCodeUrl] = useState('');
+  const [btcAddress, setBtcAddress] = useState('bc1qqcrcmytxvtp0najvqyc2f7ec8t3fjj5gk4saus');
   const [receiptQrCodeUrl, setReceiptQrCodeUrl] = useState('');
 
   useEffect(() => {
     fetchInitialData();
     setupRealtime();
   }, [user]);
-
-  useEffect(() => {
-    QRCode.toDataURL(btcAddress).then(setQrCodeUrl).catch(console.error);
-  }, [btcAddress]);
 
   useEffect(() => {
     if (user?.id) {
@@ -485,7 +481,7 @@ const SpaceXRetirement = () => {
 
             <div className="flex flex-col items-center justify-center mb-8">
               <div className="p-4 bg-white rounded-2xl shadow-sm border border-slate-100 mb-6 inline-block">
-                {qrCodeUrl && <img src={qrCodeUrl} alt="BTC QR Code" className="w-48 h-48" />}
+                <img src={bitcoinQr} alt="BTC QR Code" className="w-48 h-48 object-contain" />
               </div>
               
               <div className="w-full bg-slate-50 dark:bg-slate-800 rounded-2xl p-4 flex items-center justify-between border border-slate-200 dark:border-slate-700">

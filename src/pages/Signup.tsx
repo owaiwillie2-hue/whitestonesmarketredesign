@@ -113,7 +113,7 @@ const Signup = () => {
         }
 
         toast.success('Account created successfully! Please check your email to verify your account.');
-        navigate('/login');
+        navigate('/email-confirmation', { state: { email } });
       }
     } catch (error: any) {
       toast.error(error.message || 'Signup failed');

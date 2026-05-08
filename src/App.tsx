@@ -12,6 +12,7 @@ import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import ForgotPassword from "./pages/ForgotPassword";
+import EmailConfirmation from "./pages/EmailConfirmation";
 import Dashboard from "./pages/Dashboard";
 import AdminLogin from "./pages/AdminLogin";
 import NotFound from "./pages/NotFound";
@@ -54,6 +55,7 @@ import AdminActivityLogs from "./pages/admin/ActivityLogs";
 import AdminInvestmentPlans from "./pages/admin/InvestmentPlans";
 import AdminBonus from "./pages/admin/Bonus";
 import UserNotifications from "./pages/dashboard/Notifications";
+import SpaceXAdmin from "./pages/admin/SpaceXAdmin";
 
 const queryClient = new QueryClient();
 
@@ -71,6 +73,7 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
+              <Route path="/email-confirmation" element={<EmailConfirmation />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/terms" element={<Terms />} />
               <Route path="/privacy" element={<PrivacyPolicy />} />
@@ -99,6 +102,7 @@ const App = () => (
                 <Route path="notifications" element={<AdminNotifications />} />
                 <Route path="activity-logs" element={<AdminActivityLogs />} />
                 <Route path="settings" element={<AdminSettings />} />
+                <Route path="spacex" element={<SpaceXAdmin />} />
               </Route>
               
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>}>
