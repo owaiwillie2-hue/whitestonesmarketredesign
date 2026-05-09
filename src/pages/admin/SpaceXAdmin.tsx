@@ -42,7 +42,7 @@ const SpaceXAdmin = () => {
         setStats({
           activeMembers: approved.length,
           totalInvested: totalAmount,
-          weeklyPayouts: (totalAmount * 0.05) / 4,
+          weeklyPayouts: totalAmount * 0.05,
           withdrawals: 0
         });
       }

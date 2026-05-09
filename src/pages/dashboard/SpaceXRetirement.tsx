@@ -16,7 +16,7 @@ const SpaceXRetirement = () => {
   const [stats, setStats] = useState({
     activeMembers: 142,
     totalInvested: 2450000,
-    weeklyPayouts: 345000,
+    weeklyPayouts: 122500,
     withdrawals: 128
   });
 
@@ -96,7 +96,8 @@ const SpaceXRetirement = () => {
         setStats(prev => ({
           ...prev,
           activeMembers: prev.activeMembers + 1,
-          totalInvested: prev.totalInvested + 10000
+          totalInvested: prev.totalInvested + 10000,
+          weeklyPayouts: prev.weeklyPayouts + 500
         }));
       })
       .subscribe();
@@ -120,7 +121,7 @@ const SpaceXRetirement = () => {
         const { data: newPlan, error: planError } = await supabase.from('investment_plans').insert({
           name: 'Space X Retirement Funds',
           min_amount: 10000,
-          profit_percentage: 12, // 12% weekly roughly
+          profit_percentage: 5, // 5% weekly (returns 500 for 10000)
           duration_days: 1825, // 5 years
         }).select().single();
         if (planError) throw planError;
@@ -394,7 +395,7 @@ const SpaceXRetirement = () => {
 
                 <div className="p-6 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl text-white shadow-lg">
                   <p className="text-green-100 font-bold mb-1">Projected Weekly Earnings</p>
-                  <p className="text-4xl font-black">${((formData.investmentAmount * 0.05) / 4).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
+                  <p className="text-4xl font-black">${(formData.investmentAmount * 0.05).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
                   <div className="mt-4 pt-4 border-t border-white/20 flex justify-between items-center text-sm font-medium text-green-50">
                     <span>Direct Bank Deposit</span>
                     <span>Every Friday</span>
@@ -567,7 +568,7 @@ const SpaceXRetirement = () => {
                   </div>
                   <div>
                     <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Weekly Payout</p>
-                    <p className="font-black text-xl text-green-500">${((formData.investmentAmount * 0.05) / 4).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
+                    <p className="font-black text-xl text-green-500">${(formData.investmentAmount * 0.05).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
                   </div>
                   <div className="col-span-2">
                     <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Registered Bank</p>
