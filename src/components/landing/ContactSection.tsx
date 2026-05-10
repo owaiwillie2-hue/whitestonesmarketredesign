@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Mail, Phone, MapPin, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
+import { useScrollReveal } from "@/hooks/useScrollReveal";
 
 const contactFormSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(100, "Name must be less than 100 characters"),
@@ -16,6 +17,7 @@ const contactFormSchema = z.object({
 
 export const ContactSection = () => {
   const { toast } = useToast();
+  const sectionRef = useScrollReveal();
   const [formData, setFormData] = useState({
     name: "",
     telephone: "",
@@ -80,9 +82,9 @@ export const ContactSection = () => {
   };
 
   return (
-    <section className="py-20 bg-muted">
+    <section className="py-20 bg-muted" ref={sectionRef as any}>
       <div className="container mx-auto px-4">
-        <div className="max-w-3xl mx-auto text-center mb-16">
+        <div className="max-w-3xl mx-auto text-center mb-16 reveal">
           <h2 className="text-4xl md:text-5xl font-bold mb-6">
             Get In <span className="text-primary">Touch</span>
           </h2>
@@ -92,7 +94,7 @@ export const ContactSection = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 max-w-6xl mx-auto">
-          <div>
+          <div className="reveal reveal-delay-1">
             <h3 className="text-2xl font-bold mb-6">Request a Callback</h3>
             <form onSubmit={handleSubmit} className="space-y-4">
               <Input
@@ -100,6 +102,7 @@ export const ContactSection = () => {
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 required
+                className="rounded-xl h-12"
               />
               <Input
                 type="tel"
@@ -107,6 +110,7 @@ export const ContactSection = () => {
                 value={formData.telephone}
                 onChange={(e) => setFormData({ ...formData, telephone: e.target.value })}
                 required
+                className="rounded-xl h-12"
               />
               <Input
                 type="email"
@@ -114,14 +118,16 @@ export const ContactSection = () => {
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 required
+                className="rounded-xl h-12"
               />
               <Textarea
                 placeholder="Your Message (Optional)"
                 rows={4}
                 value={formData.message}
                 onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                className="rounded-xl"
               />
-              <Button type="submit" className="w-full" disabled={isSubmitting}>
+              <Button type="submit" className="w-full rounded-xl h-12" disabled={isSubmitting}>
                 {isSubmitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -134,37 +140,37 @@ export const ContactSection = () => {
             </form>
           </div>
 
-          <div className="space-y-6">
+          <div className="space-y-6 reveal reveal-delay-2">
             <h3 className="text-2xl font-bold mb-6">Contact Information</h3>
             
-            <div className="flex items-start space-x-4">
-              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                <Mail className="w-6 h-6 text-primary" />
+            <div className="flex items-start space-x-4 p-4 bg-card border border-border/50 rounded-2xl card-hover-lift">
+              <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center flex-shrink-0">
+                <Mail className="w-5 h-5 text-primary" />
               </div>
               <div>
                 <h4 className="font-semibold mb-1">Email</h4>
-                <p className="text-muted-foreground">whitestonesmarkets@gmail.com</p>
-                <p className="text-muted-foreground">support@whitestonesmarkets.com</p>
+                <p className="text-muted-foreground text-sm">whitestonesmarkets@gmail.com</p>
+                <p className="text-muted-foreground text-sm">support@whitestonesmarkets.com</p>
               </div>
             </div>
 
-            <div className="flex items-start space-x-4">
-              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                <Phone className="w-6 h-6 text-primary" />
+            <div className="flex items-start space-x-4 p-4 bg-card border border-border/50 rounded-2xl card-hover-lift">
+              <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center flex-shrink-0">
+                <Phone className="w-5 h-5 text-primary" />
               </div>
               <div>
                 <h4 className="font-semibold mb-1">Phone</h4>
-                <p className="text-muted-foreground">+1 (555) 123-4567</p>
+                <p className="text-muted-foreground text-sm">+1 (555) 123-4567</p>
               </div>
             </div>
 
-            <div className="flex items-start space-x-4">
-              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                <MapPin className="w-6 h-6 text-primary" />
+            <div className="flex items-start space-x-4 p-4 bg-card border border-border/50 rounded-2xl card-hover-lift">
+              <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center flex-shrink-0">
+                <MapPin className="w-5 h-5 text-primary" />
               </div>
               <div>
                 <h4 className="font-semibold mb-1">Address</h4>
-                <p className="text-muted-foreground">
+                <p className="text-muted-foreground text-sm">
                   123 Financial District<br />
                   New York, NY 10004<br />
                   United States

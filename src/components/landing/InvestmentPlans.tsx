@@ -5,10 +5,12 @@ import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useScrollReveal } from "@/hooks/useScrollReveal";
 
 export const InvestmentPlans = () => {
   const [plans, setPlans] = useState<any[]>([]);
   const { t } = useLanguage();
+  const sectionRef = useScrollReveal();
 
   useEffect(() => {
     fetchPlans();
@@ -27,9 +29,9 @@ export const InvestmentPlans = () => {
   };
 
   return (
-    <section className="py-20 bg-background">
+    <section className="py-20 bg-background" ref={sectionRef as any}>
       <div className="container mx-auto px-4">
-        <div className="max-w-3xl mx-auto text-center mb-16">
+        <div className="max-w-3xl mx-auto text-center mb-16 reveal">
           <h2 className="text-4xl md:text-5xl font-bold mb-6">
             {t('investmentPlans.title')} <span className="text-primary">{t('investmentPlans.titleHighlight')}</span>
           </h2>
@@ -44,14 +46,14 @@ export const InvestmentPlans = () => {
               <p className="text-muted-foreground">{t('investmentPlans.loading')}</p>
             </div>
           ) : (
-            plans.map((plan) => (
+            plans.map((plan, index) => (
               <Card
                 key={plan.id}
-                className="relative shadow-soft hover:shadow-large transition-smooth"
+                className={`relative shadow-soft card-hover-lift rounded-2xl border-border/50 reveal reveal-delay-${Math.min(index + 1, 4)}`}
               >
                 <CardHeader>
-                  <CardTitle className="text-2xl">{plan.name}</CardTitle>
-                  <CardDescription>{plan.description}</CardDescription>
+                  <CardTitle className="text-xl">{plan.name}</CardTitle>
+                  <CardDescription className="text-sm">{plan.description}</CardDescription>
                   <div className="pt-4">
                     <p className="text-4xl font-bold text-primary">{plan.profit_percentage}%</p>
                     <p className="text-sm text-muted-foreground mt-1">{t('investmentPlans.totalROI')}</p>
@@ -64,7 +66,7 @@ export const InvestmentPlans = () => {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <Button asChild className="w-full mt-4">
+                  <Button asChild className="w-full mt-4 rounded-xl">
                     <Link to="/signup">{t('investmentPlans.getStarted')}</Link>
                   </Button>
                 </CardContent>

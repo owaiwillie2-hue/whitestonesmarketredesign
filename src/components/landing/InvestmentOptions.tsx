@@ -1,5 +1,6 @@
 import { Bitcoin, Building2, Droplet, Image, PiggyBank, BadgeDollarSign } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useScrollReveal } from "@/hooks/useScrollReveal";
 
 const investmentOptions = [
   {
@@ -47,10 +48,12 @@ const investmentOptions = [
 ];
 
 export const InvestmentOptions = () => {
+  const sectionRef = useScrollReveal();
+
   return (
-    <section id="investments" className="py-20 bg-muted">
+    <section id="investments" className="py-20 bg-muted" ref={sectionRef as any}>
       <div className="container mx-auto px-4">
-        <div className="max-w-3xl mx-auto text-center mb-16">
+        <div className="max-w-3xl mx-auto text-center mb-16 reveal">
           <h2 className="text-4xl md:text-5xl font-bold mb-6">
             Diversified <span className="text-primary">Investment Options</span>
           </h2>
@@ -60,20 +63,20 @@ export const InvestmentOptions = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {investmentOptions.map((option) => (
-            <Card key={option.id} className="shadow-soft hover:shadow-medium transition-smooth">
+          {investmentOptions.map((option, index) => (
+            <Card key={option.id} className={`shadow-soft card-hover-lift rounded-2xl border-border/50 reveal reveal-delay-${Math.min(index + 1, 6)}`}>
               <CardHeader>
-                <div className="w-16 h-16 bg-primary/10 rounded-lg flex items-center justify-center mb-4 text-primary">
+                <div className="w-14 h-14 bg-gradient-to-br from-primary/10 to-primary/5 rounded-2xl flex items-center justify-center mb-4 text-primary">
                   {option.icon}
                 </div>
-                <CardTitle className="text-2xl">{option.title}</CardTitle>
-                <CardDescription className="text-base">{option.description}</CardDescription>
+                <CardTitle className="text-xl">{option.title}</CardTitle>
+                <CardDescription className="text-sm leading-relaxed">{option.description}</CardDescription>
               </CardHeader>
               <CardContent>
                 <ul className="space-y-2">
-                  {option.features.map((feature, index) => (
-                    <li key={index} className="flex items-center space-x-2 text-sm text-muted-foreground">
-                      <div className="w-1.5 h-1.5 bg-primary rounded-full"></div>
+                  {option.features.map((feature, fIndex) => (
+                    <li key={fIndex} className="flex items-center space-x-2 text-sm text-muted-foreground">
+                      <div className="w-1.5 h-1.5 bg-primary rounded-full shrink-0"></div>
                       <span>{feature}</span>
                     </li>
                   ))}

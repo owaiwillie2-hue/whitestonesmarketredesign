@@ -43,15 +43,15 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const isSpaceXEligible = profile?.date_of_birth ? calculateAge(profile.date_of_birth) >= 40 : true;
 
   const navItems = [
-    { icon: 'dashboard', label: 'Dashboard', path: '/dashboard' },
-    { icon: 'receipt_long', label: 'Activity', path: '/dashboard/transactions' },
-    { icon: 'trending_up', label: 'Investments', path: '/dashboard/investments' },
-    { icon: 'account_balance_wallet', label: 'Plans', path: '/dashboard/plans' },
-    ...(isSpaceXEligible ? [{ icon: 'rocket_launch', label: 'Space X Retirement', path: '/dashboard/spacex' }] : []),
-    { icon: 'verified_user', label: 'KYC', path: '/dashboard/kyc' },
-    { icon: 'group_add', label: 'Refer & Earn', path: '/dashboard/referrals' },
-    { icon: 'account_circle', label: 'Profile', path: '/dashboard/profile' },
-    { icon: 'settings', label: 'Settings', path: '/dashboard/settings' },
+    { icon: 'dashboard', label: 'Dashboard', path: '/dashboard', isNew: false },
+    { icon: 'receipt_long', label: 'Activity', path: '/dashboard/transactions', isNew: false },
+    { icon: 'trending_up', label: 'Investments', path: '/dashboard/investments', isNew: false },
+    { icon: 'account_balance_wallet', label: 'Plans', path: '/dashboard/plans', isNew: false },
+    ...(isSpaceXEligible ? [{ icon: 'rocket_launch', label: 'Space X Retirement', path: '/dashboard/spacex', isNew: true }] : []),
+    { icon: 'verified_user', label: 'KYC', path: '/dashboard/kyc', isNew: false },
+    { icon: 'group_add', label: 'Refer & Earn', path: '/dashboard/referrals', isNew: false },
+    { icon: 'account_circle', label: 'Profile', path: '/dashboard/profile', isNew: false },
+    { icon: 'settings', label: 'Settings', path: '/dashboard/settings', isNew: false },
   ];
 
   const [notifications, setNotifications] = useState<any[]>([]);
@@ -187,18 +187,18 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         fixed inset-y-0 left-0 z-[100] lg:z-40 w-64 bg-surface dark:bg-slate-900 shadow-2xl lg:shadow-none lg:border-r border-outline-variant/30 flex flex-col transition-transform duration-300 lg:translate-x-0 lg:sticky lg:top-0 lg:h-screen
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
-        <div className="p-6 border-b border-outline-variant/30 flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center overflow-hidden border border-slate-100 p-0.5 shrink-0">
+        <div className="p-4 border-b border-outline-variant/30 flex items-center gap-2">
+          <div className="w-7 h-7 rounded-full bg-white flex items-center justify-center overflow-hidden border border-slate-100 p-0.5 shrink-0">
             <img src={logo} alt="WhitestonesMarket" className="w-full h-full object-contain" />
           </div>
-          <span className="text-lg font-bold text-primary font-['Plus_Jakarta_Sans'] tracking-tight">Whitestones</span>
+          <span className="text-sm font-bold text-primary font-['Plus_Jakarta_Sans'] tracking-tight">Whitestones</span>
           {/* Close button on mobile */}
           <button onClick={() => setSidebarOpen(false)} className="lg:hidden ml-auto text-on-surface-variant">
-            <span className="material-symbols-outlined">close</span>
+            <span className="material-symbols-outlined text-[20px]">close</span>
           </button>
         </div>
         
-        <nav className="flex-1 py-4 flex flex-col gap-1 px-3 overflow-y-auto custom-scrollbar">
+        <nav className="flex-1 py-3 flex flex-col gap-0.5 px-2 overflow-y-auto custom-scrollbar">
           {navItems.map((item) => {
             const isActive = location.pathname === item.path || (item.path !== '/dashboard' && location.pathname.startsWith(item.path));
             return (
@@ -206,27 +206,30 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                 key={item.path}
                 to={item.path}
                 onClick={() => setSidebarOpen(false)}
-                className={`flex items-center gap-3 px-4 py-3 rounded-full font-label-md transition-colors ${
+                className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-200 ${
                   isActive 
                     ? 'bg-primary text-white font-bold shadow-md' 
                     : 'text-on-surface-variant hover:bg-surface-variant hover:text-on-surface'
                 }`}
               >
-                <span className="material-symbols-outlined" style={{ fontVariationSettings: isActive ? "'FILL' 1" : "'FILL' 0" }}>
+                <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: isActive ? "'FILL' 1" : "'FILL' 0" }}>
                   {item.icon}
                 </span>
-                <span>{item.label}</span>
+                <span className="flex-1">{item.label}</span>
+                {item.isNew && (
+                  <span className="px-1.5 py-0.5 bg-red-500 text-white text-[9px] font-black uppercase rounded-md tracking-wider animate-pulse shadow-sm shadow-red-500/30">NEW</span>
+                )}
               </Link>
             );
           })}
         </nav>
         
-        <div className="p-4 border-t border-outline-variant/30 shrink-0">
+        <div className="p-3 border-t border-outline-variant/30 shrink-0">
           <button 
             onClick={handleLogout}
-            className="flex items-center gap-3 px-4 py-3 w-full rounded-full font-label-md text-error hover:bg-error/10 transition-colors"
+            className="flex items-center gap-2.5 px-3 py-2.5 w-full rounded-xl text-[13px] font-medium text-error hover:bg-error/10 transition-all duration-200"
           >
-            <span className="material-symbols-outlined">logout</span>
+            <span className="material-symbols-outlined text-[20px]">logout</span>
             <span>Logout</span>
           </button>
         </div>
@@ -243,9 +246,9 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-h-screen overflow-hidden w-full max-w-full">
         {/* Desktop Header */}
-        <header className="hidden lg:flex bg-white/80 dark:bg-slate-950/80 backdrop-blur-md shadow-sm border-b border-slate-200 dark:border-slate-800 sticky top-0 z-30 h-20 items-center justify-between px-8">
+        <header className="hidden lg:flex bg-white/80 dark:bg-slate-950/80 backdrop-blur-md shadow-sm border-b border-slate-200 dark:border-slate-800 sticky top-0 z-30 h-16 items-center justify-between px-6">
           <div>
-            <h2 className="text-lg font-bold text-slate-900 dark:text-white capitalize">
+            <h2 className="text-sm font-bold text-slate-900 dark:text-white capitalize">
               {location.pathname.split('/').pop() || 'Dashboard'}
             </h2>
           </div>
@@ -314,7 +317,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         </header>
 
         {/* Main Content */}
-        <main className="flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-6 lg:p-8 w-full max-w-7xl mx-auto custom-scrollbar">
+        <main className="flex-1 overflow-y-auto overflow-x-hidden p-3 sm:p-4 lg:p-6 w-full max-w-7xl mx-auto custom-scrollbar">
           {children}
         </main>
       </div>

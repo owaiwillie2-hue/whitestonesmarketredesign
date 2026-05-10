@@ -326,68 +326,68 @@ const DashboardOverview = () => {
       </section>
 
       {/* Quick Actions - BELOW THE CARD */}
-      <section className="flex flex-col gap-3">
-        <h3 className="font-headline-md text-primary px-1">Quick Actions</h3>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <section className="flex flex-col gap-2">
+        <h3 className="text-sm font-bold text-primary px-1">Quick Actions</h3>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           <button 
             onClick={() => setShowTransferModal(true)} 
-            className="flex flex-col items-center justify-center gap-2 py-4 bg-white dark:bg-slate-800 border border-outline-variant dark:border-slate-700 rounded-2xl font-bold active:scale-95 transition-all duration-200 shadow-sm"
+            className="flex flex-col items-center justify-center gap-1.5 py-3 bg-white dark:bg-slate-800 border border-outline-variant dark:border-slate-700 rounded-xl font-bold active:scale-95 transition-all duration-200 shadow-sm"
           >
-            <div className="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center">
-              <span className="material-symbols-outlined text-blue-600 dark:text-blue-400">swap_horiz</span>
+            <div className="w-8 h-8 rounded-full bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center">
+              <span className="material-symbols-outlined text-blue-600 dark:text-blue-400 text-[18px]">swap_horiz</span>
             </div>
-            <span className="text-xs text-primary dark:text-white">Transfer</span>
+            <span className="text-[11px] text-primary dark:text-white">Transfer</span>
           </button>
           <button 
             onClick={() => navigate('/dashboard/deposit')} 
-            className="flex flex-col items-center justify-center gap-2 py-4 bg-primary text-white rounded-2xl font-bold active:scale-95 transition-all duration-200 shadow-sm"
+            className="flex flex-col items-center justify-center gap-1.5 py-3 bg-primary text-white rounded-xl font-bold active:scale-95 transition-all duration-200 shadow-sm"
           >
-            <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
-              <span className="material-symbols-outlined text-white">add_circle</span>
+            <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+              <span className="material-symbols-outlined text-white text-[18px]">add_circle</span>
             </div>
-            <span className="text-xs">Deposit</span>
+            <span className="text-[11px]">Deposit</span>
           </button>
           <button 
             onClick={() => navigate('/dashboard/invest')} 
-            className="flex flex-col items-center justify-center gap-2 py-4 bg-primary text-white rounded-2xl font-bold active:scale-95 transition-all duration-200 shadow-sm"
+            className="flex flex-col items-center justify-center gap-1.5 py-3 bg-primary text-white rounded-xl font-bold active:scale-95 transition-all duration-200 shadow-sm"
           >
-            <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
-              <span className="material-symbols-outlined text-white">trending_up</span>
+            <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+              <span className="material-symbols-outlined text-white text-[18px]">trending_up</span>
             </div>
-            <span className="text-xs">Invest</span>
+            <span className="text-[11px]">Invest</span>
           </button>
           <button 
             onClick={() => setShowWithdrawModal(true)} 
-            className="flex flex-col items-center justify-center gap-2 py-4 bg-white dark:bg-slate-800 border border-outline-variant dark:border-slate-700 rounded-2xl font-bold active:scale-95 transition-all duration-200 shadow-sm"
+            className="flex flex-col items-center justify-center gap-1.5 py-3 bg-white dark:bg-slate-800 border border-outline-variant dark:border-slate-700 rounded-xl font-bold active:scale-95 transition-all duration-200 shadow-sm"
           >
-            <div className="w-10 h-10 rounded-full bg-red-50 dark:bg-red-900/30 flex items-center justify-center">
-              <span className="material-symbols-outlined text-red-600 dark:text-red-400">account_balance_wallet</span>
+            <div className="w-8 h-8 rounded-full bg-red-50 dark:bg-red-900/30 flex items-center justify-center">
+              <span className="material-symbols-outlined text-red-600 dark:text-red-400 text-[18px]">account_balance_wallet</span>
             </div>
-            <span className="text-xs text-primary dark:text-white">Withdraw</span>
+            <span className="text-[11px] text-primary dark:text-white">Withdraw</span>
           </button>
         </div>
       </section>
 
       {/* Investment Plan Section */}
-      <section className="flex flex-col gap-4">
+      <section className="flex flex-col gap-3">
         <div className="flex justify-between items-center px-1">
-          <h3 className="font-headline-md text-primary">Active Plan</h3>
-          <button onClick={() => window.location.href = '/dashboard/plans'} className="text-secondary font-bold text-sm">View All Plans</button>
+          <h3 className="text-sm font-bold text-primary">Active Plan</h3>
+          <button onClick={() => window.location.href = '/dashboard/plans'} className="text-secondary font-bold text-[11px]">View All Plans</button>
         </div>
         
         {currentPlan ? (
-          <div className="bg-primary-container text-on-primary-fixed-variant rounded-2xl p-5 shadow-lg relative overflow-hidden flex flex-col gap-4">
-            <div className="absolute top-0 right-0 p-4 opacity-10">
-              <span className="material-symbols-outlined text-6xl">military_tech</span>
+          <div className="bg-primary-container text-on-primary-fixed-variant rounded-xl p-4 shadow-lg relative overflow-hidden flex flex-col gap-3">
+            <div className="absolute top-0 right-0 p-3 opacity-10">
+              <span className="material-symbols-outlined text-5xl">military_tech</span>
             </div>
             
             <div className="flex justify-between items-start z-10">
               <div>
-                <span className="bg-secondary-container/20 text-on-secondary-container px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border border-secondary-container/30">Current Tier</span>
-                <h4 className="text-white text-2xl font-bold mt-2 font-display-lg">{currentPlan}</h4>
+                <span className="bg-secondary-container/20 text-on-secondary-container px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-widest border border-secondary-container/30">Current Tier</span>
+                <h4 className="text-white text-lg font-bold mt-1.5">{currentPlan}</h4>
               </div>
-              <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center backdrop-blur-sm border border-white/10">
-                <span className="material-symbols-outlined text-white text-3xl">rocket_launch</span>
+              <div className="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center backdrop-blur-sm border border-white/10">
+                <span className="material-symbols-outlined text-white text-2xl">rocket_launch</span>
               </div>
             </div>
 
@@ -416,7 +416,7 @@ const DashboardOverview = () => {
               </div>
             </div>
 
-            <button onClick={() => window.location.href = '/dashboard/plans?upgrade=true'} className="w-full bg-white text-primary py-3 rounded-full font-bold text-sm active:scale-95 transition-all mt-2 z-10 hover:bg-slate-50">
+            <button onClick={() => window.location.href = '/dashboard/plans?upgrade=true'} className="w-full bg-white text-primary py-2.5 rounded-full font-bold text-xs active:scale-95 transition-all mt-1 z-10 hover:bg-slate-50">
               Upgrade Plan
             </button>
           </div>
@@ -431,37 +431,37 @@ const DashboardOverview = () => {
       </section>
 
       {/* Stats Bento Grid */}
-      <section className="grid grid-cols-2 gap-4">
-        <div className="glass-card p-4 rounded-2xl">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="material-symbols-outlined text-secondary text-lg">south_west</span>
-            <span className="text-[10px] uppercase tracking-wider font-bold text-on-surface-variant">Deposits</span>
+      <section className="grid grid-cols-2 gap-3">
+        <div className="glass-card p-3 rounded-xl">
+          <div className="flex items-center gap-1.5 mb-1.5">
+            <span className="material-symbols-outlined text-secondary text-base">south_west</span>
+            <span className="text-[9px] uppercase tracking-wider font-bold text-on-surface-variant">Deposits</span>
           </div>
-          <p className="text-xl font-bold text-primary">${stats.totalDeposited.toFixed(2)}</p>
+          <p className="text-base font-bold text-primary">${stats.totalDeposited.toFixed(2)}</p>
         </div>
         
-        <div className="glass-card p-4 rounded-2xl">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="material-symbols-outlined text-error text-lg">north_east</span>
-            <span className="text-[10px] uppercase tracking-wider font-bold text-on-surface-variant">Withdrawals</span>
+        <div className="glass-card p-3 rounded-xl">
+          <div className="flex items-center gap-1.5 mb-1.5">
+            <span className="material-symbols-outlined text-error text-base">north_east</span>
+            <span className="text-[9px] uppercase tracking-wider font-bold text-on-surface-variant">Withdrawals</span>
           </div>
-          <p className="text-xl font-bold text-primary">${stats.totalWithdrawn.toFixed(2)}</p>
+          <p className="text-base font-bold text-primary">${stats.totalWithdrawn.toFixed(2)}</p>
         </div>
         
-        <div className="glass-card p-4 rounded-2xl">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="material-symbols-outlined text-secondary text-lg">trending_up</span>
-            <span className="text-[10px] uppercase tracking-wider font-bold text-on-surface-variant">Invested</span>
+        <div className="glass-card p-3 rounded-xl">
+          <div className="flex items-center gap-1.5 mb-1.5">
+            <span className="material-symbols-outlined text-secondary text-base">trending_up</span>
+            <span className="text-[9px] uppercase tracking-wider font-bold text-on-surface-variant">Invested</span>
           </div>
-          <p className="text-xl font-bold text-primary">${stats.totalInvested.toFixed(2)}</p>
+          <p className="text-base font-bold text-primary">${stats.totalInvested.toFixed(2)}</p>
         </div>
         
-        <div className="glass-card p-4 rounded-2xl bg-tertiary-fixed/10 border-tertiary-fixed/30">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="material-symbols-outlined text-on-tertiary-container text-lg">monitoring</span>
-            <span className="text-[10px] uppercase tracking-wider font-bold text-on-surface-variant">Total Profit</span>
+        <div className="glass-card p-3 rounded-xl bg-tertiary-fixed/10 border-tertiary-fixed/30">
+          <div className="flex items-center gap-1.5 mb-1.5">
+            <span className="material-symbols-outlined text-on-tertiary-container text-base">monitoring</span>
+            <span className="text-[9px] uppercase tracking-wider font-bold text-on-surface-variant">Total Profit</span>
           </div>
-          <p className="text-xl font-bold text-on-tertiary-container">+${stats.totalProfit.toFixed(2)}</p>
+          <p className="text-base font-bold text-on-tertiary-container">+${stats.totalProfit.toFixed(2)}</p>
         </div>
       </section>
 
