@@ -6,13 +6,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/lib/toast';
-import { Plus, Edit, Trash2 } from 'lucide-react';
 
 interface InvestmentPlan {
   id: string;
@@ -64,7 +61,6 @@ export const AdminInvestmentPlans = () => {
   const handleOpenDialog = (plan?: InvestmentPlan) => {
     if (plan) {
       setEditingPlan(plan);
-      // Detect if duration is in hours or days
       const isHours = plan.duration_days < 1;
       setFormData({
         name: plan.name,
@@ -96,7 +92,6 @@ export const AdminInvestmentPlans = () => {
     e.preventDefault();
 
     try {
-      // Convert duration to days based on unit
       const durationValue = parseFloat(formData.duration_value);
       const duration_days = formData.duration_unit === 'hours' 
         ? durationValue / 24 
@@ -171,122 +166,136 @@ export const AdminInvestmentPlans = () => {
     }
   };
 
-
-
   return (
-    <div className="space-y-6 max-w-full overflow-x-hidden">
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Investment Plans Management</h1>
-          <p className="text-muted-foreground mt-2">Create and manage investment plans</p>
+          <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white font-['Plus_Jakarta_Sans']">Investment Plans</h1>
+          <p className="text-xs text-slate-500 mt-1">Configure and manage investment tiers, interest terms, and limits</p>
         </div>
-        <Button onClick={() => handleOpenDialog()}>
-          <Plus className="w-4 h-4 mr-2" />
+        <Button onClick={() => handleOpenDialog()} className="rounded-xl h-10 text-xs font-bold bg-primary text-white">
+          <span className="material-symbols-outlined text-[16px] mr-1.5">add</span>
           Add New Plan
         </Button>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>All Investment Plans ({plans.length})</CardTitle>
+      <Card className="border border-slate-200 dark:border-slate-800 shadow-soft bg-white dark:bg-slate-900 rounded-2xl overflow-hidden">
+        <CardHeader className="pb-4 border-b border-slate-100 dark:border-slate-800">
+          <CardTitle className="text-sm font-bold text-slate-900 dark:text-white">All Active Tiers ({plans.length})</CardTitle>
         </CardHeader>
-        <CardContent className="overflow-x-auto">
-          {plans.length === 0 ? (
+        <CardContent className="p-0">
+          {loading ? (
+            <div className="flex justify-center items-center py-12">
+              <span className="material-symbols-outlined animate-spin text-[24px] text-primary">progress_activity</span>
+            </div>
+          ) : plans.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-muted-foreground">No investment plans found</p>
-              <Button onClick={() => handleOpenDialog()} className="mt-4">
+              <p className="text-slate-500 text-xs font-medium mb-3">No investment plans found</p>
+              <Button onClick={() => handleOpenDialog()} className="h-9 text-xs rounded-xl bg-primary text-white">
                 Create Your First Plan
               </Button>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Min Amount</TableHead>
-                  <TableHead>Max Amount</TableHead>
-                  <TableHead>ROI %</TableHead>
-                  <TableHead>Duration</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {plans.map((plan) => (
-                  <TableRow key={plan.id}>
-                    <TableCell>
-                      <div>
-                        <p className="font-medium">{plan.name}</p>
-                        <p className="text-xs text-muted-foreground">{plan.description}</p>
-                      </div>
-                    </TableCell>
-                    <TableCell>${plan.min_amount.toLocaleString()}</TableCell>
-                    <TableCell>
-                      {plan.max_amount ? `$${plan.max_amount.toLocaleString()}` : 'Unlimited'}
-                    </TableCell>
-                    <TableCell>{plan.profit_percentage}%</TableCell>
-                    <TableCell>
-                      {plan.duration_days < 1 
-                        ? `${plan.duration_days * 24} hours` 
-                        : `${plan.duration_days} days`}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Switch
-                          checked={plan.is_active}
-                          onCheckedChange={() => toggleActive(plan.id, plan.is_active)}
-                        />
-                        <Badge variant={plan.is_active ? 'default' : 'secondary'}>
-                          {plan.is_active ? 'Active' : 'Inactive'}
-                        </Badge>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleOpenDialog(plan)}
-                        >
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => handleDelete(plan.id)}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader className="bg-slate-50 dark:bg-slate-800/50">
+                  <TableRow className="hover:bg-transparent border-b border-slate-100 dark:border-slate-800">
+                    <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 h-10 px-6">Name</TableHead>
+                    <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 h-10 px-6">Min Amount</TableHead>
+                    <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 h-10 px-6">Max Amount</TableHead>
+                    <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 h-10 px-6">ROI %</TableHead>
+                    <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 h-10 px-6">Duration</TableHead>
+                    <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 h-10 px-6">Status</TableHead>
+                    <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 h-10 px-6">Actions</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {plans.map((plan) => (
+                    <TableRow key={plan.id} className="border-b border-slate-100 dark:border-slate-800">
+                      <TableCell className="px-6 py-4">
+                        <div>
+                          <div className="font-bold text-xs text-slate-900 dark:text-white">{plan.name}</div>
+                          <div className="text-[11px] text-slate-500 mt-0.5">{plan.description}</div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-xs font-bold text-slate-900 dark:text-white px-6 py-4">${parseFloat(plan.min_amount.toString()).toLocaleString()}</TableCell>
+                      <TableCell className="text-xs text-slate-600 dark:text-slate-400 px-6 py-4">
+                        {plan.max_amount ? `$${parseFloat(plan.max_amount.toString()).toLocaleString()}` : 'Unlimited'}
+                      </TableCell>
+                      <TableCell className="text-xs font-bold text-slate-900 dark:text-white px-6 py-4">{plan.profit_percentage}%</TableCell>
+                      <TableCell className="text-xs text-slate-600 dark:text-slate-400 px-6 py-4">
+                        {plan.duration_days < 1 
+                          ? `${plan.duration_days * 24} hours` 
+                          : `${plan.duration_days} days`}
+                      </TableCell>
+                      <TableCell className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          <Switch
+                            checked={plan.is_active || false}
+                            onCheckedChange={() => toggleActive(plan.id, plan.is_active || false)}
+                          />
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-black uppercase ${
+                            plan.is_active 
+                              ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' 
+                              : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
+                          }`}>
+                            {plan.is_active ? 'Active' : 'Inactive'}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="px-6 py-4">
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 w-8 rounded-lg border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 p-0"
+                            onClick={() => handleOpenDialog(plan)}
+                          >
+                            <span className="material-symbols-outlined text-[16px]">edit</span>
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            className="h-8 w-8 rounded-lg bg-red-600 hover:bg-red-700 text-white p-0"
+                            onClick={() => handleDelete(plan.id)}
+                          >
+                            <span className="material-symbols-outlined text-[16px]">delete</span>
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{editingPlan ? 'Edit Investment Plan' : 'Create New Investment Plan'}</DialogTitle>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xl p-6 gap-0">
+          <DialogHeader className="pb-4 border-b border-slate-100 dark:border-slate-800">
+            <DialogTitle className="text-sm font-bold text-slate-900 dark:text-white">
+              {editingPlan ? 'Edit Investment Plan' : 'Create New Investment Plan'}
+            </DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          
+          <form onSubmit={handleSubmit} className="space-y-4 pt-4">
             <div className="grid md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Plan Name *</Label>
+                <Label htmlFor="name" className="text-xs font-bold">Plan Name *</Label>
                 <Input
                   id="name"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   required
                   placeholder="e.g., STARTER PLAN"
+                  className="rounded-xl border-slate-200 dark:border-slate-800 text-xs bg-slate-50 dark:bg-slate-850 h-10"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="profit_percentage">Total ROI (%) *</Label>
+                <Label htmlFor="profit_percentage" className="text-xs font-bold">Total ROI (%) *</Label>
                 <Input
                   id="profit_percentage"
                   type="number"
@@ -296,11 +305,12 @@ export const AdminInvestmentPlans = () => {
                   onChange={(e) => setFormData({ ...formData, profit_percentage: e.target.value })}
                   required
                   placeholder="e.g., 12"
+                  className="rounded-xl border-slate-200 dark:border-slate-800 text-xs bg-slate-50 dark:bg-slate-850 h-10"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="min_amount">Minimum Amount ($) *</Label>
+                <Label htmlFor="min_amount" className="text-xs font-bold">Minimum Amount ($) *</Label>
                 <Input
                   id="min_amount"
                   type="number"
@@ -309,12 +319,13 @@ export const AdminInvestmentPlans = () => {
                   value={formData.min_amount}
                   onChange={(e) => setFormData({ ...formData, min_amount: e.target.value })}
                   required
-                  placeholder="e.g., 200"
+                  placeholder="e.g., 100.00"
+                  className="rounded-xl border-slate-200 dark:border-slate-800 text-xs bg-slate-50 dark:bg-slate-850 h-10"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="max_amount">Maximum Amount ($)</Label>
+                <Label htmlFor="max_amount" className="text-xs font-bold">Maximum Amount ($)</Label>
                 <Input
                   id="max_amount"
                   type="number"
@@ -323,11 +334,12 @@ export const AdminInvestmentPlans = () => {
                   value={formData.max_amount}
                   onChange={(e) => setFormData({ ...formData, max_amount: e.target.value })}
                   placeholder="Leave empty for unlimited"
+                  className="rounded-xl border-slate-200 dark:border-slate-800 text-xs bg-slate-50 dark:bg-slate-850 h-10"
                 />
               </div>
 
               <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="duration_value">Duration *</Label>
+                <Label htmlFor="duration_value" className="text-xs font-bold">Duration *</Label>
                 <div className="flex gap-2">
                   <Input
                     id="duration_value"
@@ -338,43 +350,43 @@ export const AdminInvestmentPlans = () => {
                     onChange={(e) => setFormData({ ...formData, duration_value: e.target.value })}
                     required
                     placeholder="e.g., 12 or 7"
-                    className="flex-1"
+                    className="flex-1 rounded-xl border-slate-200 dark:border-slate-800 text-xs bg-slate-50 dark:bg-slate-850 h-10"
                   />
                   <Select
                     value={formData.duration_unit}
                     onValueChange={(value) => setFormData({ ...formData, duration_unit: value })}
                   >
-                    <SelectTrigger className="w-[120px]">
+                    <SelectTrigger className="w-[120px] rounded-xl border-slate-200 dark:border-slate-800 text-xs bg-slate-50 dark:bg-slate-850 h-10">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="rounded-xl border-slate-200 dark:border-slate-800">
                       <SelectItem value="hours">Hours</SelectItem>
                       <SelectItem value="days">Days</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  Select the duration and unit (e.g., 12 hours or 7 days)
+                <p className="text-[10px] text-slate-400">
+                  Select the duration magnitude and unit (e.g. 12 hours, or 7 days)
                 </p>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="is_active" className="flex items-center gap-2">
+              <div className="space-y-2 md:col-span-2">
+                <div className="flex items-center gap-2.5 p-3 rounded-xl border border-slate-150 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-850/20">
                   <Switch
                     id="is_active"
                     checked={formData.is_active}
                     onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
                   />
-                  Active Status
-                </Label>
-                <p className="text-xs text-muted-foreground">
-                  Only active plans are visible to users
-                </p>
+                  <Label htmlFor="is_active" className="cursor-pointer space-y-0.5 flex-1">
+                    <span className="font-bold text-xs text-slate-900 dark:text-white">Active Status</span>
+                    <p className="text-[10px] text-slate-400 font-medium">Only active plans are visible to users on the platform</p>
+                  </Label>
+                </div>
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="description">Description *</Label>
+            <div className="space-y-2.5">
+              <Label htmlFor="description" className="text-xs font-bold">Description *</Label>
               <Textarea
                 id="description"
                 value={formData.description}
@@ -382,14 +394,15 @@ export const AdminInvestmentPlans = () => {
                 required
                 placeholder="e.g., 1.00% Hourly Interest - 12 Term Hours"
                 rows={3}
+                className="rounded-xl border-slate-200 dark:border-slate-800 text-xs bg-slate-50 dark:bg-slate-850"
               />
             </div>
 
-            <div className="flex gap-2 justify-end">
-              <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
+            <div className="flex gap-3 pt-3 border-t border-slate-100 dark:border-slate-800 justify-end">
+              <Button type="button" variant="outline" onClick={() => setDialogOpen(false)} className="rounded-xl h-10 text-xs border-slate-200 dark:border-slate-850">
                 Cancel
               </Button>
-              <Button type="submit">
+              <Button type="submit" className="rounded-xl h-10 text-xs font-bold bg-primary text-white">
                 {editingPlan ? 'Update Plan' : 'Create Plan'}
               </Button>
             </div>

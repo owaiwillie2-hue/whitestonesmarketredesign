@@ -6,8 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/lib/toast';
-import { Search, Gift, User } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 interface UserProfile {
@@ -131,143 +129,147 @@ const Bonus = () => {
     }
   };
 
-
-
   return (
-    <div className="space-y-6 max-w-full overflow-x-hidden">
+    <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Bonus Management</h1>
-        <p className="text-muted-foreground">Send bonuses to user accounts</p>
+        <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white font-['Plus_Jakarta_Sans']">Bonus Management</h1>
+        <p className="text-xs text-slate-500 mt-1">Distribute direct wallet bonuses or create redeemable bonuses for users</p>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
         {/* User Selection */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Search className="h-5 w-5" />
-              Select User
-            </CardTitle>
+        <Card className="border border-slate-200 dark:border-slate-800 shadow-soft bg-white dark:bg-slate-900 rounded-2xl overflow-hidden">
+          <CardHeader className="pb-4 border-b border-slate-100 dark:border-slate-800">
+            <div className="flex flex-col gap-3">
+              <CardTitle className="text-sm font-bold text-slate-900 dark:text-white">1. Select Target User</CardTitle>
+              <div className="relative">
+                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">search</span>
+                <Input
+                  placeholder="Search by name, email..."
+                  value={searchQuery}
+                  onChange={(e) => handleSearch(e.target.value)}
+                  className="pl-9 h-10 text-xs bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-xl focus-visible:ring-primary focus-visible:ring-1"
+                />
+              </div>
+            </div>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search by name, email, or ID..."
-                value={searchQuery}
-                onChange={(e) => handleSearch(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-
-            <div className="space-y-2 max-h-96 overflow-y-auto">
-              {filteredUsers.map((user) => (
-                <div
-                  key={user.user_id}
-                  onClick={() => setSelectedUser(user)}
-                  className={`p-4 rounded-lg border cursor-pointer transition-all ${
-                    selectedUser?.user_id === user.user_id
-                      ? 'border-primary bg-primary/10'
-                      : 'border-border hover:border-primary/50 hover:bg-accent'
-                  }`}
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="space-y-1">
-                      <p className="font-medium">{user.full_name || 'No name'}</p>
-                      <p className="text-sm text-muted-foreground">{user.email}</p>
-                      <p className="text-xs text-muted-foreground">{user.country || 'N/A'}</p>
+          <CardContent className="p-4">
+            {loading ? (
+              <div className="flex justify-center items-center py-12">
+                <span className="material-symbols-outlined animate-spin text-[24px] text-primary">progress_activity</span>
+              </div>
+            ) : (
+              <div className="space-y-2 max-h-96 overflow-y-auto pr-1 custom-scrollbar">
+                {filteredUsers.map((user) => (
+                  <div
+                    key={user.user_id}
+                    onClick={() => setSelectedUser(user)}
+                    className={`p-3.5 rounded-xl border cursor-pointer transition-all ${
+                      selectedUser?.user_id === user.user_id
+                        ? 'border-primary bg-primary/5 dark:bg-primary/10'
+                        : 'border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-850/50'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="space-y-1">
+                        <p className="font-bold text-xs text-slate-900 dark:text-white">{user.full_name || 'Unnamed'}</p>
+                        <p className="text-[11px] text-slate-500">{user.email}</p>
+                        <p className="text-[10px] text-slate-400 font-semibold uppercase">{user.country || 'N/A'}</p>
+                      </div>
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-350">
+                        ${parseFloat(user.main_balance.toString()).toFixed(2)}
+                      </span>
                     </div>
-                    <Badge variant="secondary">
-                      ${user.main_balance.toFixed(2)}
-                    </Badge>
                   </div>
-                </div>
-              ))}
+                ))}
 
-              {filteredUsers.length === 0 && (
-                <p className="text-center text-muted-foreground py-8">No users found</p>
-              )}
-            </div>
+                {filteredUsers.length === 0 && (
+                  <p className="text-center text-slate-500 py-8 text-xs font-semibold">No users found matching query</p>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
 
         {/* Bonus Form */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Gift className="h-5 w-5" />
-              Send Bonus
-            </CardTitle>
+        <Card className="border border-slate-200 dark:border-slate-800 shadow-soft bg-white dark:bg-slate-900 rounded-2xl overflow-hidden">
+          <CardHeader className="pb-4 border-b border-slate-100 dark:border-slate-800">
+            <CardTitle className="text-sm font-bold text-slate-900 dark:text-white">2. Configure Bonus</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="p-5">
             {selectedUser ? (
-              <>
-                <div className="p-4 rounded-lg bg-accent border border-border">
+              <div className="space-y-5">
+                <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-850/50 border border-slate-100 dark:border-slate-800">
                   <div className="flex items-center gap-3">
-                    <div className="h-12 w-12 rounded-full bg-primary/20 flex items-center justify-center">
-                      <User className="h-6 w-6 text-primary" />
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
+                      <span className="material-symbols-outlined text-[20px]">person</span>
                     </div>
                     <div>
-                      <p className="font-medium">{selectedUser.full_name}</p>
-                      <p className="text-sm text-muted-foreground">{selectedUser.email}</p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Current Balance: ${selectedUser.main_balance.toFixed(2)}
+                      <p className="font-bold text-xs text-slate-900 dark:text-white">{selectedUser.full_name}</p>
+                      <p className="text-[11px] text-slate-500">{selectedUser.email}</p>
+                      <p className="text-[10px] text-slate-400 font-semibold mt-0.5">
+                        Current Bal: ${parseFloat(selectedUser.main_balance.toString()).toFixed(2)}
                       </p>
                     </div>
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label>Bonus Type</Label>
-                  <RadioGroup value={bonusType} onValueChange={(value: 'direct' | 'redeemable') => setBonusType(value)}>
-                    <div className="flex items-center space-x-2 p-3 rounded-lg border border-border hover:border-primary/50 transition-all">
+                <div className="space-y-2.5">
+                  <Label className="text-xs font-bold text-slate-900 dark:text-white">Bonus Type</Label>
+                  <RadioGroup value={bonusType} onValueChange={(value: 'direct' | 'redeemable') => setBonusType(value)} className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="flex items-center space-x-2.5 p-3 rounded-xl border border-slate-150 dark:border-slate-800 hover:border-slate-250 dark:hover:border-slate-700 transition-all cursor-pointer bg-slate-50/50 dark:bg-slate-850/20">
                       <RadioGroupItem value="direct" id="direct" />
-                      <Label htmlFor="direct" className="flex-1 cursor-pointer">
-                        <span className="font-medium">Direct Bonus</span>
-                        <p className="text-xs text-muted-foreground">Added immediately to user balance</p>
+                      <Label htmlFor="direct" className="flex-1 cursor-pointer space-y-0.5">
+                        <span className="font-bold text-xs text-slate-900 dark:text-white">Direct Bonus</span>
+                        <p className="text-[10px] text-slate-400 font-medium">Credited to wallet balance immediately</p>
                       </Label>
                     </div>
-                    <div className="flex items-center space-x-2 p-3 rounded-lg border border-border hover:border-primary/50 transition-all">
+                    <div className="flex items-center space-x-2.5 p-3 rounded-xl border border-slate-150 dark:border-slate-800 hover:border-slate-250 dark:hover:border-slate-700 transition-all cursor-pointer bg-slate-50/50 dark:bg-slate-850/20">
                       <RadioGroupItem value="redeemable" id="redeemable" />
-                      <Label htmlFor="redeemable" className="flex-1 cursor-pointer">
-                        <span className="font-medium">Redeemable Bonus</span>
-                        <p className="text-xs text-muted-foreground">User must claim it from their dashboard</p>
+                      <Label htmlFor="redeemable" className="flex-1 cursor-pointer space-y-0.5">
+                        <span className="font-bold text-xs text-slate-900 dark:text-white">Redeemable Bonus</span>
+                        <p className="text-[10px] text-slate-400 font-medium">User manually redeems from dashboard</p>
                       </Label>
                     </div>
                   </RadioGroup>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="amount">Bonus Amount ($)</Label>
-                  <Input
-                    id="amount"
-                    type="number"
-                    placeholder="Enter amount"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    min="0"
-                    step="0.01"
-                  />
+                <div className="space-y-2.5">
+                  <Label htmlFor="amount" className="text-xs font-bold text-slate-900 dark:text-white">Bonus Amount ($)</Label>
+                  <div className="relative">
+                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">$</span>
+                    <Input
+                      id="amount"
+                      type="number"
+                      placeholder="0.00"
+                      value={amount}
+                      onChange={(e) => setAmount(e.target.value)}
+                      min="0"
+                      step="0.01"
+                      className="rounded-xl border-slate-200 dark:border-slate-800 pl-7 text-xs bg-slate-50 dark:bg-slate-850 h-10"
+                    />
+                  </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="message">
-                    {bonusType === 'direct' ? 'Notification Message' : 'Bonus Message'}
+                <div className="space-y-2.5">
+                  <Label htmlFor="message" className="text-xs font-bold text-slate-900 dark:text-white">
+                    {bonusType === 'direct' ? 'Notification Message' : 'Redemption Message'}
                   </Label>
                   <Textarea
                     id="message"
                     placeholder={bonusType === 'direct' 
-                      ? "Enter the notification message..."
-                      : "Enter the bonus message (user will see this when redeeming)..."
+                      ? "Enter the notification message explaining the credit..."
+                      : "Enter the bonus description the user will see when claiming..."
                     }
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
-                    rows={5}
+                    rows={4}
+                    className="rounded-xl border-slate-200 dark:border-slate-800 text-xs bg-slate-50 dark:bg-slate-850"
                   />
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-[10px] text-slate-400 leading-normal">
                     {bonusType === 'direct' 
-                      ? 'This message will appear in the user\'s notification center'
-                      : 'This message will be shown when the user redeems the bonus'
+                      ? 'This message will appear in the user\'s notifications list.'
+                      : 'This description will show on the user\'s "claim bonus" container.'
                     }
                   </p>
                 </div>
@@ -275,16 +277,22 @@ const Bonus = () => {
                 <Button
                   onClick={handleSendBonus}
                   disabled={sending}
-                  className="w-full"
+                  className="w-full rounded-xl text-xs font-bold h-11 bg-primary text-white"
                 >
-                  <Gift className="mr-2 h-4 w-4" />
-                  {sending ? 'Sending...' : bonusType === 'direct' ? 'Send Direct Bonus' : 'Create Redeemable Bonus'}
+                  {sending ? (
+                    <span className="material-symbols-outlined animate-spin text-[20px]">progress_activity</span>
+                  ) : (
+                    <>
+                      <span className="material-symbols-outlined text-[18px] mr-1.5">redeem</span>
+                      {bonusType === 'direct' ? 'Send Direct Bonus' : 'Create Redeemable Bonus'}
+                    </>
+                  )}
                 </Button>
-              </>
+              </div>
             ) : (
-              <div className="text-center py-12 text-muted-foreground">
-                <User className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>Select a user to send a bonus</p>
+              <div className="text-center py-16 text-slate-400 flex flex-col items-center gap-3">
+                <span className="material-symbols-outlined text-[48px] opacity-40">redeem</span>
+                <p className="text-xs font-bold">Select a user to send a bonus</p>
               </div>
             )}
           </CardContent>

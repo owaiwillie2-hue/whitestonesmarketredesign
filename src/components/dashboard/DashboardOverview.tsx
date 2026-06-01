@@ -44,7 +44,7 @@ const DashboardOverview = () => {
         // Fetch user profile
         const { data: profileData } = await supabase
           .from('profiles')
-          .select('full_name')
+          .select('full_name, current_plan_override_id')
           .eq('user_id', user.id)
           .single();
 
@@ -98,18 +98,32 @@ const DashboardOverview = () => {
           .select('*, investment_plans(name, min_amount)')
           .eq('user_id', user.id);
 
+        // Resolve current plan (override takes precedence)
+        let resolvedPlanName = null;
+        if (profileData?.current_plan_override_id) {
+          const { data: overridePlan } = await supabase
+            .from('investment_plans')
+            .select('name')
+            .eq('id', profileData.current_plan_override_id)
+            .maybeSingle();
+          if (overridePlan) {
+            resolvedPlanName = overridePlan.name;
+          }
+        }
+
+        if (!resolvedPlanName && investments && investments.length > 0) {
+          const highestTierInvestment = [...investments].sort((a, b) => {
+            const planA = (a as any).investment_plans;
+            const planB = (b as any).investment_plans;
+            return (planB?.min_amount || 0) - (planA?.min_amount || 0);
+          })[0];
+          resolvedPlanName = (highestTierInvestment as any).investment_plans?.name || null;
+        }
+
+        setCurrentPlan(resolvedPlanName);
+
         if (investments) {
           const activeInvs = investments.filter(i => i.status === 'active');
-          
-          // Get the highest tier investment plan from ALL investments
-          if (investments.length > 0) {
-            const highestTierInvestment = [...investments].sort((a, b) => {
-              const planA = (a as any).investment_plans;
-              const planB = (b as any).investment_plans;
-              return (planB?.min_amount || 0) - (planA?.min_amount || 0);
-            })[0];
-            setCurrentPlan((highestTierInvestment as any).investment_plans?.name || null);
-          }
           
           const totalInvested = investments.reduce((sum, i) => sum + Number(i.amount), 0);
           const totalProfit = investments.reduce((sum, i) => {

@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 
-export const useScrollReveal = () => {
+export const useScrollReveal = (deps: any[] = []) => {
   const ref = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -26,7 +26,7 @@ export const useScrollReveal = () => {
     return () => {
       reveals.forEach((reveal) => observer.unobserve(reveal));
     };
-  }, []);
+  }, deps);
 
   return ref;
 };

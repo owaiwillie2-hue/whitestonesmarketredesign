@@ -15,11 +15,13 @@ const Plans = () => {
   const [plans, setPlans] = useState<any[]>([]);
   const [investmentBalance, setInvestmentBalance] = useState<number>(0);
   const [currentActivePlan, setCurrentActivePlan] = useState<any>(null);
+  const [totalDeposited, setTotalDeposited] = useState<number>(0);
   const { isApproved: kycApproved, isPending: kycPending, initialLoading: kycLoading } = useKYCStatus();
 
   useEffect(() => {
     fetchPlans();
     fetchBalance();
+    fetchTotalDeposited();
     if (upgradeMode) {
       fetchCurrentActivePlan();
     }
@@ -54,6 +56,24 @@ const Plans = () => {
     }
   };
 
+  const fetchTotalDeposited = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: deposits } = await supabase
+        .from('deposits')
+        .select('amount')
+        .eq('user_id', user.id)
+        .eq('status', 'completed');
+
+      const total = deposits?.reduce((sum, d) => sum + Number(d.amount), 0) || 0;
+      setTotalDeposited(total);
+    } catch (error) {
+      console.error('Error fetching total deposits:', error);
+    }
+  };
+
   const fetchCurrentActivePlan = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -81,6 +101,9 @@ const Plans = () => {
   };
 
   const isPlanDisabled = (plan: any) => {
+    if (totalDeposited < plan.min_amount) {
+      return true;
+    }
     if (upgradeMode && currentActivePlan) {
       return plan.min_amount < currentActivePlan.investment_plans.min_amount;
     }
@@ -127,16 +150,9 @@ const Plans = () => {
   };
 
   const getEligibilityMessage = () => {
-    if (!currentActivePlan) {
-      return {
-        title: "Current Eligibility: Starter",
-        desc: "You are eligible for the Starter plan. Make an investment to unlock higher tiers."
-      };
-    }
-    const planName = currentActivePlan.investment_plans.name;
     return {
-      title: `Current Eligibility: ${planName}`,
-      desc: `Based on your investment history, you are eligible for the ${planName} tier.`
+      title: `Cumulative Deposits: $${totalDeposited.toFixed(2)}`,
+      desc: "Your eligibility to invest in each plan is based on your total deposited amount. Make a deposit matching the plan's minimum to unlock it."
     };
   };
 

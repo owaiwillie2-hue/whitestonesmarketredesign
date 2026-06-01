@@ -2,12 +2,10 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/lib/toast';
-import { Check, X, Eye, FileText } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 interface KYCSubmission {
@@ -197,153 +195,166 @@ export const AdminKYC = () => {
     }
   };
 
-
-
   return (
-    <div className="space-y-6 max-w-full overflow-x-hidden">
+    <div className="space-y-6 max-w-full overflow-x-hidden font-['Plus_Jakarta_Sans']">
       <div>
-        <h1 className="text-3xl font-bold">KYC Verification</h1>
-        <p className="text-muted-foreground mt-2">Review and verify user identity documents</p>
+        <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">KYC Verification</h1>
+        <p className="text-xs text-slate-500 mt-1">Review and verify user identity documents</p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>KYC Submissions ({kycSubmissions.length})</CardTitle>
+      <Card className="border border-slate-200 dark:border-slate-800 shadow-soft bg-white dark:bg-slate-900 rounded-2xl overflow-hidden">
+        <CardHeader className="pb-4 border-b border-slate-100 dark:border-slate-800">
+          <CardTitle className="text-sm font-bold text-slate-900 dark:text-white">KYC Submissions ({kycSubmissions.length})</CardTitle>
         </CardHeader>
-        <CardContent className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>User</TableHead>
-                <TableHead>Documents</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Submitted</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {kycSubmissions.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
-                    No KYC submissions yet
-                  </TableCell>
-                </TableRow>
-              ) : (
-                kycSubmissions.map((submission) => (
-                  <TableRow key={submission.user_id}>
-                    <TableCell>
-                      <div>
-                        <div className="font-medium">{submission.user_name}</div>
-                        <div className="text-sm text-muted-foreground">{submission.user_email}</div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1 text-sm">
-                        <FileText className="h-4 w-4" />
-                        {submission.documents.length} document{submission.documents.length !== 1 ? 's' : ''}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={
-                        submission.status === 'approved' ? 'default' :
-                        submission.status === 'pending' ? 'secondary' :
-                        'destructive'
-                      }>
-                        {submission.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {formatDistanceToNow(new Date(submission.submitted_at), { addSuffix: true })}
-                    </TableCell>
-                    <TableCell>
-                      <Button size="sm" variant="outline" onClick={() => handleView(submission)}>
-                        <Eye className="h-4 w-4 mr-1" />
-                        Review
-                      </Button>
-                    </TableCell>
+        <CardContent className="p-0">
+          {loading ? (
+            <div className="p-6 space-y-4">
+              <Skeleton className="h-8 w-full rounded-lg" />
+              <Skeleton className="h-8 w-full rounded-lg" />
+              <Skeleton className="h-8 w-full rounded-lg" />
+            </div>
+          ) : kycSubmissions.length === 0 ? (
+            <div className="text-center py-12 text-slate-500 text-xs font-medium">
+              No KYC submissions found.
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader className="bg-slate-50 dark:bg-slate-800/50">
+                  <TableRow className="hover:bg-transparent border-b border-slate-100 dark:border-slate-800">
+                    <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 h-10 px-6">User</TableHead>
+                    <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 h-10 px-6">Documents</TableHead>
+                    <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 h-10 px-6">Status</TableHead>
+                    <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 h-10 px-6">Submitted</TableHead>
+                    <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 h-10 px-6 text-right">Actions</TableHead>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                </TableHeader>
+                <TableBody>
+                  {kycSubmissions.map((submission) => (
+                    <TableRow key={submission.user_id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 border-b border-slate-100 dark:border-slate-800 transition-colors">
+                      <TableCell className="px-6 py-4">
+                        <div>
+                          <div className="font-bold text-xs text-slate-900 dark:text-white">{submission.user_name}</div>
+                          <div className="text-[11px] text-slate-500">{submission.user_email}</div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="px-6 py-4">
+                        <div className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400">
+                          <span className="material-symbols-outlined text-[16px] text-slate-400">description</span>
+                          <span>{submission.documents.length} document{submission.documents.length !== 1 ? 's' : ''}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="px-6 py-4">
+                        <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                          submission.status === 'approved' 
+                            ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' 
+                            : submission.status === 'pending'
+                            ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
+                            : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+                        }`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${
+                            submission.status === 'approved' ? 'bg-green-500' :
+                            submission.status === 'pending' ? 'bg-yellow-500' : 'bg-red-500'
+                          }`}></span>
+                          {submission.status}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-[11px] text-slate-500 px-6 py-4">
+                        {formatDistanceToNow(new Date(submission.submitted_at), { addSuffix: true })}
+                      </TableCell>
+                      <TableCell className="px-6 py-4 text-right">
+                        <Button 
+                          onClick={() => handleView(submission)}
+                          className="h-8 px-3 rounded-lg text-xs font-bold bg-primary hover:bg-primary/90 text-white flex items-center gap-1 ml-auto"
+                        >
+                          <span className="material-symbols-outlined text-[14px]">visibility</span>
+                          Review
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </CardContent>
       </Card>
 
       <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
-        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>KYC Documents Review</DialogTitle>
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-2xl shadow-2xl p-6 custom-scrollbar">
+          <DialogHeader className="border-b border-slate-100 dark:border-slate-800 pb-4 mb-4">
+            <DialogTitle className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <span className="material-symbols-outlined text-primary text-[22px]">verified_user</span>
+              KYC Documents Review
+            </DialogTitle>
           </DialogHeader>
+          
           {selectedSubmission && (
             <div className="space-y-6">
-              <div className="bg-muted/50 p-4 rounded-lg">
-                <h3 className="font-semibold mb-3">User Information</h3>
-                <div className="grid grid-cols-2 gap-4 text-sm">
+              <div className="bg-slate-50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800/50 p-5 rounded-2xl">
+                <h3 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-4">User Information</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-y-4 gap-x-6 text-xs">
                   <div>
-                    <span className="text-muted-foreground">Name:</span>
-                    <p className="font-medium">{selectedSubmission.user_name}</p>
+                    <span className="text-slate-400 block mb-0.5">Full Name</span>
+                    <span className="font-bold text-slate-900 dark:text-white">{selectedSubmission.user_name}</span>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">Email:</span>
-                    <p className="font-medium">{selectedSubmission.user_email}</p>
+                    <span className="text-slate-400 block mb-0.5">Email Address</span>
+                    <span className="font-semibold text-slate-900 dark:text-white">{selectedSubmission.user_email}</span>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">Country:</span>
-                    <p className="font-medium">{selectedSubmission.user_country || 'N/A'}</p>
+                    <span className="text-slate-400 block mb-0.5">Country</span>
+                    <span className="font-semibold text-slate-900 dark:text-white">{selectedSubmission.user_country || 'N/A'}</span>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">Phone:</span>
-                    <p className="font-medium">{selectedSubmission.user_phone || 'N/A'}</p>
+                    <span className="text-slate-400 block mb-0.5">Phone Number</span>
+                    <span className="font-semibold text-slate-900 dark:text-white">{selectedSubmission.user_phone || 'N/A'}</span>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">Date of Birth:</span>
-                    <p className="font-medium">
+                    <span className="text-slate-400 block mb-0.5">Date of Birth</span>
+                    <span className="font-semibold text-slate-900 dark:text-white">
                       {selectedSubmission.user_dob 
                         ? new Date(selectedSubmission.user_dob).toLocaleDateString()
                         : 'N/A'}
-                    </p>
+                    </span>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">Age:</span>
-                    <p className="font-medium">
+                    <span className="text-slate-400 block mb-0.5">Age</span>
+                    <span className="font-semibold text-slate-900 dark:text-white">
                       {selectedSubmission.user_dob 
                         ? Math.floor((new Date().getTime() - new Date(selectedSubmission.user_dob).getTime()) / (365.25 * 24 * 60 * 60 * 1000))
                         : 'N/A'}
-                    </p>
+                    </span>
                   </div>
-                  <div className="col-span-2">
-                    <span className="text-muted-foreground">Address:</span>
-                    <p className="font-medium">
+                  <div className="sm:col-span-2">
+                    <span className="text-slate-400 block mb-0.5">Home Address</span>
+                    <span className="font-semibold text-slate-900 dark:text-white">
                       {[
                         selectedSubmission.user_address,
                         selectedSubmission.user_city,
                         selectedSubmission.user_state
                       ].filter(Boolean).join(', ') || 'N/A'}
-                    </p>
+                    </span>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">Status:</span>
-                    <div className="mt-1">
-                      <Badge variant={
-                        selectedSubmission.status === 'approved' ? 'default' :
-                        selectedSubmission.status === 'pending' ? 'secondary' :
-                        'destructive'
-                      }>
+                    <span className="text-slate-400 block mb-0.5">Status</span>
+                    <div className="mt-0.5">
+                      <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                        selectedSubmission.status === 'approved' 
+                          ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' 
+                          : selectedSubmission.status === 'pending'
+                          ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
+                          : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+                      }`}>
                         {selectedSubmission.status}
-                      </Badge>
+                      </span>
                     </div>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Submitted:</span>
-                    <p className="font-medium">
-                      {formatDistanceToNow(new Date(selectedSubmission.submitted_at), { addSuffix: true })}
-                    </p>
                   </div>
                 </div>
               </div>
 
-                <div className="space-y-4">
-                <h3 className="font-semibold">Submitted Documents</h3>
+              <div className="space-y-4">
+                <h3 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">Submitted Documents</h3>
                 <div className="grid gap-6">
                   {selectedSubmission.documents.map((doc) => {
                     let parsedUrls: any = {};
@@ -354,61 +365,64 @@ export const AdminKYC = () => {
                     }
 
                     return (
-                      <div key={doc.id} className="border rounded-lg p-4 space-y-4">
-                        <div className="flex items-center justify-between">
-                          <h4 className="font-medium capitalize">{doc.document_type.replace(/_/g, ' ')}</h4>
-                          <Badge variant="outline" className="text-xs">
-                            {new Date(doc.submitted_at).toLocaleDateString()}
-                          </Badge>
+                      <div key={doc.id} className="border border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-4 bg-white dark:bg-slate-900">
+                        <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                          <h4 className="text-xs font-bold capitalize text-slate-900 dark:text-white flex items-center gap-1.5">
+                            <span className="material-symbols-outlined text-slate-400 text-[18px]">badge</span>
+                            {doc.document_type.replace(/_/g, ' ')}
+                          </h4>
+                          <span className="text-[10px] font-bold text-slate-400">
+                            Submitted: {new Date(doc.submitted_at).toLocaleDateString()}
+                          </span>
                         </div>
                         
-                        <div className="grid md:grid-cols-2 gap-4">
+                        <div className="grid md:grid-cols-2 gap-6">
                           {/* ID Front */}
-                          {parsedUrls.id_front ? (
-                            <div className="space-y-2">
-                              <h5 className="text-sm font-medium text-muted-foreground">Document Front</h5>
-                              <div className="bg-muted/30 rounded-lg overflow-hidden border">
+                          <div className="space-y-2">
+                            <h5 className="text-[11px] font-bold text-slate-400">Document Front</h5>
+                            {parsedUrls.id_front ? (
+                              <div className="bg-slate-50 dark:bg-slate-800/20 rounded-xl overflow-hidden border border-slate-100 dark:border-slate-800 p-2">
                                 <img 
                                   src={parsedUrls.id_front} 
                                   alt="ID Front"
-                                  className="w-full h-auto"
+                                  className="w-full h-auto rounded-lg shadow-sm max-h-[300px] object-contain mx-auto"
                                 />
                               </div>
-                            </div>
-                          ) : (
-                            <div className="bg-muted/30 rounded-lg p-8 flex items-center justify-center">
-                              <p className="text-sm text-muted-foreground">Loading...</p>
-                            </div>
-                          )}
+                            ) : (
+                              <div className="bg-slate-50 dark:bg-slate-800/30 rounded-xl p-8 flex items-center justify-center border border-slate-100 dark:border-slate-800">
+                                <span className="text-xs text-slate-400">Loading front document...</span>
+                              </div>
+                            )}
+                          </div>
 
                           {/* ID Back */}
-                          {parsedUrls.id_back ? (
-                            <div className="space-y-2">
-                              <h5 className="text-sm font-medium text-muted-foreground">Document Back</h5>
-                              <div className="bg-muted/30 rounded-lg overflow-hidden border">
+                          <div className="space-y-2">
+                            <h5 className="text-[11px] font-bold text-slate-400">Document Back</h5>
+                            {parsedUrls.id_back ? (
+                              <div className="bg-slate-50 dark:bg-slate-800/20 rounded-xl overflow-hidden border border-slate-100 dark:border-slate-800 p-2">
                                 <img 
                                   src={parsedUrls.id_back} 
                                   alt="ID Back"
-                                  className="w-full h-auto"
+                                  className="w-full h-auto rounded-lg shadow-sm max-h-[300px] object-contain mx-auto"
                                 />
                               </div>
-                            </div>
-                          ) : (
-                            <div className="bg-muted/30 rounded-lg p-8 flex items-center justify-center">
-                              <p className="text-sm text-muted-foreground">Loading...</p>
-                            </div>
-                          )}
+                            ) : (
+                              <div className="bg-slate-50 dark:bg-slate-800/30 rounded-xl p-8 flex items-center justify-center border border-slate-100 dark:border-slate-800">
+                                <span className="text-xs text-slate-400">Loading back document...</span>
+                              </div>
+                            )}
+                          </div>
                         </div>
 
                         {/* Selfie with ID */}
                         {parsedUrls.selfie && (
-                          <div className="space-y-2">
-                            <h5 className="text-sm font-medium text-muted-foreground">Selfie with ID</h5>
-                            <div className="bg-muted/30 rounded-lg overflow-hidden border max-w-md mx-auto">
+                          <div className="space-y-2 border-t border-slate-100 dark:border-slate-800 pt-4">
+                            <h5 className="text-[11px] font-bold text-slate-400 text-center">Selfie with Document</h5>
+                            <div className="bg-slate-50 dark:bg-slate-800/20 rounded-xl overflow-hidden border border-slate-100 dark:border-slate-800 p-2 max-w-md mx-auto">
                               <img 
                                 src={parsedUrls.selfie} 
                                 alt="Selfie with ID"
-                                className="w-full h-auto"
+                                className="w-full h-auto rounded-lg shadow-sm max-h-[350px] object-contain mx-auto"
                               />
                             </div>
                           </div>
@@ -420,31 +434,32 @@ export const AdminKYC = () => {
               </div>
 
               {selectedSubmission.status === 'pending' && (
-                <div className="flex gap-3 pt-4 border-t">
+                <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
                   <Button 
                     onClick={() => handleApprove(selectedSubmission.user_id)} 
-                    className="flex-1"
-                    size="lg"
+                    className="flex-1 h-11 rounded-xl text-xs font-bold bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-1.5"
                   >
-                    <Check className="h-5 w-5 mr-2" />
+                    <span className="material-symbols-outlined text-[18px]">check_circle</span>
                     Approve KYC
                   </Button>
                   <Button 
                     variant="destructive" 
                     onClick={() => handleReject(selectedSubmission.user_id)} 
-                    className="flex-1"
-                    size="lg"
+                    className="flex-1 h-11 rounded-xl text-xs font-bold bg-red-600 hover:bg-red-700 text-white flex items-center justify-center gap-1.5"
                   >
-                    <X className="h-5 w-5 mr-2" />
+                    <span className="material-symbols-outlined text-[18px]">cancel</span>
                     Reject KYC
                   </Button>
                 </div>
               )}
 
               {selectedSubmission.status === 'rejected' && selectedSubmission.documents[0]?.rejection_reason && (
-                <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4">
-                  <h4 className="font-medium text-destructive mb-2">Rejection Reason</h4>
-                  <p className="text-sm">{selectedSubmission.documents[0].rejection_reason}</p>
+                <div className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/50 rounded-2xl p-4">
+                  <h4 className="text-xs font-bold text-red-600 dark:text-red-400 mb-1 flex items-center gap-1">
+                    <span className="material-symbols-outlined text-[16px]">info</span>
+                    Rejection Reason
+                  </h4>
+                  <p className="text-xs text-slate-700 dark:text-slate-300">{selectedSubmission.documents[0].rejection_reason}</p>
                 </div>
               )}
             </div>
@@ -456,3 +471,4 @@ export const AdminKYC = () => {
 };
 
 export default AdminKYC;
+

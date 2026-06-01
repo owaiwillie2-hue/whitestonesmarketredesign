@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const SpaceXAdmin = () => {
   const [stats, setStats] = useState({
@@ -54,73 +55,77 @@ const SpaceXAdmin = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 p-4 md:p-8 font-body-md text-slate-900 dark:text-white">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-4 md:p-8 font-['Plus_Jakarta_Sans'] text-slate-900 dark:text-white">
       <div className="max-w-7xl mx-auto space-y-6">
-        <div className="flex items-center justify-between bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm mb-8">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-soft">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Space X Retirement Funds Backend</h1>
-            <p className="text-muted-foreground mt-1">Manage retirement program members, real-time statistics, and deposits.</p>
+            <h1 className="text-xl font-bold tracking-tight">Space X Retirement Funds Backend</h1>
+            <p className="text-xs text-slate-500 mt-1">Manage retirement program members, real-time statistics, and deposits.</p>
           </div>
           <button 
             onClick={() => window.location.href = '/admin'} 
-            className="px-4 py-2 bg-slate-100 dark:bg-slate-700 rounded-xl font-bold text-sm hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
+            className="h-10 px-4 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-850 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 hover:bg-slate-200 dark:hover:bg-slate-800/80 transition-colors shadow-sm"
           >
             Back to Main Admin
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card className="border border-slate-200 dark:border-slate-800 shadow-soft bg-white dark:bg-slate-900 rounded-2xl overflow-hidden">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Active Members</CardTitle>
+              <CardTitle className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Active Members</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.activeMembers}</div>
+              <div className="text-2xl font-bold text-slate-900 dark:text-white">{stats.activeMembers}</div>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="border border-slate-200 dark:border-slate-800 shadow-soft bg-white dark:bg-slate-900 rounded-2xl overflow-hidden">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Total Invested</CardTitle>
+              <CardTitle className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Total Invested</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">${stats.totalInvested.toLocaleString()}</div>
+              <div className="text-2xl font-bold text-green-600 dark:text-green-400">${stats.totalInvested.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="border border-slate-200 dark:border-slate-800 shadow-soft bg-white dark:bg-slate-900 rounded-2xl overflow-hidden">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Weekly Payouts</CardTitle>
+              <CardTitle className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Weekly Payouts</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-blue-600">${stats.weeklyPayouts.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">${stats.weeklyPayouts.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="border border-slate-200 dark:border-slate-800 shadow-soft bg-white dark:bg-slate-900 rounded-2xl overflow-hidden">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Withdrawals</CardTitle>
+              <CardTitle className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Withdrawals</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-purple-600">{stats.withdrawals}</div>
+              <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">{stats.withdrawals}</div>
             </CardContent>
           </Card>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Enrollments & Payments</CardTitle>
+        <Card className="border border-slate-200 dark:border-slate-800 shadow-soft bg-white dark:bg-slate-900 rounded-2xl overflow-hidden">
+          <CardHeader className="border-b border-slate-100 dark:border-slate-800 pb-4">
+            <CardTitle className="text-sm font-bold text-slate-900 dark:text-white">Recent Enrollments & Payments</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-0">
             {loading ? (
-              <p>Loading real-time data...</p>
+              <div className="p-6 space-y-4">
+                <Skeleton className="h-8 w-full rounded-lg" />
+                <Skeleton className="h-8 w-full rounded-lg" />
+                <Skeleton className="h-8 w-full rounded-lg" />
+              </div>
             ) : (
-              <div className="rounded-md border">
+              <div className="overflow-x-auto">
                 <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Date</TableHead>
-                      <TableHead>User</TableHead>
-                      <TableHead>Amount</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Age</TableHead>
+                  <TableHeader className="bg-slate-50 dark:bg-slate-800/50">
+                    <TableRow className="hover:bg-transparent border-b border-slate-100 dark:border-slate-800">
+                      <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 h-10 px-6">Date</TableHead>
+                      <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 h-10 px-6">User</TableHead>
+                      <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 h-10 px-6">Amount</TableHead>
+                      <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 h-10 px-6">Status</TableHead>
+                      <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 h-10 px-6">Age</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -128,31 +133,41 @@ const SpaceXAdmin = () => {
                       const dob = member.profiles?.date_of_birth;
                       const age = dob ? new Date().getFullYear() - new Date(dob).getFullYear() : 'Unknown';
                       return (
-                        <TableRow key={member.id}>
-                          <TableCell>{new Date(member.created_at).toLocaleDateString()}</TableCell>
-                          <TableCell>
+                        <TableRow key={member.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 border-b border-slate-100 dark:border-slate-800 transition-colors">
+                          <TableCell className="text-[11px] text-slate-500 px-6 py-4">
+                            {new Date(member.created_at).toLocaleDateString(undefined, {
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric'
+                            })}
+                          </TableCell>
+                          <TableCell className="px-6 py-4">
                             <div>
-                              <p className="font-medium">{member.profiles?.full_name || 'N/A'}</p>
-                              <p className="text-xs text-muted-foreground">{member.profiles?.email}</p>
+                              <p className="font-bold text-xs text-slate-900 dark:text-white">{member.profiles?.full_name || 'N/A'}</p>
+                              <p className="text-[11px] text-slate-500">{member.profiles?.email}</p>
                             </div>
                           </TableCell>
-                          <TableCell className="font-bold">${member.amount.toLocaleString()}</TableCell>
-                          <TableCell>
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              member.status === 'completed' ? 'bg-green-100 text-green-800' :
-                              member.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                              'bg-amber-100 text-amber-800'
+                          <TableCell className="font-bold text-xs text-slate-900 dark:text-white px-6 py-4">${member.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                          <TableCell className="px-6 py-4">
+                            <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                              member.status === 'completed' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' :
+                              member.status === 'rejected' ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' :
+                              'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
                             }`}>
+                              <span className={`w-1.5 h-1.5 rounded-full ${
+                                member.status === 'completed' ? 'bg-green-500' :
+                                member.status === 'rejected' ? 'bg-red-500' : 'bg-yellow-500'
+                              }`}></span>
                               {member.status}
                             </span>
                           </TableCell>
-                          <TableCell>{age}</TableCell>
+                          <TableCell className="text-xs text-slate-700 dark:text-slate-300 px-6 py-4">{age}</TableCell>
                         </TableRow>
                       );
                     })}
                     {members.length === 0 && (
                       <TableRow>
-                        <TableCell colSpan={5} className="text-center text-muted-foreground">No records found</TableCell>
+                        <TableCell colSpan={5} className="text-center py-12 text-slate-500 text-xs font-medium">No records found</TableCell>
                       </TableRow>
                     )}
                   </TableBody>
@@ -167,3 +182,4 @@ const SpaceXAdmin = () => {
 };
 
 export default SpaceXAdmin;
+

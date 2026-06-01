@@ -10,21 +10,30 @@ import { useScrollReveal } from "@/hooks/useScrollReveal";
 export const InvestmentPlans = () => {
   const [plans, setPlans] = useState<any[]>([]);
   const { t } = useLanguage();
-  const sectionRef = useScrollReveal();
+  const sectionRef = useScrollReveal([plans]);
 
   useEffect(() => {
     fetchPlans();
   }, []);
 
   const fetchPlans = async () => {
-    const { data } = await supabase
-      .from('investment_plans')
-      .select('*')
-      .eq('is_active', true)
-      .order('min_amount');
+    try {
+      const { data, error } = await supabase
+        .from('investment_plans')
+        .select('*')
+        .eq('is_active', true)
+        .order('min_amount');
 
-    if (data) {
-      setPlans(data);
+      if (error) {
+        console.error('Error fetching plans:', error);
+        return;
+      }
+
+      if (data) {
+        setPlans(data);
+      }
+    } catch (err) {
+      console.error('Exception fetching plans:', err);
     }
   };
 

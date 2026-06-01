@@ -1,14 +1,9 @@
-import { useState } from 'react';
-import { Link, useNavigate, Outlet, useLocation } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { 
-  LayoutDashboard, Users, DollarSign, Download, FileText, 
-  GitBranch, Settings, LogOut, Menu, X, Moon, Sun, Bell, TrendingUp, Shield, Monitor
-} from 'lucide-react';
-import logo from '@/assets/logo.png';
+import { ReactNode, useState } from 'react';
+import { useNavigate, Link, useLocation, Outlet } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/lib/toast';
 import { useTheme } from '@/contexts/ThemeContext';
+import logo from '@/assets/logo.png';
 
 export const AdminLayout = () => {
   const navigate = useNavigate();
@@ -23,127 +18,150 @@ export const AdminLayout = () => {
   };
 
   const menuItems = [
-    { icon: LayoutDashboard, label: 'Analytics', path: '/admin' },
-    { icon: Users, label: 'Users', path: '/admin/users' },
-    { icon: DollarSign, label: 'Deposits', path: '/admin/deposits' },
-    { icon: Download, label: 'Withdrawals', path: '/admin/withdrawals' },
-    { icon: TrendingUp, label: 'Bonus', path: '/admin/bonus' },
-    { icon: FileText, label: 'Investment Plans', path: '/admin/investment-plans' },
-    { icon: Shield, label: 'KYC', path: '/admin/kyc' },
-    { icon: GitBranch, label: 'Referrals', path: '/admin/referrals' },
-    { icon: Bell, label: 'Notifications', path: '/admin/notifications' },
-    { icon: Monitor, label: 'Activity Logs', path: '/admin/activity-logs' },
-    { icon: Settings, label: 'Settings', path: '/admin/settings' },
+    { icon: 'analytics', label: 'Analytics', path: '/admin' },
+    { icon: 'group', label: 'Users', path: '/admin/users' },
+    { icon: 'payments', label: 'Deposits', path: '/admin/deposits' },
+    { icon: 'price_change', label: 'Withdrawals', path: '/admin/withdrawals' },
+    { icon: 'local_activity', label: 'Bonus', path: '/admin/bonus' },
+    { icon: 'description', label: 'Investment Plans', path: '/admin/investment-plans' },
+    { icon: 'verified_user', label: 'KYC', path: '/admin/kyc' },
+    { icon: 'diversity_3', label: 'Referrals', path: '/admin/referrals' },
+    { icon: 'notifications', label: 'Notifications', path: '/admin/notifications' },
+    { icon: 'history', label: 'Activity Logs', path: '/admin/activity-logs' },
+    { icon: 'settings', label: 'Settings', path: '/admin/settings' },
   ];
 
-  const isActive = (path: string) => location.pathname === path || (path !== '/admin' && location.pathname.startsWith(path));
+  const isActive = (path: string) => {
+    return location.pathname === path || (path !== '/admin' && location.pathname.startsWith(path));
+  };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 font-body-md text-slate-900 dark:text-slate-100 flex flex-col md:flex-row">
-      {/* Mobile Header */}
-      <header className="md:hidden sticky top-0 z-50 bg-primary text-white border-b border-primary/20 flex items-center justify-between px-4 h-16 shadow-sm">
-        <div className="flex items-center space-x-3">
-          <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="p-1 rounded-md hover:bg-white/10 active:scale-95 transition-all"
+    <div className="bg-background text-on-background font-body-md min-h-screen flex flex-col lg:flex-row">
+      {/* Mobile Top App Bar */}
+      <header className="lg:hidden bg-white/80 dark:bg-slate-955/80 backdrop-blur-md shadow-sm border-b border-slate-200 dark:border-slate-800 sticky top-0 z-50 flex justify-between items-center h-16 px-4 w-full">
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={() => setSidebarOpen(true)} 
+            className="text-on-surface-variant active:scale-95 transition-transform flex items-center p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800"
           >
-            {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
+            <span className="material-symbols-outlined text-[24px]">menu</span>
           </button>
-          <Link to="/admin/dashboard" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-white rounded-lg p-1 flex items-center justify-center">
-              <img src={logo} alt="Whitestones" className="max-w-full max-h-full object-contain" />
-            </div>
-            <span className="font-bold text-lg font-display-lg">Admin</span>
-          </Link>
+          
+          <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center overflow-hidden border border-slate-100 p-0.5 shrink-0">
+            <img src={logo} alt="WhitestonesMarket" className="w-full h-full object-contain" />
+          </div>
+          <span className="text-sm font-bold text-slate-900 dark:text-white font-['Plus_Jakarta_Sans'] tracking-tight">Admin Console</span>
         </div>
-        <Button variant="ghost" size="icon" onClick={toggleTheme} className="text-white hover:bg-white/10 rounded-full">
-          {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-        </Button>
+        
+        <div className="flex items-center gap-3">
+          {/* Theme Toggle */}
+          <button 
+            onClick={toggleTheme} 
+            className="text-on-surface-variant hover:text-primary active:scale-95 transition-transform flex items-center"
+          >
+            <span className="material-symbols-outlined">
+              {theme === 'dark' ? 'light_mode' : 'dark_mode'}
+            </span>
+          </button>
+          
+          {/* Mobile Profile Icon */}
+          <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white font-bold text-sm shrink-0">
+            A
+          </div>
+        </div>
       </header>
 
-      {/* Sidebar */}
+      {/* Desktop Sidebar & Mobile Drawer */}
       <aside className={`
-        fixed md:sticky top-0 left-0 z-40 h-screen w-64
-        bg-primary text-white transition-transform duration-300 md:translate-x-0 shadow-2xl md:shadow-none
-        flex flex-col
+        fixed inset-y-0 left-0 z-[100] lg:z-40 w-64 bg-[#0B1E36] border-r border-blue-950/40 flex flex-col transition-transform duration-300 lg:translate-x-0 lg:sticky lg:top-0 lg:h-screen
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
-        <div className="h-20 flex items-center px-6 border-b border-white/10 shrink-0">
-          <Link to="/admin/dashboard" className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-white rounded-xl p-1.5 flex items-center justify-center shadow-lg shadow-black/10">
-              <img src={logo} alt="Whitestones" className="max-w-full max-h-full object-contain" />
-            </div>
-            <span className="font-bold text-xl font-display-lg tracking-tight">Whitestones</span>
-          </Link>
+        <div className="p-4 border-b border-blue-950/40 flex items-center gap-2">
+          <div className="w-7 h-7 rounded-full bg-white flex items-center justify-center overflow-hidden border border-slate-100 p-0.5 shrink-0">
+            <img src={logo} alt="WhitestonesMarket" className="w-full h-full object-contain" />
+          </div>
+          <span className="text-sm font-bold text-white font-['Plus_Jakarta_Sans'] tracking-tight">Whitestones Admin</span>
+          {/* Close button on mobile */}
+          <button onClick={() => setSidebarOpen(false)} className="lg:hidden ml-auto text-blue-200 hover:text-white transition-colors">
+            <span className="material-symbols-outlined text-[20px]">close</span>
+          </button>
         </div>
-
-        <nav className="flex-1 overflow-y-auto py-6 px-4 space-y-1 custom-scrollbar">
-          {menuItems.map((item) => (
-            <Link
-              key={item.path}
-              to={item.path}
-              onClick={() => setSidebarOpen(false)}
-              className={`
-                flex items-center space-x-3 px-4 py-3.5 rounded-xl transition-all font-label-md
-                ${isActive(item.path) 
-                  ? 'bg-white text-primary shadow-md font-bold scale-[1.02]' 
-                  : 'text-blue-100 hover:bg-white/10 hover:text-white'
-                }
-              `}
-            >
-              <item.icon className={`h-5 w-5 ${isActive(item.path) ? 'text-primary' : 'text-blue-200'}`} />
-              <span>{item.label}</span>
-            </Link>
-          ))}
+        
+        <nav className="flex-1 py-3 flex flex-col gap-0.5 px-2 overflow-y-auto custom-scrollbar">
+          {menuItems.map((item) => {
+            const active = isActive(item.path);
+            return (
+              <Link 
+                key={item.path}
+                to={item.path}
+                onClick={() => setSidebarOpen(false)}
+                className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-200 ${
+                  active 
+                    ? 'bg-blue-600 text-white font-bold shadow-md shadow-blue-950/40' 
+                    : 'text-blue-100/70 hover:bg-white/5 hover:text-white'
+                }`}
+              >
+                <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: active ? "'FILL' 1" : "'FILL' 0" }}>
+                  {item.icon}
+                </span>
+                <span className="flex-1">{item.label}</span>
+              </Link>
+            );
+          })}
         </nav>
-
-        <div className="p-4 border-t border-white/10 shrink-0">
+        
+        <div className="p-3 border-t border-blue-950/40 shrink-0">
           <button 
             onClick={handleLogout}
-            className="w-full flex items-center space-x-3 px-4 py-3.5 rounded-xl text-red-300 hover:bg-red-500/10 hover:text-red-200 transition-all font-label-md"
+            className="flex items-center gap-2.5 px-3 py-2.5 w-full rounded-xl text-[13px] font-medium text-red-400 hover:bg-red-500/10 transition-all duration-200"
           >
-            <LogOut className="h-5 w-5" />
+            <span className="material-symbols-outlined text-[20px]">logout</span>
             <span>Logout</span>
           </button>
         </div>
       </aside>
 
+      {/* Mobile Backdrop */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 lg:hidden" 
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-h-screen overflow-hidden">
+      <div className="flex-1 flex flex-col min-h-screen overflow-hidden w-full max-w-full">
         {/* Desktop Header */}
-        <header className="hidden md:flex sticky top-0 z-30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 h-20 items-center justify-between px-8 shadow-sm">
+        <header className="hidden lg:flex bg-white/80 dark:bg-slate-950/80 backdrop-blur-md shadow-sm border-b border-slate-200 dark:border-slate-800 sticky top-0 z-30 h-16 items-center justify-between px-6 shrink-0">
           <div>
-            <h2 className="text-xl font-bold text-primary dark:text-white font-display-lg">Admin Dashboard</h2>
-            <p className="text-sm text-slate-500 dark:text-slate-400">Manage your platform efficiently</p>
+            <h2 className="text-sm font-bold text-slate-900 dark:text-white capitalize">
+              {location.pathname.split('/').pop() || 'Admin Panel'}
+            </h2>
           </div>
-          <div className="flex items-center space-x-4">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={toggleTheme}
-              className="rounded-full bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
+          
+          <div className="flex items-center gap-4">
+            {/* Theme Toggle */}
+            <button 
+              onClick={toggleTheme} 
+              className="w-10 h-10 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95 transition-all"
             >
-              {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-            </Button>
-            <div className="w-10 h-10 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-bold">
+              <span className="material-symbols-outlined">
+                {theme === 'dark' ? 'light_mode' : 'dark_mode'}
+              </span>
+            </button>
+
+            {/* Profile initials badge */}
+            <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white font-bold text-sm shrink-0">
               A
             </div>
           </div>
         </header>
 
         {/* Main Content */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-x-hidden overflow-y-auto w-full max-w-7xl mx-auto">
+        <main className="flex-1 p-4 sm:p-6 overflow-x-hidden overflow-y-auto w-full max-w-7xl mx-auto custom-scrollbar">
           <Outlet />
         </main>
       </div>
-
-      {/* Mobile Overlay */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-30 md:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
     </div>
   );
 };

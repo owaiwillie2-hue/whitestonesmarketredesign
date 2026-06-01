@@ -22,16 +22,36 @@ const Invest = () => {
   const [submitting, setSubmitting] = useState(false);
   const [investmentBalance, setInvestmentBalance] = useState(0);
   const [currentActivePlan, setCurrentActivePlan] = useState<any>(null);
+  const [totalDeposited, setTotalDeposited] = useState(0);
 
   useEffect(() => {
     if (planId) {
       fetchPlanDetails();
       fetchBalance();
+      fetchTotalDeposited();
       if (upgradeMode) {
         fetchCurrentActivePlan();
       }
     }
   }, [planId]);
+
+  const fetchTotalDeposited = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: deposits } = await supabase
+        .from('deposits')
+        .select('amount')
+        .eq('user_id', user.id)
+        .eq('status', 'completed');
+
+      const total = deposits?.reduce((sum, d) => sum + Number(d.amount), 0) || 0;
+      setTotalDeposited(total);
+    } catch (error) {
+      console.error('Error fetching deposits:', error);
+    }
+  };
 
   const fetchPlanDetails = async () => {
     try {
@@ -108,6 +128,15 @@ const Invest = () => {
     e.preventDefault();
     
     const investAmount = parseFloat(amount);
+    if (totalDeposited < plan.min_amount) {
+      toast({
+        title: 'Plan Locked',
+        description: `This plan requires a minimum cumulative deposit of $${plan.min_amount}. Your cumulative deposits are $${totalDeposited}.`,
+        variant: 'destructive',
+      });
+      return;
+    }
+
     if (isNaN(investAmount) || investAmount < plan.min_amount) {
       toast({
         title: 'Invalid Amount',

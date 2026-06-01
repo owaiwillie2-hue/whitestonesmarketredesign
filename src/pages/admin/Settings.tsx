@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/lib/toast';
-import { Save, Upload, Trash2 } from 'lucide-react';
 
 export const AdminSettings = () => {
   const [settings, setSettings] = useState({
@@ -52,7 +51,7 @@ export const AdminSettings = () => {
         const fileExt = qrFile.name.split('.').pop();
         const fileName = `qr-${Date.now()}.${fileExt}`;
         
-        const { error: uploadError, data } = await supabase.storage
+        const { error: uploadError } = await supabase.storage
           .from('settings')
           .upload(fileName, qrFile, { upsert: true });
 
@@ -108,31 +107,47 @@ export const AdminSettings = () => {
   };
 
   return (
-    <div className="space-y-6 max-w-full overflow-x-hidden">
-      <div>
-        <h1 className="text-3xl font-bold">Website Settings</h1>
-        <p className="text-muted-foreground mt-2">Manage website configuration</p>
+    <div className="space-y-6 max-w-full overflow-x-hidden font-['Plus_Jakarta_Sans']">
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">Website Settings</h1>
+          <p className="text-xs text-slate-500 mt-1">Configure platform deposit parameters and company info</p>
+        </div>
+        <Button 
+          onClick={handleSave} 
+          disabled={loading} 
+          className="h-10 rounded-xl text-xs font-bold bg-primary hover:bg-primary/95 text-white flex items-center justify-center gap-1.5 transition-all shadow-sm px-4"
+        >
+          <span className="material-symbols-outlined text-[18px]">save</span>
+          {loading ? 'Saving...' : 'Save Settings'}
+        </Button>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Deposit Information</CardTitle>
+        {/* Deposit Information */}
+        <Card className="border border-slate-200 dark:border-slate-800 shadow-soft bg-white dark:bg-slate-900 rounded-2xl overflow-hidden">
+          <CardHeader className="pb-4 border-b border-slate-100 dark:border-slate-800">
+            <CardTitle className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <span className="material-symbols-outlined text-primary text-[20px]">account_balance_wallet</span>
+              Deposit Parameters
+            </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="deposit_address">Bitcoin Deposit Address</Label>
+          <CardContent className="p-6 space-y-5">
+            <div className="space-y-2">
+              <Label htmlFor="deposit_address" className="text-xs font-bold text-slate-900 dark:text-white">Bitcoin Deposit Address</Label>
               <Textarea
                 id="deposit_address"
                 value={settings.deposit_address}
                 onChange={(e) => setSettings({ ...settings, deposit_address: e.target.value })}
                 placeholder="bc1q..."
                 rows={2}
+                className="text-xs bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-xl focus-visible:ring-primary focus-visible:ring-1 p-3"
               />
             </div>
-            <div>
-              <Label htmlFor="deposit_qr_file" className="block mb-2">Upload Bitcoin QR Code</Label>
-              <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 hover:border-muted-foreground/50 transition">
+            
+            <div className="space-y-2">
+              <Label htmlFor="deposit_qr_file" className="text-xs font-bold text-slate-900 dark:text-white block">Bitcoin QR Code</Label>
+              <div className="border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl p-6 hover:bg-slate-50 dark:hover:bg-slate-800/20 hover:border-primary/50 transition-all duration-200 flex flex-col items-center justify-center text-center">
                 <input
                   id="deposit_qr_file"
                   type="file"
@@ -141,28 +156,28 @@ export const AdminSettings = () => {
                   className="hidden"
                 />
                 <label htmlFor="deposit_qr_file" className="cursor-pointer flex flex-col items-center gap-2">
-                  <Upload className="h-8 w-8 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">Click to upload QR image or drag and drop</span>
-                  <span className="text-xs text-muted-foreground">PNG, JPG, GIF up to 5MB</span>
+                  <span className="material-symbols-outlined text-[36px] text-slate-400">cloud_upload</span>
+                  <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Click to upload QR image</span>
+                  <span className="text-[10px] text-slate-400">PNG, JPG, GIF up to 5MB</span>
                 </label>
               </div>
               
               {(qrPreview || settings.deposit_qr_url) && (
-                <div className="mt-4 space-y-2">
-                  <div className="border rounded-lg p-4 bg-muted/50">
+                <div className="mt-4 p-4 border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/20 rounded-xl flex items-center gap-4 justify-between">
+                  <div className="border border-slate-200 dark:border-slate-700 rounded-lg p-2 bg-white dark:bg-slate-900 shrink-0">
                     <img 
                       src={qrPreview || settings.deposit_qr_url} 
                       alt="QR Code Preview" 
-                      className="h-48 w-48 object-cover rounded"
+                      className="h-24 w-24 object-contain rounded"
                     />
                   </div>
                   <Button 
                     type="button"
                     variant="destructive" 
-                    size="sm"
                     onClick={handleRemoveQr}
+                    className="h-9 px-3 rounded-lg text-xs font-bold bg-red-600 hover:bg-red-700 text-white flex items-center gap-1.5 shrink-0"
                   >
-                    <Trash2 className="mr-2 h-4 w-4" />
+                    <span className="material-symbols-outlined text-[16px]">delete</span>
                     Remove QR Code
                   </Button>
                 </div>
@@ -171,50 +186,55 @@ export const AdminSettings = () => {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Company Information</CardTitle>
+        {/* Company Information */}
+        <Card className="border border-slate-200 dark:border-slate-800 shadow-soft bg-white dark:bg-slate-900 rounded-2xl overflow-hidden">
+          <CardHeader className="pb-4 border-b border-slate-100 dark:border-slate-800">
+            <CardTitle className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <span className="material-symbols-outlined text-primary text-[20px]">corporate_fare</span>
+              Company Details
+            </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="company_address">Company Address</Label>
+          <CardContent className="p-6 space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="company_address" className="text-xs font-bold text-slate-900 dark:text-white">Physical Address</Label>
               <Textarea
                 id="company_address"
                 value={settings.company_address}
                 onChange={(e) => setSettings({ ...settings, company_address: e.target.value })}
                 placeholder="123 Financial District..."
                 rows={2}
+                className="text-xs bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-xl focus-visible:ring-primary focus-visible:ring-1 p-3"
               />
             </div>
-            <div>
-              <Label htmlFor="company_phone">Company Phone</Label>
+            
+            <div className="space-y-2">
+              <Label htmlFor="company_phone" className="text-xs font-bold text-slate-900 dark:text-white">Phone Number</Label>
               <Input
                 id="company_phone"
                 value={settings.company_phone}
                 onChange={(e) => setSettings({ ...settings, company_phone: e.target.value })}
                 placeholder="+1 (555) 123-4567"
+                className="h-10 text-xs bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-xl focus-visible:ring-primary focus-visible:ring-1"
               />
             </div>
-            <div>
-              <Label htmlFor="company_email">Company Email</Label>
+            
+            <div className="space-y-2">
+              <Label htmlFor="company_email" className="text-xs font-bold text-slate-900 dark:text-white">Support Email Address</Label>
               <Input
                 id="company_email"
                 type="email"
                 value={settings.company_email}
                 onChange={(e) => setSettings({ ...settings, company_email: e.target.value })}
                 placeholder="contact@company.com"
+                className="h-10 text-xs bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-xl focus-visible:ring-primary focus-visible:ring-1"
               />
             </div>
           </CardContent>
         </Card>
       </div>
-
-      <Button onClick={handleSave} disabled={loading} size="lg">
-        <Save className="mr-2 h-5 w-5" />
-        {loading ? 'Saving...' : 'Save Settings'}
-      </Button>
     </div>
   );
 };
 
 export default AdminSettings;
+

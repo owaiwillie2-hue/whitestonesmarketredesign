@@ -2,11 +2,9 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/lib/toast';
-import { Check, X, Eye, Image as ImageIcon } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 export const AdminDeposits = () => {
@@ -85,8 +83,6 @@ export const AdminDeposits = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Admin not authenticated');
 
-      // Call the approve-deposit edge function (handles referral bonus logic)
-      const { data: session } = await supabase.auth.getSession();
       const response = await supabase.functions.invoke('approve-deposit', {
         body: {
           deposit_id: depositId,
@@ -98,181 +94,200 @@ export const AdminDeposits = () => {
         throw new Error(response.error.message || 'Failed to approve deposit');
       }
 
-      const result = response.data;
-
-      toast.success(
-        result.bonus > 0
-          ? `Deposit approved! $${result.amount_credited.toFixed(2)} credited (includes $${result.bonus.toFixed(2)} first-deposit bonus)`
-          : `Deposit approved! $${result.amount_credited.toFixed(2)} credited`
-      );
+      toast.success(`Deposit approved! $${amount.toFixed(2)} credited to main wallet.`);
       fetchDeposits();
     } catch (error: any) {
-      toast.error(error.message);
+      console.error('Error approving deposit:', error);
+      toast.error(error.message || 'Failed to approve deposit');
     }
   };
 
   const handleReject = async (depositId: string) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      await supabase.from('deposits').update({
-        status: 'rejected',
-        approved_at: new Date().toISOString(),
-        approved_by: user?.id,
-        rejection_reason: 'Invalid proof of payment'
-      }).eq('id', depositId);
+      const response = await supabase.functions.invoke('reject-deposit', {
+        body: {
+          deposit_id: depositId,
+        },
+      });
 
-      toast.success('Deposit rejected');
+      if (response.error) {
+        throw new Error(response.error.message || 'Failed to reject deposit');
+      }
+
+      toast.success('Deposit request rejected');
       fetchDeposits();
     } catch (error: any) {
-      toast.error(error.message);
+      console.error('Error rejecting deposit:', error);
+      toast.error(error.message || 'Failed to reject deposit');
     }
   };
 
-
-
   return (
-    <div className="space-y-6 max-w-full overflow-x-hidden">
+    <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Deposit Management</h1>
-        <p className="text-muted-foreground mt-2">Review and approve deposit requests</p>
+        <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white font-['Plus_Jakarta_Sans']">Deposits Management</h1>
+        <p className="text-xs text-slate-500 mt-1">Review and approve user deposit requests and payment proofs</p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>All Deposits ({deposits.length})</CardTitle>
+      <Card className="border border-slate-200 dark:border-slate-800 shadow-soft bg-white dark:bg-slate-900 rounded-2xl overflow-hidden">
+        <CardHeader className="pb-4 border-b border-slate-100 dark:border-slate-800">
+          <CardTitle className="text-sm font-bold text-slate-900 dark:text-white">All Deposit Requests ({deposits.length})</CardTitle>
         </CardHeader>
-        <CardContent className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>User</TableHead>
-                <TableHead>Amount</TableHead>
-                <TableHead>Method</TableHead>
-                <TableHead>Proof</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {deposits.map((deposit) => (
-                <TableRow key={deposit.id}>
-                  <TableCell>
-                    <div>
-                      <div className="font-medium">{deposit.profiles?.full_name}</div>
-                      <div className="text-sm text-muted-foreground">{deposit.profiles?.email}</div>
-                    </div>
-                  </TableCell>
-                  <TableCell className="font-semibold">${deposit.amount}</TableCell>
-                  <TableCell>{deposit.payment_method}</TableCell>
-                  <TableCell>
-                    {deposit.proof_url ? (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="flex items-center gap-1.5"
-                        onClick={() => handleViewProof(deposit)}
-                      >
-                        <Eye className="h-3.5 w-3.5" />
-                        View Proof
-                      </Button>
-                    ) : (
-                      <span className="text-xs text-muted-foreground flex items-center gap-1">
-                        <ImageIcon className="h-3.5 w-3.5" />
-                        No proof
-                      </span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={
-                      deposit.status === 'approved' ? 'default' :
-                      deposit.status === 'pending' ? 'secondary' :
-                      'destructive'
-                    }>
-                      {deposit.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    {formatDistanceToNow(new Date(deposit.created_at), { addSuffix: true })}
-                  </TableCell>
-                  <TableCell>
-                    {deposit.status === 'pending' && (
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          onClick={() => handleApprove(deposit.id, deposit.user_id, deposit.amount)}
-                        >
-                          <Check className="h-4 w-4 mr-1" />
-                          Approve
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => handleReject(deposit.id)}
-                        >
-                          <X className="h-4 w-4 mr-1" />
-                          Reject
-                        </Button>
-                      </div>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+        <CardContent className="p-0">
+          {loading ? (
+            <div className="flex justify-center items-center py-12">
+              <span className="material-symbols-outlined animate-spin text-[24px] text-primary">progress_activity</span>
+            </div>
+          ) : deposits.length === 0 ? (
+            <div className="text-center py-12 text-slate-500 text-xs font-medium">
+              No deposit transactions found.
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader className="bg-slate-50 dark:bg-slate-800/50">
+                  <TableRow className="hover:bg-transparent border-b border-slate-100 dark:border-slate-800">
+                    <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 h-10 px-6">User</TableHead>
+                    <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 h-10 px-6">Amount</TableHead>
+                    <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 h-10 px-6">Method</TableHead>
+                    <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 h-10 px-6">Proof</TableHead>
+                    <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 h-10 px-6">Status</TableHead>
+                    <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 h-10 px-6">Date</TableHead>
+                    <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 h-10 px-6">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {deposits.map((deposit) => (
+                    <TableRow key={deposit.id} className="border-b border-slate-100 dark:border-slate-800">
+                      <TableCell className="px-6 py-4">
+                        <div>
+                          <div className="font-bold text-xs text-slate-900 dark:text-white">{deposit.profiles?.full_name || 'Unnamed'}</div>
+                          <div className="text-[11px] text-slate-500 mt-0.5">{deposit.profiles?.email}</div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-xs font-bold text-slate-900 dark:text-white px-6 py-4">${parseFloat(deposit.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}</TableCell>
+                      <TableCell className="text-xs text-slate-600 dark:text-slate-400 px-6 py-4">{deposit.payment_method}</TableCell>
+                      <TableCell className="px-6 py-4">
+                        {deposit.proof_url ? (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="flex items-center gap-1.5 h-8 text-[11px] rounded-lg border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-350"
+                            onClick={() => handleViewProof(deposit)}
+                          >
+                            <span className="material-symbols-outlined text-[15px]">visibility</span>
+                            View Proof
+                          </Button>
+                        ) : (
+                          <span className="text-[11px] text-slate-400 flex items-center gap-1">
+                            <span className="material-symbols-outlined text-[15px]">no_photography</span>
+                            No proof
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell className="px-6 py-4">
+                        <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                          deposit.status === 'completed' 
+                            ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' 
+                            : deposit.status === 'pending'
+                            ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
+                            : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+                        }`}>
+                          {deposit.status}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-[11px] text-slate-500 px-6 py-4">
+                        {formatDistanceToNow(new Date(deposit.created_at), { addSuffix: true })}
+                      </TableCell>
+                      <TableCell className="px-6 py-4">
+                        {deposit.status === 'pending' && (
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              className="h-8 rounded-lg text-[11px] font-bold bg-primary text-white hover:bg-primary/90"
+                              onClick={() => handleApprove(deposit.id, deposit.user_id, deposit.amount)}
+                            >
+                              <span className="material-symbols-outlined text-[15px] mr-1">check</span>
+                              Approve
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              className="h-8 rounded-lg text-[11px] font-bold bg-red-600 hover:bg-red-700 text-white"
+                              onClick={() => handleReject(deposit.id)}
+                            >
+                              <span className="material-symbols-outlined text-[15px] mr-1">close</span>
+                              Reject
+                            </Button>
+                          </div>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </CardContent>
       </Card>
 
       {/* Proof Image Modal */}
       <Dialog open={!!selectedProof} onOpenChange={closeProofModal}>
-        <DialogContent className="max-w-3xl">
-          <DialogHeader>
-            <DialogTitle>Payment Proof</DialogTitle>
+        <DialogContent className="max-w-3xl rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xl overflow-hidden p-6 gap-0">
+          <DialogHeader className="pb-4 border-b border-slate-100 dark:border-slate-800">
+            <DialogTitle className="text-sm font-bold text-slate-900 dark:text-white">Payment Proof</DialogTitle>
           </DialogHeader>
 
           {selectedProof && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <p className="text-muted-foreground text-xs uppercase tracking-wider font-medium">User</p>
-                  <p className="font-semibold">{selectedProof.deposit.profiles?.full_name}</p>
-                  <p className="text-xs text-muted-foreground">{selectedProof.deposit.profiles?.email}</p>
+            <div className="space-y-4 pt-4">
+              <div className="grid grid-cols-2 gap-4 text-xs">
+                <div className="space-y-0.5">
+                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">User</p>
+                  <p className="font-bold text-slate-900 dark:text-white">{selectedProof.deposit.profiles?.full_name || 'Unnamed'}</p>
+                  <p className="text-slate-500">{selectedProof.deposit.profiles?.email}</p>
                 </div>
-                <div>
-                  <p className="text-muted-foreground text-xs uppercase tracking-wider font-medium">Amount</p>
-                  <p className="text-xl font-bold">${selectedProof.deposit.amount}</p>
+                <div className="space-y-0.5">
+                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Amount</p>
+                  <p className="text-lg font-black text-slate-900 dark:text-white">${parseFloat(selectedProof.deposit.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
                 </div>
-                <div>
-                  <p className="text-muted-foreground text-xs uppercase tracking-wider font-medium">Status</p>
-                  <Badge variant={
-                    selectedProof.deposit.status === 'approved' ? 'default' :
-                    selectedProof.deposit.status === 'pending' ? 'secondary' :
-                    'destructive'
-                  } className="mt-1">
-                    {selectedProof.deposit.status}
-                  </Badge>
+                <div className="space-y-0.5">
+                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Status</p>
+                  <div className="pt-0.5">
+                    <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                      selectedProof.deposit.status === 'completed' 
+                        ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' 
+                        : selectedProof.deposit.status === 'pending'
+                        ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
+                        : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+                    }`}>
+                      {selectedProof.deposit.status}
+                    </span>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-muted-foreground text-xs uppercase tracking-wider font-medium">Date</p>
-                  <p className="font-medium">{formatDistanceToNow(new Date(selectedProof.deposit.created_at), { addSuffix: true })}</p>
+                <div className="space-y-0.5">
+                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Date</p>
+                  <p className="font-semibold text-slate-900 dark:text-white mt-1">
+                    {formatDistanceToNow(new Date(selectedProof.deposit.created_at), { addSuffix: true })}
+                  </p>
                 </div>
               </div>
 
-              <div className="border rounded-xl overflow-hidden bg-muted/30">
+              <div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-2">
                 {loadingImage ? (
-                  <div className="flex items-center justify-center h-96">
-                    <p className="text-muted-foreground">Loading image...</p>
+                  <div className="flex flex-col items-center justify-center h-96 gap-2">
+                    <span className="material-symbols-outlined animate-spin text-[24px] text-primary">progress_activity</span>
+                    <p className="text-xs text-slate-500 font-medium">Loading proof image...</p>
                   </div>
                 ) : proofImageUrl ? (
                   <img
                     src={proofImageUrl}
                     alt="Payment Proof"
-                    className="w-full h-auto max-h-[600px] object-contain"
+                    className="w-full h-auto max-h-[500px] object-contain rounded-xl"
                   />
                 ) : (
-                  <div className="flex items-center justify-center h-96 text-muted-foreground">
-                    <p>Unable to load image</p>
+                  <div className="flex flex-col items-center justify-center h-96 text-slate-500 gap-2">
+                    <span className="material-symbols-outlined text-[32px]">broken_image</span>
+                    <p className="text-xs font-semibold">Unable to load image</p>
                   </div>
                 )}
               </div>
@@ -280,24 +295,24 @@ export const AdminDeposits = () => {
               {selectedProof.deposit.status === 'pending' && (
                 <div className="flex gap-3 pt-2">
                   <Button
-                    className="flex-1"
+                    className="flex-1 rounded-xl h-11 text-xs font-bold bg-primary text-white"
                     onClick={() => {
                       handleApprove(selectedProof.deposit.id, selectedProof.deposit.user_id, selectedProof.deposit.amount);
                       closeProofModal();
                     }}
                   >
-                    <Check className="h-4 w-4 mr-2" />
+                    <span className="material-symbols-outlined text-[16px] mr-1.5">check</span>
                     Approve Deposit
                   </Button>
                   <Button
                     variant="destructive"
-                    className="flex-1"
+                    className="flex-1 rounded-xl h-11 text-xs font-bold bg-red-600 hover:bg-red-700 text-white"
                     onClick={() => {
                       handleReject(selectedProof.deposit.id);
                       closeProofModal();
                     }}
                   >
-                    <X className="h-4 w-4 mr-2" />
+                    <span className="material-symbols-outlined text-[16px] mr-1.5">close</span>
                     Reject Deposit
                   </Button>
                 </div>

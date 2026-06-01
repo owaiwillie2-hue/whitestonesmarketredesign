@@ -3,7 +3,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { format, subDays, startOfDay } from 'date-fns';
-import { TrendingUp, Users, DollarSign, Activity as ActivityIcon } from 'lucide-react';
 import { AnalyticsCharts } from '@/components/admin/AnalyticsCharts';
 
 export const Analytics = () => {
@@ -18,8 +17,6 @@ export const Analytics = () => {
     totalDeposits: 0,
     totalWithdrawals: 0,
     activeInvestments: 0,
-    depositChange: 0,
-    withdrawalChange: 0,
   });
   const [loading, setLoading] = useState(true);
 
@@ -169,8 +166,6 @@ export const Analytics = () => {
         totalDeposits: totalDepositsAmount,
         totalWithdrawals: totalWithdrawalsAmount,
         activeInvestments: activeInvestmentsCount || 0,
-        depositChange: 0,
-        withdrawalChange: 0,
       });
 
     } catch (error) {
@@ -181,79 +176,85 @@ export const Analytics = () => {
   };
 
   return (
-    <div className="space-y-6 max-w-full overflow-x-hidden">
+    <div className="space-y-6 max-w-full overflow-x-hidden font-['Plus_Jakarta_Sans']">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Analytics Dashboard</h1>
-          <p className="text-muted-foreground">Track key metrics and performance in real-time</p>
+          <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">Analytics Dashboard</h1>
+          <p className="text-xs text-slate-500 mt-1">Track platform operations, financial stats, and user growth</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl gap-1 border border-slate-200/50 dark:border-slate-700/50">
           {(['7d', '30d', '90d'] as const).map((range) => (
             <Button
               key={range}
               onClick={() => setTimeRange(range)}
-              variant={timeRange === range ? 'default' : 'outline'}
-              size="sm"
+              variant="ghost"
+              className={`h-8 px-3 rounded-lg text-xs font-bold transition-all duration-200 ${
+                timeRange === range 
+                  ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm' 
+                  : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+              }`}
             >
               {range === '7d' ? '7 Days' : range === '30d' ? '30 Days' : '90 Days'}
             </Button>
           ))}
         </div>
       </div>
+      
       <div className="space-y-6">
-          {/* Stats Cards */}
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-                <Users className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stats.totalUsers}</div>
-                <p className="text-xs text-muted-foreground">All registered users</p>
-              </CardContent>
-            </Card>
+        {/* Stats Cards */}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <Card className="border border-slate-200 dark:border-slate-800 shadow-soft bg-white dark:bg-slate-900 rounded-2xl overflow-hidden">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Total Users</CardTitle>
+              <span className="material-symbols-outlined text-primary text-[20px] bg-primary/10 p-1.5 rounded-xl">group</span>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{stats.totalUsers}</div>
+              <p className="text-[10px] text-slate-400 mt-1">Total registered profiles</p>
+            </CardContent>
+          </Card>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Deposits</CardTitle>
-                <DollarSign className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">${stats.totalDeposits.toFixed(2)}</div>
-                <p className="text-xs text-muted-foreground flex items-center gap-1">
-                  <TrendingUp className="h-3 w-3 text-green-500" />
-                  Last {timeRange}
-                </p>
-              </CardContent>
-            </Card>
+          <Card className="border border-slate-200 dark:border-slate-800 shadow-soft bg-white dark:bg-slate-900 rounded-2xl overflow-hidden">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Total Deposits</CardTitle>
+              <span className="material-symbols-outlined text-green-500 text-[20px] bg-green-500/10 p-1.5 rounded-xl">payments</span>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-slate-900 dark:text-white mt-1">${stats.totalDeposits.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+              <p className="text-[10px] text-slate-400 mt-1">Approved deposits in interval</p>
+            </CardContent>
+          </Card>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Withdrawals</CardTitle>
-                <DollarSign className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">${stats.totalWithdrawals.toFixed(2)}</div>
-                <p className="text-xs text-muted-foreground flex items-center gap-1">
-                  Last {timeRange}
-                </p>
-              </CardContent>
-            </Card>
+          <Card className="border border-slate-200 dark:border-slate-800 shadow-soft bg-white dark:bg-slate-900 rounded-2xl overflow-hidden">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Total Withdrawals</CardTitle>
+              <span className="material-symbols-outlined text-red-500 text-[20px] bg-red-500/10 p-1.5 rounded-xl">price_change</span>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-slate-900 dark:text-white mt-1">${stats.totalWithdrawals.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+              <p className="text-[10px] text-slate-400 mt-1">Completed cashouts in interval</p>
+            </CardContent>
+          </Card>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Active Investments</CardTitle>
-                <ActivityIcon className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stats.activeInvestments}</div>
-                <p className="text-xs text-muted-foreground">Currently active</p>
-              </CardContent>
-            </Card>
+          <Card className="border border-slate-200 dark:border-slate-800 shadow-soft bg-white dark:bg-slate-900 rounded-2xl overflow-hidden">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Active Investments</CardTitle>
+              <span className="material-symbols-outlined text-blue-500 text-[20px] bg-blue-500/10 p-1.5 rounded-xl">trending_up</span>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{stats.activeInvestments}</div>
+              <p className="text-[10px] text-slate-400 mt-1">Currently generating returns</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Charts */}
+        {loading ? (
+          <div className="grid gap-4 md:grid-cols-2">
+            <Card className="border border-slate-200 dark:border-slate-800 rounded-2xl h-[360px] bg-white dark:bg-slate-900 animate-pulse" />
+            <Card className="border border-slate-200 dark:border-slate-800 rounded-2xl h-[360px] bg-white dark:bg-slate-900 animate-pulse" />
           </div>
-
-          {/* Charts */}
+        ) : (
           <AnalyticsCharts
             depositsOverTime={depositsOverTime}
             withdrawalsOverTime={withdrawalsOverTime}
@@ -261,9 +262,11 @@ export const Analytics = () => {
             userGrowth={userGrowth}
             kycCompletion={kycCompletion}
           />
-        </div>
+        )}
       </div>
+    </div>
   );
 };
 
 export default Analytics;
+
