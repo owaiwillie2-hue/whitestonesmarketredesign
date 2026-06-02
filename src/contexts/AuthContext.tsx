@@ -56,32 +56,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    // 1. Initial check
-    const checkSession = async () => {
-      try {
-        const { data: { session: initialSession } } = await supabase.auth.getSession();
-        setSession(initialSession);
-        setUser(initialSession?.user ?? null);
-        if (initialSession?.user) {
-          await fetchProfileAndRole(initialSession.user);
-        }
-      } catch (err) {
-        console.error('Error checking initial session:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    checkSession();
-
-    // 2. Setup subscription
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
       setSession(newSession);
       const newUser = newSession?.user ?? null;
       setUser(newUser);
       
       if (newUser) {
-        setLoading(true);
         await fetchProfileAndRole(newUser);
       } else {
         setProfile(null);
