@@ -134,30 +134,45 @@ export const AdminDeposits = () => {
           <CardTitle className="text-sm font-bold text-slate-900 dark:text-white">All Deposit Requests ({deposits.length})</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          {loading ? (
-            <div className="flex justify-center items-center py-12">
-              <span className="material-symbols-outlined animate-spin text-[24px] text-primary">progress_activity</span>
-            </div>
-          ) : deposits.length === 0 ? (
-            <div className="text-center py-12 text-slate-500 text-xs font-medium">
-              No deposit transactions found.
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader className="bg-slate-50 dark:bg-slate-800/50">
-                  <TableRow className="hover:bg-transparent border-b border-slate-100 dark:border-slate-800">
-                    <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 h-10 px-6">User</TableHead>
-                    <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 h-10 px-6">Amount</TableHead>
-                    <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 h-10 px-6">Method</TableHead>
-                    <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 h-10 px-6">Proof</TableHead>
-                    <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 h-10 px-6">Status</TableHead>
-                    <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 h-10 px-6">Date</TableHead>
-                    <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 h-10 px-6">Actions</TableHead>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader className="bg-slate-50 dark:bg-slate-800/50">
+                <TableRow className="hover:bg-transparent border-b border-slate-100 dark:border-slate-800">
+                  <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 h-10 px-6">User</TableHead>
+                  <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 h-10 px-6">Amount</TableHead>
+                  <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 h-10 px-6">Method</TableHead>
+                  <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 h-10 px-6">Proof</TableHead>
+                  <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 h-10 px-6">Status</TableHead>
+                  <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 h-10 px-6">Date</TableHead>
+                  <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 h-10 px-6">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {loading ? (
+                  Array.from({ length: 5 }).map((_, idx) => (
+                    <TableRow key={idx} className="border-b border-slate-100 dark:border-slate-800">
+                      <TableCell className="px-6 py-4">
+                        <div className="space-y-1">
+                          <div className="h-4 w-24 bg-slate-200 dark:bg-slate-800 rounded animate-pulse" />
+                          <div className="h-3 w-32 bg-slate-100 dark:bg-slate-850 rounded animate-pulse" />
+                        </div>
+                      </TableCell>
+                      <TableCell className="px-6 py-4"><div className="h-4 w-16 bg-slate-200 dark:bg-slate-800 rounded animate-pulse" /></TableCell>
+                      <TableCell className="px-6 py-4"><div className="h-4 w-12 bg-slate-200 dark:bg-slate-800 rounded animate-pulse" /></TableCell>
+                      <TableCell className="px-6 py-4"><div className="h-7 w-20 bg-slate-200 dark:bg-slate-800 rounded-lg animate-pulse" /></TableCell>
+                      <TableCell className="px-6 py-4"><div className="h-4.5 w-16 bg-slate-200 dark:bg-slate-800 rounded-full animate-pulse" /></TableCell>
+                      <TableCell className="px-6 py-4"><div className="h-3 w-16 bg-slate-200 dark:bg-slate-800 rounded animate-pulse" /></TableCell>
+                      <TableCell className="px-6 py-4"><div className="h-7 w-24 bg-slate-200 dark:bg-slate-800 rounded-lg animate-pulse" /></TableCell>
+                    </TableRow>
+                  ))
+                ) : deposits.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-12 text-slate-500 text-xs font-medium">
+                      No deposit transactions found.
+                    </TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {deposits.map((deposit) => (
+                ) : (
+                  deposits.map((deposit) => (
                     <TableRow key={deposit.id} className="border-b border-slate-100 dark:border-slate-800">
                       <TableCell className="px-6 py-4">
                         <div>
@@ -223,11 +238,11 @@ export const AdminDeposits = () => {
                         )}
                       </TableCell>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
 

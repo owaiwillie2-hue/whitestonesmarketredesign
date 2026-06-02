@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 
 interface ProtectedRouteProps {
@@ -8,83 +8,22 @@ interface ProtectedRouteProps {
 }
 
 export const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRouteProps) => {
-  const [loading, setLoading] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [isSuspended, setIsSuspended] = useState(false);
+  const { user, loading, isAdmin, isSuspended } = useAuth();
   const location = useLocation();
 
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (session?.user) {
-          setIsAuthenticated(true);
-
-          // Check if user is suspended
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('is_suspended')
-            .eq('user_id', session.user.id)
-            .maybeSingle();
-
-          if (profile?.is_suspended) {
-            setIsSuspended(true);
-          }
-          
-          if (requireAdmin) {
-            const { data: roleData } = await supabase
-              .rpc('has_role', { _user_id: session.user.id, _role: 'admin' });
-            setIsAdmin(!!roleData);
-          }
-        }
-      } catch (error) {
-        console.error('Auth check error:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    checkAuth();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (session?.user) {
-        setIsAuthenticated(true);
-        
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('is_suspended')
-          .eq('user_id', session.user.id)
-          .maybeSingle();
-
-        if (profile?.is_suspended) {
-          setIsSuspended(true);
-        } else {
-          setIsSuspended(false);
-        }
-
-        if (requireAdmin) {
-          const { data: roleData } = await supabase
-            .rpc('has_role', { _user_id: session.user.id, _role: 'admin' });
-          setIsAdmin(!!roleData);
-        }
-      } else {
-        setIsAuthenticated(false);
-        setIsAdmin(false);
-        setIsSuspended(false);
-      }
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
-  }, [requireAdmin]);
-
   if (loading) {
-    return null;
+    return (
+      <div className="min-h-screen w-full flex items-center justify-center bg-slate-950">
+        <div className="flex items-center gap-1.5 justify-center py-0.5">
+          <span className="w-2.5 h-2.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: '-0.3s' }}></span>
+          <span className="w-2.5 h-2.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: '-0.15s' }}></span>
+          <span className="w-2.5 h-2.5 rounded-full bg-primary animate-bounce"></span>
+        </div>
+      </div>
+    );
   }
 
-  if (!isAuthenticated) {
+  if (!user) {
     return <Navigate to={requireAdmin ? "/admin/login" : "/login"} state={{ from: location }} replace />;
   }
 

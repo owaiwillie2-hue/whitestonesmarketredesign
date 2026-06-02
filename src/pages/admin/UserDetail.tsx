@@ -294,15 +294,7 @@ export const AdminUserDetail = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center py-24">
-        <span className="material-symbols-outlined animate-spin text-[32px] text-primary">progress_activity</span>
-      </div>
-    );
-  }
-
-  if (!user) {
+  if (!user && !loading) {
     return (
       <div className="space-y-6">
         <Button variant="outline" onClick={() => navigate('/admin/users')} className="rounded-xl h-10 text-xs">
@@ -318,9 +310,9 @@ export const AdminUserDetail = () => {
     );
   }
 
-  const mainBalance = parseFloat(user.account_balances?.[0]?.main_balance || '0');
-  const investmentBalance = parseFloat(user.account_balances?.[0]?.investment_balance || '0');
-  const kycStatus = user.kyc_documents?.[0]?.status || 'not_submitted';
+  const mainBalance = user ? parseFloat(user.account_balances?.[0]?.main_balance || '0') : 0;
+  const investmentBalance = user ? parseFloat(user.account_balances?.[0]?.investment_balance || '0') : 0;
+  const kycStatus = user ? (user.kyc_documents?.[0]?.status || 'not_submitted') : 'not_submitted';
 
   return (
     <div className="space-y-6">
@@ -334,13 +326,23 @@ export const AdminUserDetail = () => {
         <div className="sm:text-right">
           <div className="flex items-center sm:justify-end gap-2.5">
             <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white font-['Plus_Jakarta_Sans']">
-              {user.full_name}
+              {loading ? (
+                <div className="h-6 w-32 bg-slate-200 dark:bg-slate-800 rounded animate-pulse" />
+              ) : (
+                user.full_name
+              )}
             </h1>
-            {user.is_suspended && (
+            {user?.is_suspended && !loading && (
               <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">Suspended / Banned</span>
             )}
           </div>
-          <p className="text-xs text-slate-500 mt-1">{user.email}</p>
+          <div className="text-xs text-slate-500 mt-1">
+            {loading ? (
+              <div className="h-4 w-48 bg-slate-200 dark:bg-slate-800 rounded animate-pulse mt-1" />
+            ) : (
+              user.email
+            )}
+          </div>
         </div>
       </div>
 
@@ -349,7 +351,13 @@ export const AdminUserDetail = () => {
         <div className="bg-surface-container-low p-4 rounded-2xl border border-outline-variant/30 flex items-center justify-between">
           <div className="space-y-1">
             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Main Wallet</p>
-            <p className="text-lg font-black text-slate-900 dark:text-white">${mainBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+            <div className="text-lg font-black text-slate-900 dark:text-white mt-1">
+              {loading ? (
+                <div className="h-6 w-24 bg-slate-200 dark:bg-slate-800 rounded animate-pulse" />
+              ) : (
+                `$${mainBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}`
+              )}
+            </div>
           </div>
           <span className="material-symbols-outlined text-slate-400 text-[24px]">account_balance_wallet</span>
         </div>
@@ -357,7 +365,13 @@ export const AdminUserDetail = () => {
         <div className="bg-surface-container-low p-4 rounded-2xl border border-outline-variant/30 flex items-center justify-between">
           <div className="space-y-1">
             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Investment Wallet</p>
-            <p className="text-lg font-black text-slate-900 dark:text-white">${investmentBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+            <div className="text-lg font-black text-slate-900 dark:text-white mt-1">
+              {loading ? (
+                <div className="h-6 w-24 bg-slate-200 dark:bg-slate-800 rounded animate-pulse" />
+              ) : (
+                `$${investmentBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}`
+              )}
+            </div>
           </div>
           <span className="material-symbols-outlined text-slate-400 text-[24px]">trending_up</span>
         </div>
@@ -365,7 +379,13 @@ export const AdminUserDetail = () => {
         <div className="bg-surface-container-low p-4 rounded-2xl border border-outline-variant/30 flex items-center justify-between">
           <div className="space-y-1">
             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Total Investment</p>
-            <p className="text-lg font-black text-slate-900 dark:text-white">${totalInvested.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+            <div className="text-lg font-black text-slate-900 dark:text-white mt-1">
+              {loading ? (
+                <div className="h-6 w-24 bg-slate-200 dark:bg-slate-800 rounded animate-pulse" />
+              ) : (
+                `$${totalInvested.toLocaleString(undefined, { minimumFractionDigits: 2 })}`
+              )}
+            </div>
           </div>
           <span className="material-symbols-outlined text-slate-400 text-[24px]">payments</span>
         </div>
@@ -373,7 +393,13 @@ export const AdminUserDetail = () => {
         <div className="bg-surface-container-low p-4 rounded-2xl border border-outline-variant/30 flex items-center justify-between">
           <div className="space-y-1">
             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Total Withdrawal</p>
-            <p className="text-lg font-black text-slate-900 dark:text-white">${totalWithdrawn.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+            <div className="text-lg font-black text-slate-900 dark:text-white mt-1">
+              {loading ? (
+                <div className="h-6 w-24 bg-slate-200 dark:bg-slate-800 rounded animate-pulse" />
+              ) : (
+                `$${totalWithdrawn.toLocaleString(undefined, { minimumFractionDigits: 2 })}`
+              )}
+            </div>
           </div>
           <span className="material-symbols-outlined text-slate-400 text-[24px]">price_change</span>
         </div>
@@ -381,7 +407,13 @@ export const AdminUserDetail = () => {
         <div className="bg-surface-container-low p-4 rounded-2xl border border-outline-variant/30 flex items-center justify-between">
           <div className="space-y-1">
             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Current Plan</p>
-            <p className="text-sm font-bold text-slate-900 dark:text-white mt-1.5">{currentPlanName}</p>
+            <div className="text-sm font-bold text-slate-900 dark:text-white mt-1.5">
+              {loading ? (
+                <div className="h-5 w-24 bg-slate-200 dark:bg-slate-800 rounded animate-pulse" />
+              ) : (
+                currentPlanName
+              )}
+            </div>
           </div>
           <span className="material-symbols-outlined text-slate-400 text-[24px]">workspace_premium</span>
         </div>
@@ -389,16 +421,20 @@ export const AdminUserDetail = () => {
         <div className="bg-surface-container-low p-4 rounded-2xl border border-outline-variant/30 flex items-center justify-between">
           <div className="space-y-1">
             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">KYC Status</p>
-            <div className="pt-0.5">
-              <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                kycStatus === 'approved' 
-                  ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' 
-                  : kycStatus === 'pending'
-                  ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
-                  : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
-              }`}>
-                {kycStatus === 'approved' ? 'Approved' : kycStatus === 'pending' ? 'Pending Review' : 'Not Verified'}
-              </span>
+            <div className="pt-1">
+              {loading ? (
+                <div className="h-5 w-20 bg-slate-200 dark:bg-slate-800 rounded animate-pulse" />
+              ) : (
+                <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                  kycStatus === 'approved' 
+                    ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' 
+                    : kycStatus === 'pending'
+                    ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
+                    : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
+                }`}>
+                  {kycStatus === 'approved' ? 'Approved' : kycStatus === 'pending' ? 'Pending Review' : 'Not Verified'}
+                </span>
+              )}
             </div>
           </div>
           <span className="material-symbols-outlined text-slate-400 text-[24px]">verified_user</span>

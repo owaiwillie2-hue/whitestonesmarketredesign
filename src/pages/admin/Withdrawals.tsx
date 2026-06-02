@@ -114,29 +114,48 @@ export const AdminWithdrawals = () => {
           <CardTitle className="text-sm font-bold text-slate-900 dark:text-white font-['Plus_Jakarta_Sans']">All Withdrawals ({withdrawals.length})</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          {loading ? (
-            <div className="flex justify-center items-center py-12">
-              <span className="material-symbols-outlined animate-spin text-[24px] text-primary">progress_activity</span>
-            </div>
-          ) : withdrawals.length === 0 ? (
-            <div className="text-center py-12 text-slate-500 text-xs font-medium">
-              No withdrawal requests found.
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader className="bg-slate-50 dark:bg-slate-800/50">
-                  <TableRow className="hover:bg-transparent border-b border-slate-100 dark:border-slate-800">
-                    <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 h-10 px-6">User</TableHead>
-                    <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 h-10 px-6">Amount</TableHead>
-                    <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 h-10 px-6">Account Details</TableHead>
-                    <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 h-10 px-6">Status</TableHead>
-                    <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 h-10 px-6">Date</TableHead>
-                    <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 h-10 px-6">Actions</TableHead>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader className="bg-slate-50 dark:bg-slate-800/50">
+                <TableRow className="hover:bg-transparent border-b border-slate-100 dark:border-slate-800">
+                  <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 h-10 px-6">User</TableHead>
+                  <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 h-10 px-6">Amount</TableHead>
+                  <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 h-10 px-6">Account Details</TableHead>
+                  <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 h-10 px-6">Status</TableHead>
+                  <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 h-10 px-6">Date</TableHead>
+                  <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 h-10 px-6">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {loading ? (
+                  Array.from({ length: 5 }).map((_, idx) => (
+                    <TableRow key={idx} className="border-b border-slate-100 dark:border-slate-800">
+                      <TableCell className="px-6 py-4">
+                        <div className="space-y-1">
+                          <div className="h-4 w-24 bg-slate-200 dark:bg-slate-800 rounded animate-pulse" />
+                          <div className="h-3 w-32 bg-slate-100 dark:bg-slate-850 rounded animate-pulse" />
+                        </div>
+                      </TableCell>
+                      <TableCell className="px-6 py-4"><div className="h-4 w-16 bg-slate-200 dark:bg-slate-800 rounded animate-pulse" /></TableCell>
+                      <TableCell className="px-6 py-4">
+                        <div className="space-y-1">
+                          <div className="h-4 w-16 bg-slate-200 dark:bg-slate-800 rounded animate-pulse" />
+                          <div className="h-3 w-28 bg-slate-100 dark:bg-slate-850 rounded animate-pulse" />
+                        </div>
+                      </TableCell>
+                      <TableCell className="px-6 py-4"><div className="h-4.5 w-16 bg-slate-200 dark:bg-slate-800 rounded-full animate-pulse" /></TableCell>
+                      <TableCell className="px-6 py-4"><div className="h-3 w-16 bg-slate-200 dark:bg-slate-800 rounded animate-pulse" /></TableCell>
+                      <TableCell className="px-6 py-4"><div className="h-7 w-24 bg-slate-200 dark:bg-slate-800 rounded-lg animate-pulse" /></TableCell>
+                    </TableRow>
+                  ))
+                ) : withdrawals.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-12 text-slate-500 text-xs font-medium">
+                      No withdrawal requests found.
+                    </TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {withdrawals.map((withdrawal) => {
+                ) : (
+                  withdrawals.map((withdrawal) => {
                     const acctDetails = withdrawal.withdrawal_accounts?.account_details;
                     return (
                       <TableRow key={withdrawal.id} className="border-b border-slate-100 dark:border-slate-800">
@@ -196,11 +215,11 @@ export const AdminWithdrawals = () => {
                         </TableCell>
                       </TableRow>
                     );
-                  })}
-                </TableBody>
-              </Table>
-            </div>
-          )}
+                  })
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </div>

@@ -7,9 +7,11 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 import { ArrowLeft, TrendingUp, Clock, DollarSign, AlertCircle } from 'lucide-react';
 
 const Invest = () => {
+  const { user } = useAuth();
   const [searchParams] = useSearchParams();
   const planId = searchParams.get('planId');
   const upgradeMode = searchParams.get('upgrade') === 'true';
@@ -26,12 +28,9 @@ const Invest = () => {
 
   useEffect(() => {
     const loadData = async () => {
-      if (!planId) return;
+      if (!planId || !user) return;
       setLoading(true);
       try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-
         const promises: Promise<any>[] = [
           supabase.from('investment_plans').select('*').eq('id', planId).single(),
           supabase.from('account_balances').select('investment_balance').eq('user_id', user.id).maybeSingle(),
@@ -88,7 +87,7 @@ const Invest = () => {
     };
 
     loadData();
-  }, [planId, upgradeMode]);
+  }, [planId, upgradeMode, user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -133,7 +132,6 @@ const Invest = () => {
     setSubmitting(true);
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
       const durationInDays = Number(plan.duration_days);

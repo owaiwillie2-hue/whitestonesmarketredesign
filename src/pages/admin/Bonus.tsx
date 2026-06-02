@@ -155,8 +155,14 @@ const Bonus = () => {
           </CardHeader>
           <CardContent className="p-4">
             {loading ? (
-              <div className="flex justify-center items-center py-12">
-                <span className="material-symbols-outlined animate-spin text-[24px] text-primary">progress_activity</span>
+              <div className="space-y-2.5 max-h-96 overflow-y-auto pr-1">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="p-3.5 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/20 animate-pulse space-y-2">
+                    <div className="h-4 w-32 bg-slate-200 dark:bg-slate-800 rounded" />
+                    <div className="h-3 w-48 bg-slate-150 dark:bg-slate-850 rounded" />
+                    <div className="h-2.5 w-16 bg-slate-100 dark:bg-slate-900 rounded" />
+                  </div>
+                ))}
               </div>
             ) : (
               <div className="space-y-2 max-h-96 overflow-y-auto pr-1 custom-scrollbar">

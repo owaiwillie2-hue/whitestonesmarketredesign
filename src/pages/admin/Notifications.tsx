@@ -78,6 +78,7 @@ export const AdminNotifications = () => {
           title,
           message,
           type: category as any,
+          is_global: true,
         }]);
       } else {
         if (!selectedUserId) {
@@ -91,6 +92,7 @@ export const AdminNotifications = () => {
           title,
           message,
           type: category as any,
+          is_global: false,
         }]);
       }
 

@@ -13,11 +13,10 @@ import { WithdrawModal } from './WithdrawModal';
 import { toast } from '@/lib/toast';
 
 const DashboardOverview = () => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { isApproved } = useKYCStatus();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const [userName, setUserName] = useState<string>('');
   const [balance, setBalance] = useState<any>(null);
   const [currentPlan, setCurrentPlan] = useState<string | null>(null);
   const [stats, setStats] = useState({
@@ -42,12 +41,7 @@ const DashboardOverview = () => {
       setLoading(true);
       try {
         // Fetch all base data in parallel to avoid database query waterfalls
-        const [profileRes, balanceRes, depositsRes, withdrawalsRes, investmentsRes] = await Promise.all([
-          supabase
-            .from('profiles')
-            .select('full_name, current_plan_override_id')
-            .eq('user_id', user.id)
-            .single(),
+        const [balanceRes, depositsRes, withdrawalsRes, investmentsRes] = await Promise.all([
           supabase
             .from('account_balances')
             .select('*')
@@ -69,15 +63,10 @@ const DashboardOverview = () => {
             .eq('user_id', user.id)
         ]);
 
-        const profileData = profileRes.data;
         const balanceData = balanceRes.data;
         const deposits = depositsRes.data;
         const withdrawals = withdrawalsRes.data;
         const investments = investmentsRes.data;
-
-        if (profileData) {
-          setUserName(profileData.full_name || '');
-        }
 
         if (balanceData) {
           setBalance(balanceData);
@@ -99,11 +88,11 @@ const DashboardOverview = () => {
 
         // Resolve current plan (override takes precedence)
         let resolvedPlanName = null;
-        if (profileData?.current_plan_override_id) {
+        if (profile?.current_plan_override_id) {
           const { data: overridePlan } = await supabase
             .from('investment_plans')
             .select('name')
-            .eq('id', profileData.current_plan_override_id)
+            .eq('id', profile.current_plan_override_id)
             .maybeSingle();
           if (overridePlan) {
             resolvedPlanName = overridePlan.name;
@@ -183,7 +172,7 @@ const DashboardOverview = () => {
         supabase.removeChannel(channel);
       };
     }
-  }, [user]);
+  }, [user, profile]);
 
   const handleTransfer = async () => {
     const amount = parseFloat(transferAmount);
@@ -240,23 +229,6 @@ const DashboardOverview = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="space-y-6 animate-pulse">
-        <div className="flex gap-2 items-center">
-          <div className="h-8 bg-slate-200 dark:bg-slate-800 rounded w-1/2"></div>
-        </div>
-        <div className="h-48 bg-slate-200 dark:bg-slate-800 rounded-2xl w-full"></div>
-        <div className="grid grid-cols-3 gap-3">
-          <div className="h-24 bg-slate-200 dark:bg-slate-800 rounded-2xl"></div>
-          <div className="h-24 bg-slate-200 dark:bg-slate-800 rounded-2xl"></div>
-          <div className="h-24 bg-slate-200 dark:bg-slate-800 rounded-2xl"></div>
-        </div>
-        <div className="h-32 bg-slate-200 dark:bg-slate-800 rounded-2xl w-full"></div>
-      </div>
-    );
-  }
-
   const getPlanProgress = (planName: string | null) => {
     const plans = ['Starter', 'Platinum', 'Executive', 'Apex'];
     const currentIndex = planName ? plans.findIndex(p => planName.includes(p)) : -1;
@@ -269,14 +241,20 @@ const DashboardOverview = () => {
       {/* Welcome Section */}
       <section className="flex flex-col gap-1">
         <div className="flex items-center gap-1">
-          <h1 className="font-headline-sm text-lg font-bold text-primary">Welcome back, {userName || 'User'}</h1>
-          {isApproved && (
+          <h1 className="font-headline-sm text-lg font-bold text-primary flex items-center gap-1.5">
+            Welcome back, {loading ? <span className="h-5 w-28 bg-slate-200 dark:bg-slate-800 rounded animate-pulse inline-block align-middle" /> : (profile?.full_name || 'User')}
+          </h1>
+          {isApproved && !loading && (
             <span className="material-symbols-outlined text-secondary text-[22px] translate-y-[1px]" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
           )}
         </div>
         <div className="flex items-center gap-2">
           <div className="px-2 py-0.5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed text-[10px] font-bold tracking-wider uppercase">
-            Active for {stats.daysActive} days
+            {loading ? (
+              <span className="h-3 w-20 bg-slate-200/20 dark:bg-slate-800/20 rounded animate-pulse inline-block" />
+            ) : (
+              `Active for ${stats.daysActive} days`
+            )}
           </div>
         </div>
       </section>
@@ -306,33 +284,57 @@ const DashboardOverview = () => {
         </div>
         <p className="text-on-surface-variant font-label-md uppercase tracking-widest text-[10px]">Total Combined Balance</p>
         <h2 className="text-2xl font-bold text-primary mt-1">
-          ${balance ? (Number(balance.main_balance) + Number(balance.profit_balance)).toFixed(2) : '0.00'}
+          {loading ? (
+            <span className="h-8 w-32 bg-slate-200 dark:bg-slate-800 rounded animate-pulse inline-block" />
+          ) : (
+            `$${(Number(balance?.main_balance || 0) + Number(balance?.profit_balance || 0)).toFixed(2)}`
+          )}
         </h2>
         
         <div className="mt-6 space-y-3">
           <div className="flex justify-between items-end">
             <div>
               <p className="text-on-surface-variant text-[10px] uppercase">Main Wallet</p>
-              <p className="text-lg font-bold text-primary">
-                ${balance ? Number(balance.main_balance).toFixed(2) : '0.00'}
-              </p>
+              <div className="text-lg font-bold text-primary mt-0.5">
+                {loading ? (
+                  <span className="h-6 w-24 bg-slate-200 dark:bg-slate-800 rounded animate-pulse inline-block" />
+                ) : (
+                  `$${Number(balance?.main_balance || 0).toFixed(2)}`
+                )}
+              </div>
             </div>
             <div className="text-right">
               <p className="text-on-surface-variant text-[10px] uppercase">Investment Wallet</p>
-              <p className="text-lg font-bold text-primary">
-                ${balance ? Number(balance.investment_balance).toFixed(2) : '0.00'}
-              </p>
+              <div className="text-lg font-bold text-primary mt-0.5">
+                {loading ? (
+                  <span className="h-6 w-24 bg-slate-200 dark:bg-slate-800 rounded animate-pulse inline-block" />
+                ) : (
+                  `$${Number(balance?.investment_balance || 0).toFixed(2)}`
+                )}
+              </div>
             </div>
           </div>
           
-          <div className="grid grid-cols-2 gap-3 pt-3 border-t border-slate-100">
+          <div className="grid grid-cols-2 gap-3 pt-3 border-t border-slate-100 font-['Plus_Jakarta_Sans']">
             <div>
               <p className="text-on-surface-variant text-[10px] uppercase">Active Investments</p>
-              <p className="text-base font-bold text-primary">${stats.totalInvested.toFixed(2)}</p>
+              <div className="text-base font-bold text-primary mt-0.5">
+                {loading ? (
+                  <span className="h-5 w-20 bg-slate-200 dark:bg-slate-800 rounded animate-pulse inline-block" />
+                ) : (
+                  `$${stats.totalInvested.toFixed(2)}`
+                )}
+              </div>
             </div>
             <div className="text-right">
               <p className="text-on-surface-variant text-[10px] uppercase">Total Profit Returns</p>
-              <p className="text-base font-bold text-secondary">${balance?.profit_balance ? Number(balance.profit_balance).toFixed(2) : '0.00'}</p>
+              <div className="text-base font-bold text-secondary mt-0.5">
+                {loading ? (
+                  <span className="h-5 w-20 bg-slate-200 dark:bg-slate-800 rounded animate-pulse inline-block" />
+                ) : (
+                  `$${balance?.profit_balance ? Number(balance.profit_balance).toFixed(2) : '0.00'}`
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -388,7 +390,21 @@ const DashboardOverview = () => {
           <button onClick={() => window.location.href = '/dashboard/plans'} className="text-secondary font-bold text-[11px]">View All Plans</button>
         </div>
         
-        {currentPlan ? (
+        {loading ? (
+          <div className="bg-primary-container text-on-primary-fixed-variant rounded-xl p-4 shadow-lg relative overflow-hidden flex flex-col gap-3">
+            <div className="absolute top-0 right-0 p-3 opacity-10">
+              <span className="material-symbols-outlined text-5xl">military_tech</span>
+            </div>
+            <div className="flex justify-between items-start z-10">
+              <div className="space-y-1">
+                <span className="bg-secondary-container/20 text-on-secondary-container px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-widest border border-secondary-container/30">Current Tier</span>
+                <div className="h-5 w-32 bg-white/20 rounded animate-pulse mt-1" />
+              </div>
+              <div className="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center backdrop-blur-sm border border-white/10 animate-pulse" />
+            </div>
+            <div className="h-10 w-full bg-white/10 rounded-full animate-pulse mt-2" />
+          </div>
+        ) : currentPlan ? (
           <div className="bg-primary-container text-on-primary-fixed-variant rounded-xl p-4 shadow-lg relative overflow-hidden flex flex-col gap-3">
             <div className="absolute top-0 right-0 p-3 opacity-10">
               <span className="material-symbols-outlined text-5xl">military_tech</span>
@@ -450,7 +466,13 @@ const DashboardOverview = () => {
             <span className="material-symbols-outlined text-secondary text-base">south_west</span>
             <span className="text-[9px] uppercase tracking-wider font-bold text-on-surface-variant">Deposits</span>
           </div>
-          <p className="text-base font-bold text-primary">${stats.totalDeposited.toFixed(2)}</p>
+          <div className="text-base font-bold text-primary">
+            {loading ? (
+              <span className="h-5 w-16 bg-slate-200 dark:bg-slate-800 rounded animate-pulse inline-block" />
+            ) : (
+              `$${stats.totalDeposited.toFixed(2)}`
+            )}
+          </div>
         </div>
         
         <div className="glass-card p-3 rounded-xl">
@@ -458,7 +480,13 @@ const DashboardOverview = () => {
             <span className="material-symbols-outlined text-error text-base">north_east</span>
             <span className="text-[9px] uppercase tracking-wider font-bold text-on-surface-variant">Withdrawals</span>
           </div>
-          <p className="text-base font-bold text-primary">${stats.totalWithdrawn.toFixed(2)}</p>
+          <div className="text-base font-bold text-primary">
+            {loading ? (
+              <span className="h-5 w-16 bg-slate-200 dark:bg-slate-800 rounded animate-pulse inline-block" />
+            ) : (
+              `$${stats.totalWithdrawn.toFixed(2)}`
+            )}
+          </div>
         </div>
         
         <div className="glass-card p-3 rounded-xl">
@@ -466,15 +494,27 @@ const DashboardOverview = () => {
             <span className="material-symbols-outlined text-secondary text-base">trending_up</span>
             <span className="text-[9px] uppercase tracking-wider font-bold text-on-surface-variant">Invested</span>
           </div>
-          <p className="text-base font-bold text-primary">${stats.totalInvested.toFixed(2)}</p>
+          <div className="text-base font-bold text-primary">
+            {loading ? (
+              <span className="h-5 w-16 bg-slate-200 dark:bg-slate-800 rounded animate-pulse inline-block" />
+            ) : (
+              `$${stats.totalInvested.toFixed(2)}`
+            )}
+          </div>
         </div>
         
-        <div className="glass-card p-3 rounded-xl bg-tertiary-fixed/10 border-tertiary-fixed/30">
+        <div className="glass-card p-3 rounded-xl bg-tertiary-fixed/10 border-tertiary-fixed/30 font-['Plus_Jakarta_Sans']">
           <div className="flex items-center gap-1.5 mb-1.5">
             <span className="material-symbols-outlined text-on-tertiary-container text-base">monitoring</span>
             <span className="text-[9px] uppercase tracking-wider font-bold text-on-surface-variant">Total Profit</span>
           </div>
-          <p className="text-base font-bold text-on-tertiary-container">+${stats.totalProfit.toFixed(2)}</p>
+          <div className="text-base font-bold text-on-tertiary-container">
+            {loading ? (
+              <span className="h-5 w-16 bg-slate-200 dark:bg-slate-800 rounded animate-pulse inline-block" />
+            ) : (
+              `+$${stats.totalProfit.toFixed(2)}`
+            )}
+          </div>
         </div>
       </section>
 

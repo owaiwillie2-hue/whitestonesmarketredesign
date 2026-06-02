@@ -12,13 +12,12 @@ interface DashboardLayoutProps {
 }
 
 const DashboardLayout = ({ children }: DashboardLayoutProps) => {
-  const { user, signOut } = useAuth();
+  const { user, signOut, profile } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const { theme, toggleTheme } = useTheme();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
-  const [profile, setProfile] = useState<any>(null);
   const [showSpaceXModal, setShowSpaceXModal] = useState(false);
 
   const handleLogout = async () => {
@@ -57,33 +56,29 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const [notifications, setNotifications] = useState<any[]>([]);
 
   useEffect(() => {
+    if (profile?.date_of_birth && user?.id) {
+      const age = calculateAge(profile.date_of_birth);
+      if (age >= 40) {
+        const hasSeenModal = localStorage.getItem(`has_seen_spacex_${user.id}`);
+        if (!hasSeenModal) {
+          setShowSpaceXModal(true);
+        }
+      }
+    }
+  }, [profile, user]);
+
+  useEffect(() => {
     if (!user?.id) return;
  
     const loadLayoutData = async () => {
       try {
-        const [profileRes, notificationsRes] = await Promise.all([
-          supabase.from('profiles').select('*').eq('user_id', user.id).single(),
-          supabase
-            .from('notifications')
-            .select('*')
-            .eq('user_id', user.id)
-            .order('created_at', { ascending: false })
-            .limit(10)
-        ]);
+        const { data: notificationsData } = await supabase
+          .from('notifications')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(10);
 
-        const profileData = profileRes.data;
-        if (profileData) {
-          setProfile(profileData);
-          const age = calculateAge(profileData.date_of_birth);
-          if (age >= 40) {
-            const hasSeenModal = localStorage.getItem(`has_seen_spacex_${user.id}`);
-            if (!hasSeenModal) {
-              setShowSpaceXModal(true);
-            }
-          }
-        }
-
-        const notificationsData = notificationsRes.data;
         if (notificationsData) {
           setNotifications(notificationsData);
         }

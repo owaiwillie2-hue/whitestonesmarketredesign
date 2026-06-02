@@ -101,32 +101,40 @@ export const AdminUsers = () => {
           </div>
         </CardHeader>
         <CardContent className="p-0">
-          {loading ? (
-            <div className="p-6 space-y-4">
-              <Skeleton className="h-8 w-full rounded-lg" />
-              <Skeleton className="h-8 w-full rounded-lg" />
-              <Skeleton className="h-8 w-full rounded-lg" />
-            </div>
-          ) : filteredUsers.length === 0 ? (
-            <div className="text-center py-12 text-slate-500 text-xs font-medium">
-              No users found matching your search.
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader className="bg-slate-50 dark:bg-slate-800/50">
-                  <TableRow className="hover:bg-transparent border-b border-slate-100 dark:border-slate-800">
-                    <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 h-10 px-6">Name</TableHead>
-                    <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 h-10 px-6">Email</TableHead>
-                    <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 h-10 px-6">Status</TableHead>
-                    <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 h-10 px-6">Main Wallet</TableHead>
-                    <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 h-10 px-6">Investment Wallet</TableHead>
-                    <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 h-10 px-6">KYC Status</TableHead>
-                    <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 h-10 px-6">Joined</TableHead>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader className="bg-slate-50 dark:bg-slate-800/50">
+                <TableRow className="hover:bg-transparent border-b border-slate-100 dark:border-slate-800">
+                  <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 h-10 px-6">Name</TableHead>
+                  <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 h-10 px-6">Email</TableHead>
+                  <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 h-10 px-6">Status</TableHead>
+                  <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 h-10 px-6">Main Wallet</TableHead>
+                  <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 h-10 px-6">Investment Wallet</TableHead>
+                  <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 h-10 px-6">KYC Status</TableHead>
+                  <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 h-10 px-6">Joined</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {loading ? (
+                  Array.from({ length: 5 }).map((_, idx) => (
+                    <TableRow key={idx} className="border-b border-slate-100 dark:border-slate-800">
+                      <TableCell className="px-6 py-4"><Skeleton className="h-4 w-24 bg-slate-200 dark:bg-slate-800 rounded animate-pulse" /></TableCell>
+                      <TableCell className="px-6 py-4"><Skeleton className="h-4 w-32 bg-slate-200 dark:bg-slate-800 rounded animate-pulse" /></TableCell>
+                      <TableCell className="px-6 py-4"><Skeleton className="h-4 w-16 bg-slate-200 dark:bg-slate-800 rounded-full animate-pulse" /></TableCell>
+                      <TableCell className="px-6 py-4"><Skeleton className="h-4 w-20 bg-slate-200 dark:bg-slate-800 rounded animate-pulse" /></TableCell>
+                      <TableCell className="px-6 py-4"><Skeleton className="h-4 w-20 bg-slate-200 dark:bg-slate-800 rounded animate-pulse" /></TableCell>
+                      <TableCell className="px-6 py-4"><Skeleton className="h-4 w-20 bg-slate-200 dark:bg-slate-800 rounded animate-pulse" /></TableCell>
+                      <TableCell className="px-6 py-4"><Skeleton className="h-4 w-20 bg-slate-200 dark:bg-slate-800 rounded animate-pulse" /></TableCell>
+                    </TableRow>
+                  ))
+                ) : filteredUsers.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-12 text-slate-500 text-xs font-medium">
+                      No users found matching your search.
+                    </TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredUsers.map((user) => (
+                ) : (
+                  filteredUsers.map((user) => (
                     <TableRow
                       key={user.id}
                       onClick={() => navigate(`/admin/users/${user.id}`)}
@@ -174,11 +182,11 @@ export const AdminUsers = () => {
                         {user.created_at ? formatDistanceToNow(new Date(user.created_at), { addSuffix: true }) : '-'}
                       </TableCell>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </div>

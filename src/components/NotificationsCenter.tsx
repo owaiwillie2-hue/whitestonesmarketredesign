@@ -39,7 +39,7 @@ export const NotificationsCenter: React.FC<NotificationsCenterProps> = ({
       const { data, error } = await supabase
         .from('notifications')
         .select('*')
-        .or(`user_id.eq.${user.id},user_id.is.null`)
+        .or(`user_id.eq.${user.id},is_global.eq.true`)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -65,11 +65,13 @@ export const NotificationsCenter: React.FC<NotificationsCenterProps> = ({
           event: 'INSERT',
           schema: 'public',
           table: 'notifications',
-          filter: `user_id=eq.${user.id}`,
         },
         (payload) => {
-          setNotifications((prev) => [payload.new as Notification, ...prev]);
-          setUnreadCount((prev) => prev + 1);
+          const newNotif = payload.new as any;
+          if (newNotif.user_id === user.id || newNotif.is_global) {
+            setNotifications((prev) => [newNotif as Notification, ...prev]);
+            setUnreadCount((prev) => prev + 1);
+          }
         }
       )
       .subscribe();

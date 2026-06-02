@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { LanguageProvider } from "./contexts/LanguageContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { ModalProvider } from "./contexts/ModalContext";
+import { AuthProvider } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { lazy, Suspense } from 'react';
 
@@ -75,14 +76,15 @@ const PageLoader = () => (
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
-      <ModalProvider>
-        <LanguageProvider>
-          <TooltipProvider>
-            <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Suspense fallback={<PageLoader />}>
-              <Routes>
+      <AuthProvider>
+        <ModalProvider>
+          <LanguageProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
+                <Suspense fallback={<PageLoader />}>
+                  <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
@@ -115,6 +117,7 @@ const App = () => (
                 <Route path="notifications" element={<AdminNotifications />} />
                 <Route path="activity-logs" element={<AdminActivityLogs />} />
                 <Route path="settings" element={<AdminSettings />} />
+                <Route path="investments" element={<AdminInvestments />} />
               </Route>
               
               <Route path="/admin/spacex" element={<ProtectedRoute requireAdmin><SpaceXAdmin /></ProtectedRoute>} />
@@ -140,11 +143,12 @@ const App = () => (
             </Routes>
           </Suspense>
         </BrowserRouter>
-        </TooltipProvider>
-      </LanguageProvider>
-    </ModalProvider>
-  </ThemeProvider>
-</QueryClientProvider>
+            </TooltipProvider>
+          </LanguageProvider>
+        </ModalProvider>
+      </AuthProvider>
+    </ThemeProvider>
+  </QueryClientProvider>
 );
 
 export default App;

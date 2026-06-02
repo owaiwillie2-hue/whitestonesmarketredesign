@@ -209,7 +209,11 @@ export const Analytics = () => {
               <span className="material-symbols-outlined text-primary text-[20px] bg-primary/10 p-1.5 rounded-xl">group</span>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{stats.totalUsers}</div>
+              {loading ? (
+                <div className="h-8 w-16 bg-slate-205 dark:bg-slate-800 rounded animate-pulse mt-1" />
+              ) : (
+                <div className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{stats.totalUsers}</div>
+              )}
               <p className="text-[10px] text-slate-400 mt-1">Total registered profiles</p>
             </CardContent>
           </Card>
@@ -220,7 +224,11 @@ export const Analytics = () => {
               <span className="material-symbols-outlined text-green-500 text-[20px] bg-green-500/10 p-1.5 rounded-xl">payments</span>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-slate-900 dark:text-white mt-1">${stats.totalDeposits.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+              {loading ? (
+                <div className="h-8 w-28 bg-slate-205 dark:bg-slate-800 rounded animate-pulse mt-1" />
+              ) : (
+                <div className="text-2xl font-bold text-slate-900 dark:text-white mt-1">${stats.totalDeposits.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+              )}
               <p className="text-[10px] text-slate-400 mt-1">Approved deposits in interval</p>
             </CardContent>
           </Card>
@@ -231,7 +239,11 @@ export const Analytics = () => {
               <span className="material-symbols-outlined text-red-500 text-[20px] bg-red-500/10 p-1.5 rounded-xl">price_change</span>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-slate-900 dark:text-white mt-1">${stats.totalWithdrawals.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+              {loading ? (
+                <div className="h-8 w-28 bg-slate-205 dark:bg-slate-800 rounded animate-pulse mt-1" />
+              ) : (
+                <div className="text-2xl font-bold text-slate-900 dark:text-white mt-1">${stats.totalWithdrawals.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+              )}
               <p className="text-[10px] text-slate-400 mt-1">Completed cashouts in interval</p>
             </CardContent>
           </Card>
@@ -242,7 +254,11 @@ export const Analytics = () => {
               <span className="material-symbols-outlined text-blue-500 text-[20px] bg-blue-500/10 p-1.5 rounded-xl">trending_up</span>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{stats.activeInvestments}</div>
+              {loading ? (
+                <div className="h-8 w-16 bg-slate-205 dark:bg-slate-800 rounded animate-pulse mt-1" />
+              ) : (
+                <div className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{stats.activeInvestments}</div>
+              )}
               <p className="text-[10px] text-slate-400 mt-1">Currently generating returns</p>
             </CardContent>
           </Card>
