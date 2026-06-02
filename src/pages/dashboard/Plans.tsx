@@ -14,91 +14,64 @@ const Plans = () => {
   const upgradeMode = searchParams.get('upgrade') === 'true';
   const [plans, setPlans] = useState<any[]>([]);
   const [investmentBalance, setInvestmentBalance] = useState<number>(0);
+  const [loading, setLoading] = useState<boolean>(false);
   const [currentActivePlan, setCurrentActivePlan] = useState<any>(null);
   const [totalDeposited, setTotalDeposited] = useState<number>(0);
   const { isApproved: kycApproved, isPending: kycPending, initialLoading: kycLoading } = useKYCStatus();
 
   useEffect(() => {
-    fetchPlans();
-    fetchBalance();
-    fetchTotalDeposited();
-    if (upgradeMode) {
-      fetchCurrentActivePlan();
-    }
+    const loadData = async () => {
+      setLoading(true);
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const promises: Promise<any>[] = [
+          supabase.from('investment_plans').select('*').eq('is_active', true).order('min_amount'),
+          supabase.from('account_balances').select('investment_balance').eq('user_id', user.id).maybeSingle(),
+          supabase.from('deposits').select('amount').eq('user_id', user.id).eq('status', 'completed')
+        ];
+
+        if (upgradeMode) {
+          promises.push(
+            supabase.from('investments').select('*, investment_plans(*)').eq('user_id', user.id)
+          );
+        }
+
+        const results = await Promise.all(promises);
+
+        const plansData = results[0].data || [];
+        setPlans(plansData);
+
+        const balanceData = results[1].data;
+        if (balanceData) {
+          setInvestmentBalance(balanceData.investment_balance || 0);
+        }
+
+        const depositsData = results[2].data || [];
+        const totalDep = depositsData.reduce((sum: number, d: any) => sum + Number(d.amount), 0);
+        setTotalDeposited(totalDep);
+
+        if (upgradeMode && results[3]) {
+          const allInvestments = results[3].data || [];
+          if (allInvestments.length > 0) {
+            const highestTierInvestment = allInvestments.sort((a: any, b: any) => {
+              const planA = a.investment_plans;
+              const planB = b.investment_plans;
+              return (planB?.min_amount || 0) - (planA?.min_amount || 0);
+            })[0];
+            setCurrentActivePlan(highestTierInvestment);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading plans page data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
   }, [upgradeMode]);
-
-  const fetchPlans = async () => {
-    const { data } = await supabase
-      .from('investment_plans')
-      .select('*')
-      .eq('is_active', true)
-      .order('min_amount');
-
-    setPlans(data || []);
-  };
-
-  const fetchBalance = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data } = await supabase
-        .from('account_balances')
-        .select('investment_balance')
-        .eq('user_id', user.id)
-        .single();
-
-      if (data) {
-        setInvestmentBalance(data.investment_balance || 0);
-      }
-    } catch (error) {
-      console.error('Error fetching balance:', error);
-    }
-  };
-
-  const fetchTotalDeposited = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data: deposits } = await supabase
-        .from('deposits')
-        .select('amount')
-        .eq('user_id', user.id)
-        .eq('status', 'completed');
-
-      const total = deposits?.reduce((sum, d) => sum + Number(d.amount), 0) || 0;
-      setTotalDeposited(total);
-    } catch (error) {
-      console.error('Error fetching total deposits:', error);
-    }
-  };
-
-  const fetchCurrentActivePlan = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      // Get all investments (including completed ones) to find highest tier ever invested
-      const { data: allInvestments } = await supabase
-        .from('investments')
-        .select('*, investment_plans(*)')
-        .eq('user_id', user.id);
-
-      if (allInvestments && allInvestments.length > 0) {
-        // Find the highest tier plan ever invested in (by min_amount)
-        const highestTierInvestment = allInvestments.sort((a, b) => {
-          const planA = (a as any).investment_plans;
-          const planB = (b as any).investment_plans;
-          return (planB?.min_amount || 0) - (planA?.min_amount || 0);
-        })[0];
-        
-        setCurrentActivePlan(highestTierInvestment);
-      }
-    } catch (error) {
-      console.error('Error fetching current plan:', error);
-    }
-  };
 
   const isPlanDisabled = (plan: any) => {
     if (totalDeposited < plan.min_amount) {

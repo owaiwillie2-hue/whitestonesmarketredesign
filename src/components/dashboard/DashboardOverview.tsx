@@ -41,23 +41,43 @@ const DashboardOverview = () => {
       
       setLoading(true);
       try {
-        // Fetch user profile
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('full_name, current_plan_override_id')
-          .eq('user_id', user.id)
-          .single();
+        // Fetch all base data in parallel to avoid database query waterfalls
+        const [profileRes, balanceRes, depositsRes, withdrawalsRes, investmentsRes] = await Promise.all([
+          supabase
+            .from('profiles')
+            .select('full_name, current_plan_override_id')
+            .eq('user_id', user.id)
+            .single(),
+          supabase
+            .from('account_balances')
+            .select('*')
+            .eq('user_id', user.id)
+            .single(),
+          supabase
+            .from('deposits')
+            .select('amount')
+            .eq('user_id', user.id)
+            .eq('status', 'completed'),
+          supabase
+            .from('withdrawals')
+            .select('amount')
+            .eq('user_id', user.id)
+            .eq('status', 'completed'),
+          supabase
+            .from('investments')
+            .select('*, investment_plans(name, min_amount)')
+            .eq('user_id', user.id)
+        ]);
+
+        const profileData = profileRes.data;
+        const balanceData = balanceRes.data;
+        const deposits = depositsRes.data;
+        const withdrawals = withdrawalsRes.data;
+        const investments = investmentsRes.data;
 
         if (profileData) {
-          setUserName(profileData.full_name);
+          setUserName(profileData.full_name || '');
         }
-
-        // Fetch account balance
-        const { data: balanceData } = await supabase
-          .from('account_balances')
-          .select('*')
-          .eq('user_id', user.id)
-          .single();
 
         if (balanceData) {
           setBalance(balanceData);
@@ -74,29 +94,8 @@ const DashboardOverview = () => {
           }));
         }
 
-        // Fetch deposits
-        const { data: deposits } = await supabase
-          .from('deposits')
-          .select('amount')
-          .eq('user_id', user.id)
-          .eq('status', 'completed');
-
         const totalDeposited = deposits?.reduce((sum, d) => sum + Number(d.amount), 0) || 0;
-
-        // Fetch withdrawals
-        const { data: withdrawals } = await supabase
-          .from('withdrawals')
-          .select('amount')
-          .eq('user_id', user.id)
-          .eq('status', 'completed');
-
         const totalWithdrawn = withdrawals?.reduce((sum, w) => sum + Number(w.amount), 0) || 0;
-
-        // Fetch investments
-        const { data: investments } = await supabase
-          .from('investments')
-          .select('*, investment_plans(name, min_amount)')
-          .eq('user_id', user.id);
 
         // Resolve current plan (override takes precedence)
         let resolvedPlanName = null;

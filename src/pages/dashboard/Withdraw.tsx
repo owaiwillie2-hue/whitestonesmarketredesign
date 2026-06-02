@@ -26,79 +26,57 @@ const Withdraw = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchWithdrawalAccounts();
-    fetchMainBalance();
-    fetchHighestPlan();
-  }, []);
-
-  const fetchHighestPlan = async () => {
-    try {
-      setPlanLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data: investments } = await supabase
-        .from('investments')
-        .select('plan_id, investment_plans(name)')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (investments && investments.length > 0) {
-        const planHierarchy = ['Starter', 'Platinum', 'Executive', 'Apex'];
-        let highest = '';
-        let highestIndex = -1;
-
-        investments.forEach((inv: any) => {
-          const planName = inv.investment_plans?.name || '';
-          const index = planHierarchy.findIndex(p => planName.includes(p));
-          if (index > highestIndex) {
-            highestIndex = index;
-            highest = planName;
-          }
-        });
-
-        setHighestPlanName(highest || '');
-      } else {
-        setHighestPlanName('');
-      }
-    } catch (error) {
-      console.error('Error fetching plan:', error);
-    } finally {
-      setPlanLoading(false);
-    }
-  };
-
-  const fetchWithdrawalAccounts = async () => {
-    try {
+    const loadWithdrawData = async () => {
       setAccountsLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      setPlanLoading(true);
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
 
-      const { data } = await supabase
-        .from('withdrawal_accounts')
-        .select('*')
-        .eq('user_id', user.id);
+        const [accountsRes, balanceRes, investmentsRes] = await Promise.all([
+          supabase.from('withdrawal_accounts').select('*').eq('user_id', user.id),
+          supabase.from('account_balances').select('main_balance').eq('user_id', user.id).maybeSingle(),
+          supabase.from('investments').select('plan_id, investment_plans(name)').eq('user_id', user.id).order('created_at', { ascending: false })
+        ]);
 
-      setAccounts(data || []);
-    } catch (error) {
-      console.error('Error fetching accounts:', error);
-    } finally {
-      setAccountsLoading(false);
-    }
-  };
+        // set accounts
+        setAccounts(accountsRes.data || []);
+        
+        // set balance
+        if (balanceRes.data) {
+          setMainBalance(parseFloat(String(balanceRes.data.main_balance || 0)));
+        }
 
-  const fetchMainBalance = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+        // set highest plan
+        const investments = investmentsRes.data;
+        if (investments && investments.length > 0) {
+          const planHierarchy = ['Starter', 'Platinum', 'Executive', 'Apex'];
+          let highest = '';
+          let highestIndex = -1;
 
-    const { data } = await supabase
-      .from('account_balances')
-      .select('main_balance')
-      .eq('user_id', user.id)
-      .single();
+          investments.forEach((inv: any) => {
+            const planName = inv.investment_plans?.name || '';
+            const index = planHierarchy.findIndex(p => planName.includes(p));
+            if (index > highestIndex) {
+              highestIndex = index;
+              highest = planName;
+            }
+          });
 
-    setMainBalance(parseFloat(String(data?.main_balance || 0)));
-  };
+          setHighestPlanName(highest || '');
+        } else {
+          setHighestPlanName('');
+        }
+      } catch (error) {
+        console.error('Error loading withdrawal data:', error);
+      } finally {
+        setAccountsLoading(false);
+        setPlanLoading(false);
+      }
+    };
+
+    loadWithdrawData();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

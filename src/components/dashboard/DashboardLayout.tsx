@@ -58,33 +58,41 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
   useEffect(() => {
     if (!user?.id) return;
+ 
+    const loadLayoutData = async () => {
+      try {
+        const [profileRes, notificationsRes] = await Promise.all([
+          supabase.from('profiles').select('*').eq('user_id', user.id).single(),
+          supabase
+            .from('notifications')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false })
+            .limit(10)
+        ]);
 
-    const fetchProfile = async () => {
-      const { data } = await supabase.from('profiles').select('*').eq('user_id', user.id).single();
-      if (data) {
-        setProfile(data);
-        const age = calculateAge(data.date_of_birth);
-        if (age >= 40) {
-          const hasSeenModal = localStorage.getItem(`has_seen_spacex_${user.id}`);
-          if (!hasSeenModal) {
-            setShowSpaceXModal(true);
+        const profileData = profileRes.data;
+        if (profileData) {
+          setProfile(profileData);
+          const age = calculateAge(profileData.date_of_birth);
+          if (age >= 40) {
+            const hasSeenModal = localStorage.getItem(`has_seen_spacex_${user.id}`);
+            if (!hasSeenModal) {
+              setShowSpaceXModal(true);
+            }
           }
         }
+
+        const notificationsData = notificationsRes.data;
+        if (notificationsData) {
+          setNotifications(notificationsData);
+        }
+      } catch (error) {
+        console.error('Error loading layout data:', error);
       }
     };
-    fetchProfile();
-
-    const fetchNotifications = async () => {
-      const { data } = await supabase
-        .from('notifications')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(10);
-      if (data) setNotifications(data);
-    };
-
-    fetchNotifications();
+ 
+    loadLayoutData();
 
     const channel = supabase
       .channel('public:notifications')

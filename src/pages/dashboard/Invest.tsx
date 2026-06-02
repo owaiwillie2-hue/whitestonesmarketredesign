@@ -25,104 +25,70 @@ const Invest = () => {
   const [totalDeposited, setTotalDeposited] = useState(0);
 
   useEffect(() => {
-    if (planId) {
-      fetchPlanDetails();
-      fetchBalance();
-      fetchTotalDeposited();
-      if (upgradeMode) {
-        fetchCurrentActivePlan();
+    const loadData = async () => {
+      if (!planId) return;
+      setLoading(true);
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const promises: Promise<any>[] = [
+          supabase.from('investment_plans').select('*').eq('id', planId).single(),
+          supabase.from('account_balances').select('investment_balance').eq('user_id', user.id).maybeSingle(),
+          supabase.from('deposits').select('amount').eq('user_id', user.id).eq('status', 'completed')
+        ];
+
+        if (upgradeMode) {
+          promises.push(
+            supabase.from('investments').select('*, investment_plans(*)').eq('user_id', user.id)
+          );
+        }
+
+        const results = await Promise.all(promises);
+
+        const planRes = results[0];
+        if (planRes.error) throw planRes.error;
+        const planData = planRes.data;
+        setPlan(planData);
+        if (planData) {
+          setAmount(planData.min_amount.toString());
+        }
+
+        const balanceData = results[1].data;
+        if (balanceData) {
+          setInvestmentBalance(balanceData.investment_balance || 0);
+        }
+
+        const depositsData = results[2].data || [];
+        const totalDep = depositsData.reduce((sum: number, d: any) => sum + Number(d.amount), 0);
+        setTotalDeposited(totalDep);
+
+        if (upgradeMode && results[3]) {
+          const allInvestments = results[3].data || [];
+          if (allInvestments.length > 0) {
+            const highestTierInvestment = allInvestments.sort((a: any, b: any) => {
+              const planA = a.investment_plans;
+              const planB = b.investment_plans;
+              return (planB?.min_amount || 0) - (planA?.min_amount || 0);
+            })[0];
+            setCurrentActivePlan(highestTierInvestment);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading invest page data:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to load investment plan details',
+          variant: 'destructive',
+        });
+        navigate('/dashboard/plans');
+      } finally {
+        setLoading(false);
       }
-    }
-  }, [planId]);
+    };
 
-  const fetchTotalDeposited = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data: deposits } = await supabase
-        .from('deposits')
-        .select('amount')
-        .eq('user_id', user.id)
-        .eq('status', 'completed');
-
-      const total = deposits?.reduce((sum, d) => sum + Number(d.amount), 0) || 0;
-      setTotalDeposited(total);
-    } catch (error) {
-      console.error('Error fetching deposits:', error);
-    }
-  };
-
-  const fetchPlanDetails = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('investment_plans')
-        .select('*')
-        .eq('id', planId)
-        .single();
-
-      if (error) throw error;
-      setPlan(data);
-      if (data) {
-        setAmount(data.min_amount.toString());
-      }
-    } catch (error) {
-      console.error('Error fetching plan:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load investment plan',
-        variant: 'destructive',
-      });
-      navigate('/dashboard/plans');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchBalance = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data } = await supabase
-        .from('account_balances')
-        .select('investment_balance')
-        .eq('user_id', user.id)
-        .single();
-
-      if (data) {
-        setInvestmentBalance(data.investment_balance || 0);
-      }
-    } catch (error) {
-      console.error('Error fetching balance:', error);
-    }
-  };
-
-  const fetchCurrentActivePlan = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      // Get all investments (including completed ones) to find highest tier ever invested
-      const { data: allInvestments } = await supabase
-        .from('investments')
-        .select('*, investment_plans(*)')
-        .eq('user_id', user.id);
-
-      if (allInvestments && allInvestments.length > 0) {
-        // Find the highest tier plan ever invested in (by min_amount)
-        const highestTierInvestment = allInvestments.sort((a, b) => {
-          const planA = (a as any).investment_plans;
-          const planB = (b as any).investment_plans;
-          return (planB?.min_amount || 0) - (planA?.min_amount || 0);
-        })[0];
-        
-        setCurrentActivePlan(highestTierInvestment);
-      }
-    } catch (error) {
-      console.error('Error fetching current plan:', error);
-    }
-  };
+    loadData();
+  }, [planId, upgradeMode]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

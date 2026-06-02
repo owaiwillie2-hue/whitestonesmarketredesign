@@ -69,21 +69,24 @@ export const AdminUserDetail = () => {
         setCity(profile.city || '');
         setAddress(profile.address || '');
 
-        // Fetch investments to calculate total investment and resolved plan
-        const { data: investments } = await supabase
-          .from('investments')
-          .select('*, investment_plans(name, min_amount)')
-          .eq('user_id', profile.user_id);
+        // Fetch investments and withdrawals in parallel to avoid waterfalls
+        const [investmentsRes, withdrawalsRes] = await Promise.all([
+          supabase
+            .from('investments')
+            .select('*, investment_plans(name, min_amount)')
+            .eq('user_id', profile.user_id),
+          supabase
+            .from('withdrawals')
+            .select('amount')
+            .eq('user_id', profile.user_id)
+            .eq('status', 'completed')
+        ]);
+
+        const investments = investmentsRes.data;
+        const withdrawals = withdrawalsRes.data;
 
         const totalInv = investments?.reduce((sum, i) => sum + Number(i.amount), 0) || 0;
         setTotalInvested(totalInv);
-
-        // Fetch withdrawals to calculate total completed withdrawals
-        const { data: withdrawals } = await supabase
-          .from('withdrawals')
-          .select('amount')
-          .eq('user_id', profile.user_id)
-          .eq('status', 'completed');
 
         const totalWith = withdrawals?.reduce((sum, w) => sum + Number(w.amount), 0) || 0;
         setTotalWithdrawn(totalWith);
