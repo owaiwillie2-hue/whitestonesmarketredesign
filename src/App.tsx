@@ -7,7 +7,6 @@ import { LanguageProvider } from "./contexts/LanguageContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { ModalProvider } from "./contexts/ModalContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
-import TidioChat from "./components/Tidio";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
@@ -68,7 +67,6 @@ const App = () => (
             <Toaster />
           <Sonner />
           <BrowserRouter>
-            <TidioChat />
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/login" element={<Login />} />

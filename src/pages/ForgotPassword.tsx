@@ -77,8 +77,18 @@ const ForgotPassword = () => {
                   disabled={loading}
                   className="w-full py-4 bg-primary text-white font-headline-md rounded-full shadow-lg shadow-primary/30 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-70"
                 >
-                  {loading ? 'Sending...' : 'Send Reset Link'}
-                  <span className="material-symbols-outlined text-[20px]">send</span>
+                  {loading ? (
+                    <div className="flex items-center gap-1.5 justify-center py-0.5">
+                      <span className="w-2 h-2 rounded-full bg-current animate-bounce" style={{ animationDelay: '-0.3s' }}></span>
+                      <span className="w-2 h-2 rounded-full bg-current animate-bounce" style={{ animationDelay: '-0.15s' }}></span>
+                      <span className="w-2 h-2 rounded-full bg-current animate-bounce"></span>
+                    </div>
+                  ) : (
+                    <>
+                      Send Reset Link
+                      <span className="material-symbols-outlined text-[20px]">send</span>
+                    </>
+                  )}
                 </button>
 
                 <div className="text-center">
