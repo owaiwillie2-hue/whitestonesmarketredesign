@@ -7,56 +7,70 @@ import { LanguageProvider } from "./contexts/LanguageContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { ModalProvider } from "./contexts/ModalContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
-import Index from "./pages/Index";
-import Login from "./pages/Login";
-import Signup from "./pages/Signup";
-import ForgotPassword from "./pages/ForgotPassword";
-import EmailConfirmation from "./pages/EmailConfirmation";
-import Dashboard from "./pages/Dashboard";
-import AdminLogin from "./pages/AdminLogin";
-import NotFound from "./pages/NotFound";
-import Terms from "./pages/Terms";
-import PrivacyPolicy from "./pages/PrivacyPolicy";
-import Cryptocurrencies from "./pages/Cryptocurrencies";
-import Markets from "./pages/Markets";
-import RealEstate from "./pages/RealEstate";
-import OilAndGas from "./pages/OilAndGas";
-import NFT from "./pages/NFT";
-import RetirementLoan from "./pages/RetirementLoan";
-import InvestmentsPage from "./pages/Investments";
-import Company from "./pages/Company";
-import DashboardOverview from "./components/dashboard/DashboardOverview";
-import Deposit from "./pages/dashboard/Deposit";
-import Transactions from "./pages/dashboard/Transactions";
-import Investments from "./pages/dashboard/Investments";
-import Plans from "./pages/dashboard/Plans";
-import Invest from "./pages/dashboard/Invest";
-import InvestmentPreview from "./pages/dashboard/InvestmentPreview";
-import Profile from "./pages/dashboard/Profile";
-import Referrals from "./pages/dashboard/Referrals";
-import KYC from "./pages/dashboard/KYC";
-import Settings from "./pages/dashboard/Settings";
-import ActivityLog from "./pages/dashboard/ActivityLog";
-import WithdrawalAccounts from "./pages/dashboard/WithdrawalAccounts";
-import SpaceXRetirement from "./pages/dashboard/SpaceXRetirement";
-import Admin from "./pages/admin/Admin";
-import AdminAnalytics from "./pages/admin/Analytics";
-import AdminUsers from "./pages/admin/Users";
-import AdminUserDetail from "./pages/admin/UserDetail";
-import AdminDeposits from "./pages/admin/Deposits";
-import AdminWithdrawals from "./pages/admin/Withdrawals";
-import AdminKYC from "./pages/admin/KYC";
-import AdminReferrals from "./pages/admin/Referrals";
-import AdminNotifications from "./pages/admin/Notifications";
-import AdminSettings from "./pages/admin/Settings";
-import AdminInvestments from "./pages/admin/Investments";
-import AdminActivityLogs from "./pages/admin/ActivityLogs";
-import AdminInvestmentPlans from "./pages/admin/InvestmentPlans";
-import AdminBonus from "./pages/admin/Bonus";
-import UserNotifications from "./pages/dashboard/Notifications";
-import SpaceXAdmin from "./pages/admin/SpaceXAdmin";
+import { lazy, Suspense } from 'react';
+
+// Lazy load pages for bundle optimization & code splitting
+const Index = lazy(() => import("./pages/Index"));
+const Login = lazy(() => import("./pages/Login"));
+const Signup = lazy(() => import("./pages/Signup"));
+const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
+const EmailConfirmation = lazy(() => import("./pages/EmailConfirmation"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const AdminLogin = lazy(() => import("./pages/AdminLogin"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const Terms = lazy(() => import("./pages/Terms"));
+const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
+const Cryptocurrencies = lazy(() => import("./pages/Cryptocurrencies"));
+const Markets = lazy(() => import("./pages/Markets"));
+const RealEstate = lazy(() => import("./pages/RealEstate"));
+const OilAndGas = lazy(() => import("./pages/OilAndGas"));
+const NFT = lazy(() => import("./pages/NFT"));
+const RetirementLoan = lazy(() => import("./pages/RetirementLoan"));
+const InvestmentsPage = lazy(() => import("./pages/Investments"));
+const Company = lazy(() => import("./pages/Company"));
+const DashboardOverview = lazy(() => import("./components/dashboard/DashboardOverview"));
+const Deposit = lazy(() => import("./pages/dashboard/Deposit"));
+const Transactions = lazy(() => import("./pages/dashboard/Transactions"));
+const Investments = lazy(() => import("./pages/dashboard/Investments"));
+const Plans = lazy(() => import("./pages/dashboard/Plans"));
+const Invest = lazy(() => import("./pages/dashboard/Invest"));
+const InvestmentPreview = lazy(() => import("./pages/dashboard/InvestmentPreview"));
+const Profile = lazy(() => import("./pages/dashboard/Profile"));
+const Referrals = lazy(() => import("./pages/dashboard/Referrals"));
+const KYC = lazy(() => import("./pages/dashboard/KYC"));
+const Settings = lazy(() => import("./pages/dashboard/Settings"));
+const ActivityLog = lazy(() => import("./pages/dashboard/ActivityLog"));
+const WithdrawalAccounts = lazy(() => import("./pages/dashboard/WithdrawalAccounts"));
+const SpaceXRetirement = lazy(() => import("./pages/dashboard/SpaceXRetirement"));
+const Admin = lazy(() => import("./pages/admin/Admin"));
+const AdminPage = lazy(() => import("./pages/admin/Admin")); // Fallback/alias if needed
+const AdminAnalytics = lazy(() => import("./pages/admin/Analytics"));
+const AdminUsers = lazy(() => import("./pages/admin/Users"));
+const AdminUserDetail = lazy(() => import("./pages/admin/UserDetail"));
+const AdminDeposits = lazy(() => import("./pages/admin/Deposits"));
+const AdminWithdrawals = lazy(() => import("./pages/admin/Withdrawals"));
+const AdminKYC = lazy(() => import("./pages/admin/KYC"));
+const AdminReferrals = lazy(() => import("./pages/admin/Referrals"));
+const AdminNotifications = lazy(() => import("./pages/admin/Notifications"));
+const AdminSettings = lazy(() => import("./pages/admin/Settings"));
+const AdminInvestments = lazy(() => import("./pages/admin/Investments"));
+const AdminActivityLogs = lazy(() => import("./pages/admin/ActivityLogs"));
+const AdminInvestmentPlans = lazy(() => import("./pages/admin/InvestmentPlans"));
+const AdminBonus = lazy(() => import("./pages/admin/Bonus"));
+const UserNotifications = lazy(() => import("./pages/dashboard/Notifications"));
+const SpaceXAdmin = lazy(() => import("./pages/admin/SpaceXAdmin"));
 
 const queryClient = new QueryClient();
+
+const PageLoader = () => (
+  <div className="min-h-screen w-full flex items-center justify-center bg-slate-950">
+    <div className="flex items-center gap-1.5 justify-center py-0.5">
+      <span className="w-2.5 h-2.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: '-0.3s' }}></span>
+      <span className="w-2.5 h-2.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: '-0.15s' }}></span>
+      <span className="w-2.5 h-2.5 rounded-full bg-primary animate-bounce"></span>
+    </div>
+  </div>
+);
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -67,7 +81,8 @@ const App = () => (
             <Toaster />
           <Sonner />
           <BrowserRouter>
-            <Routes>
+            <Suspense fallback={<PageLoader />}>
+              <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
@@ -123,7 +138,8 @@ const App = () => (
               
               <Route path="*" element={<NotFound />} />
             </Routes>
-          </BrowserRouter>
+          </Suspense>
+        </BrowserRouter>
         </TooltipProvider>
       </LanguageProvider>
     </ModalProvider>
