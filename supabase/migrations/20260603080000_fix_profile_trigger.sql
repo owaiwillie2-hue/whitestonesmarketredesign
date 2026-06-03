@@ -65,7 +65,7 @@ CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
--- Backfill missing data for existing users (pure SQL, avoiding DO block variables syntax issues)
+-- Backfill missing data for existing users (using pure SQL to avoid DO block variable declaration issues)
 INSERT INTO public.profiles (user_id, full_name, email, referral_code)
 SELECT 
   id, 
@@ -137,5 +137,47 @@ BEGIN
   );
 
   RETURN result;
+END;
+$$;
+
+-- Create diagnostic function for a specific user by email
+CREATE OR REPLACE FUNCTION public.diagnose_user_by_email(_email TEXT)
+RETURNS JSON
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  u_id UUID;
+  has_profile BOOLEAN;
+  has_wallet BOOLEAN;
+  has_balance BOOLEAN;
+  role_name TEXT;
+  two_fa_enabled BOOLEAN;
+  is_suspended BOOLEAN;
+BEGIN
+  -- Get user ID from auth.users
+  SELECT id INTO u_id FROM auth.users WHERE email = _email;
+  
+  IF u_id IS NULL THEN
+    RETURN json_build_object('exists_in_auth', false);
+  END IF;
+
+  SELECT EXISTS(SELECT 1 FROM public.profiles WHERE user_id = u_id) INTO has_profile;
+  SELECT EXISTS(SELECT 1 FROM public.wallets WHERE user_id = u_id) INTO has_wallet;
+  SELECT EXISTS(SELECT 1 FROM public.account_balances WHERE user_id = u_id) INTO has_balance;
+  SELECT role INTO role_name FROM public.user_roles WHERE user_id = u_id LIMIT 1;
+  SELECT COALESCE(two_factor_enabled, false), COALESCE(profiles.is_suspended, false) INTO two_fa_enabled, is_suspended FROM public.profiles WHERE user_id = u_id;
+
+  RETURN json_build_object(
+    'exists_in_auth', true,
+    'user_id', u_id,
+    'has_profile', has_profile,
+    'has_wallet', has_wallet,
+    'has_balance', has_balance,
+    'role', role_name,
+    'two_fa_enabled', two_fa_enabled,
+    'is_suspended', is_suspended
+  );
 END;
 $$;
