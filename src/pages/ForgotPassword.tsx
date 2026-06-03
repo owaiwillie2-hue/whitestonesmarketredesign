@@ -78,11 +78,7 @@ const ForgotPassword = () => {
                   className="w-full py-4 bg-primary text-white font-headline-md rounded-full shadow-lg shadow-primary/30 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-70"
                 >
                   {loading ? (
-                    <div className="flex items-center gap-1.5 justify-center py-0.5">
-                      <span className="w-2 h-2 rounded-full bg-current animate-bounce" style={{ animationDelay: '-0.3s' }}></span>
-                      <span className="w-2 h-2 rounded-full bg-current animate-bounce" style={{ animationDelay: '-0.15s' }}></span>
-                      <span className="w-2 h-2 rounded-full bg-current animate-bounce"></span>
-                    </div>
+                    <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
                   ) : (
                     <>
                       Send Reset Link

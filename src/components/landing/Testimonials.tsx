@@ -52,6 +52,10 @@ export const Testimonials = () => {
                   <img
                     src={testimonial.image}
                     alt={testimonial.name}
+                    width="56"
+                    height="56"
+                    loading="lazy"
+                    fetchpriority="low"
                     className="w-14 h-14 rounded-full object-cover ring-2 ring-primary/10 ring-offset-2"
                   />
                   <div>

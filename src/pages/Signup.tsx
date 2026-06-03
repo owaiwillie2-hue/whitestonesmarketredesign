@@ -380,11 +380,7 @@ const Signup = () => {
             className="w-full bg-primary hover:bg-primary/90 text-white font-bold py-4 rounded-full shadow-lg shadow-primary/20 active:scale-[0.98] transition-all flex justify-center items-center gap-2 mt-4 group disabled:opacity-70"
           >
             {loading ? (
-              <div className="flex items-center gap-1.5 justify-center py-0.5">
-                <span className="w-2 h-2 rounded-full bg-current animate-bounce" style={{ animationDelay: '-0.3s' }}></span>
-                <span className="w-2 h-2 rounded-full bg-current animate-bounce" style={{ animationDelay: '-0.15s' }}></span>
-                <span className="w-2 h-2 rounded-full bg-current animate-bounce"></span>
-              </div>
+              <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
             ) : (
               <>
                 <span className="text-body-lg">{t('auth.signup')}</span>

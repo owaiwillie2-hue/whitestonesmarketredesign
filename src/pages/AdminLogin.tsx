@@ -113,11 +113,7 @@ const AdminLogin = () => {
               className="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-full shadow-lg shadow-blue-600/30 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {loading ? (
-                <div className="flex items-center gap-1.5 justify-center py-0.5">
-                  <span className="w-2 h-2 rounded-full bg-current animate-bounce" style={{ animationDelay: '-0.3s' }}></span>
-                  <span className="w-2 h-2 rounded-full bg-current animate-bounce" style={{ animationDelay: '-0.15s' }}></span>
-                  <span className="w-2 h-2 rounded-full bg-current animate-bounce"></span>
-                </div>
+                <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
               ) : (
                 <>
                   <span className="material-symbols-outlined text-lg">shield</span>

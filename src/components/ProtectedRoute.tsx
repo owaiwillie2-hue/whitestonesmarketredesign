@@ -14,11 +14,7 @@ export const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRout
   if (loading) {
     return (
       <div className="min-h-screen w-full flex items-center justify-center bg-slate-950">
-        <div className="flex items-center gap-1.5 justify-center py-0.5">
-          <span className="w-2.5 h-2.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: '-0.3s' }}></span>
-          <span className="w-2.5 h-2.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: '-0.15s' }}></span>
-          <span className="w-2.5 h-2.5 rounded-full bg-primary animate-bounce"></span>
-        </div>
+        <span className="text-sm font-medium text-slate-400">Loading...</span>
       </div>
     );
   }

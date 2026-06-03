@@ -56,6 +56,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
+    // Immediate session check on mount to prevent any delay/hanging in onAuthStateChange
+    const initSession = async () => {
+      try {
+        const { data: { session: initialSession } } = await supabase.auth.getSession();
+        setSession(initialSession);
+        const newUser = initialSession?.user ?? null;
+        setUser(newUser);
+        if (newUser) {
+          await fetchProfileAndRole(newUser);
+        }
+      } catch (err) {
+        console.error('Error fetching initial session:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initSession();
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
       setSession(newSession);
       const newUser = newSession?.user ?? null;
