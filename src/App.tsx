@@ -72,11 +72,7 @@ const queryClient = new QueryClient({
   },
 });
 
-const PageLoader = () => (
-  <div className="min-h-screen w-full flex items-center justify-center bg-slate-950">
-    <span className="text-sm font-medium text-slate-400">Loading...</span>
-  </div>
-);
+const PageLoader = () => null;
 
 const App = () => (
   <QueryClientProvider client={queryClient}>

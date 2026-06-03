@@ -12,11 +12,7 @@ export const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRout
   const location = useLocation();
 
   if (loading) {
-    return (
-      <div className="min-h-screen w-full flex items-center justify-center bg-slate-950">
-        <span className="text-sm font-medium text-slate-400">Loading...</span>
-      </div>
-    );
+    return null;
   }
 
   if (!user) {
