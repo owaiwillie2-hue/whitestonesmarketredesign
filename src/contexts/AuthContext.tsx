@@ -23,6 +23,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isSuspended, setIsSuspended] = useState(false);
   const [profile, setProfile] = useState<any | null>(null);
 
+  const loadCachedData = (currentUser: User) => {
+    try {
+      const cachedProfileStr = sessionStorage.getItem(`profile_${currentUser.id}`);
+      const cachedIsAdminStr = sessionStorage.getItem(`isAdmin_${currentUser.id}`);
+
+      if (cachedProfileStr) {
+        const cachedProfile = JSON.parse(cachedProfileStr);
+        setProfile(cachedProfile);
+        setIsSuspended(!!cachedProfile.is_suspended);
+      }
+      if (cachedIsAdminStr) {
+        setIsAdmin(JSON.parse(cachedIsAdminStr));
+      }
+    } catch (e) {
+      console.error('Error parsing cached auth metadata:', e);
+    }
+  };
+
   const fetchProfileAndRole = async (currentUser: User) => {
     try {
       const [profileRes, roleRes] = await Promise.all([
@@ -38,12 +56,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (profileRes.data) {
         setProfile(profileRes.data);
         setIsSuspended(!!profileRes.data.is_suspended);
+        sessionStorage.setItem(`profile_${currentUser.id}`, JSON.stringify(profileRes.data));
       } else {
         setProfile(null);
         setIsSuspended(false);
+        sessionStorage.removeItem(`profile_${currentUser.id}`);
       }
 
-      setIsAdmin(!!roleRes.data);
+      const isAdminRole = !!roleRes.data;
+      setIsAdmin(isAdminRole);
+      sessionStorage.setItem(`isAdmin_${currentUser.id}`, JSON.stringify(isAdminRole));
     } catch (err) {
       console.error('Error fetching auth metadata:', err);
     }
@@ -64,6 +86,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const newUser = initialSession?.user ?? null;
         setUser(newUser);
         if (newUser) {
+          loadCachedData(newUser);
+          // If we have cached profile data, we can mark loading as complete immediately
+          if (sessionStorage.getItem(`profile_${newUser.id}`)) {
+            setLoading(false);
+          }
           await fetchProfileAndRole(newUser);
         }
       } catch (err) {
@@ -81,6 +108,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(newUser);
       
       if (newUser) {
+        loadCachedData(newUser);
+        if (sessionStorage.getItem(`profile_${newUser.id}`)) {
+          setLoading(false);
+        }
         await fetchProfileAndRole(newUser);
       } else {
         setProfile(null);
@@ -95,6 +126,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signOut = async () => {
     setLoading(true);
+    if (user) {
+      sessionStorage.removeItem(`profile_${user.id}`);
+      sessionStorage.removeItem(`isAdmin_${user.id}`);
+    }
     await supabase.auth.signOut();
     setUser(null);
     setSession(null);
