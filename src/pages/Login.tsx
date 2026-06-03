@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Home, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -13,11 +13,19 @@ import * as OTPAuth from 'otpauth';
 import { saveLoginActivity } from '@/utils/deviceDetection';
 import { useTheme } from '@/contexts/ThemeContext';
 import logo from '@/assets/logo.png';
+import { useAuth } from '@/hooks/useAuth';
 
 const Login = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { t, language, setLanguage } = useLanguage();
   const { theme, toggleTheme } = useTheme();
+
+  useEffect(() => {
+    if (user) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [user, navigate]);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -123,9 +131,7 @@ const Login = () => {
   };
 
   const completeLogin = (userId: string) => {
-    // Navigation only: avoid any blocking background calls for faster login
     toast.success('Login successful!');
-    navigate('/dashboard');
   };
 
   const languages = [

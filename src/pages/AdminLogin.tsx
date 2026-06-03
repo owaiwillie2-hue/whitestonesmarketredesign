@@ -1,16 +1,24 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
 import { toast } from '@/lib/toast';
 import { supabase } from '@/integrations/supabase/client';
 import logo from '@/assets/logo.png';
+import { useAuth } from '@/hooks/useAuth';
 
 const AdminLogin = () => {
   const navigate = useNavigate();
+  const { user, isAdmin } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (user && isAdmin) {
+      navigate('/admin/dashboard', { replace: true });
+    }
+  }, [user, isAdmin, navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,7 +40,6 @@ const AdminLogin = () => {
 
         if (isAdmin) {
           toast.success('Admin login successful!');
-          navigate('/admin/dashboard', { replace: true });
         } else {
           await supabase.auth.signOut();
           toast.error('Unauthorized: Admin access required');
