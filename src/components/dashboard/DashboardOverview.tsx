@@ -468,20 +468,58 @@ const DashboardOverview = () => {
             <div className="flex justify-between items-start z-10">
               <div>
                 <span className="bg-secondary-container/20 text-on-secondary-container px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-widest border border-secondary-container/35">
-                  Growth Status
+                  CURRENT TIER
                 </span>
-                <h4 className="text-white text-lg font-extrabold mt-2 font-['Plus_Jakarta_Sans']">
-                  Current: {currentPlan || 'No Active Plan'}
+                <h4 className="text-white text-lg font-extrabold mt-2 font-['Plus_Jakarta_Sans'] tracking-wide uppercase">
+                  {currentPlan || 'NO ACTIVE PLAN'}
                 </h4>
               </div>
               <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center backdrop-blur-sm border border-white/10">
-                <span className="material-symbols-outlined text-white text-xl">insights</span>
+                <span className="material-symbols-outlined text-white text-xl">rocket_launch</span>
+              </div>
+            </div>
+
+            {/* Plan Progression Widget */}
+            <div className="mt-2 pt-4 border-t border-white/10 z-10 space-y-3">
+              <p className="text-[10px] font-bold uppercase tracking-widest opacity-80 text-white font-['Plus_Jakarta_Sans']">TIER PROGRESSION</p>
+              <div className="relative px-2 py-2">
+                {/* Connecting Lines */}
+                <div className="absolute left-6 right-6 top-5 -translate-y-1/2 h-1 bg-white/10 rounded-full z-0"></div>
+                <div 
+                  className="absolute left-6 top-5 -translate-y-1/2 h-1 bg-blue-500 rounded-full z-0 transition-all duration-500"
+                  style={{ 
+                    width: `${currentPlanIndex >= 0 ? (currentPlanIndex / (planSteps.length - 1)) * 100 : 0}%`, 
+                    left: '1.5rem', 
+                    right: '1.5rem', 
+                    maxWidth: 'calc(100% - 3rem)' 
+                  }}
+                ></div>
+                
+                {/* Steps */}
+                <div className="flex justify-between items-center relative z-10">
+                  {planSteps.map((step, idx) => (
+                    <div key={step} className="flex flex-col items-center gap-2">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
+                        idx <= currentPlanIndex 
+                          ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/30' 
+                          : 'bg-white/10 text-white/50'
+                      }`}>
+                        {idx + 1}
+                      </div>
+                      <span className={`text-[9px] font-bold uppercase tracking-wider ${
+                        idx <= currentPlanIndex ? 'text-white' : 'text-white/50'
+                      }`}>
+                        {step}
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
 
             {/* Deposit-Based Progress Bar to Next Plan */}
             {nextPlan && (
-              <div className="space-y-1.5 z-10">
+              <div className="space-y-1.5 z-10 pt-2 border-t border-white/10">
                 <div className="flex justify-between text-[10px] text-white/80 font-bold uppercase tracking-wide">
                   <span>Upgrade Progress</span>
                   <span>${stats.totalDeposited.toLocaleString()} / ${nextPlan.min_amount.toLocaleString()} deposited</span>
@@ -541,22 +579,12 @@ const DashboardOverview = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-2 mt-1 z-10">
-              <button 
-                onClick={() => window.location.href = '/dashboard/plans'} 
-                className="bg-white text-primary py-2.5 rounded-full font-bold text-xs active:scale-95 transition-all hover:bg-slate-50 flex items-center justify-center gap-1"
-              >
-                <span className="material-symbols-outlined text-sm">trending_up</span>
-                Invest
-              </button>
-              <button 
-                onClick={() => window.location.href = '/dashboard/plans?upgrade=true'} 
-                className="bg-white/10 text-white border border-white/20 py-2.5 rounded-full font-bold text-xs active:scale-95 transition-all hover:bg-white/15 flex items-center justify-center gap-1"
-              >
-                <span className="material-symbols-outlined text-sm">arrow_upward</span>
-                Upgrade
-              </button>
-            </div>
+            <button 
+              onClick={() => window.location.href = '/dashboard/plans?upgrade=true'} 
+              className="w-full bg-white text-primary py-3 rounded-full font-bold text-sm active:scale-95 transition-all mt-1 z-10 hover:bg-slate-50 shadow-md shadow-black/10"
+            >
+              Upgrade Plan
+            </button>
           </div>
         )}
       </section>
