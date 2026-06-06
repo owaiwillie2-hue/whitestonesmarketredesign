@@ -23,6 +23,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isSuspended, setIsSuspended] = useState(false);
   const [profile, setProfile] = useState<any | null>(null);
 
+  const clearAuthState = () => {
+    setUser(null);
+    setSession(null);
+    setProfile(null);
+    setIsAdmin(false);
+    setIsSuspended(false);
+  };
+
   const loadCachedData = (currentUser: User) => {
     try {
       const cachedProfileStr = sessionStorage.getItem(`profile_${currentUser.id}`);
@@ -78,64 +86,76 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    // Immediate session check on mount to prevent any delay/hanging in onAuthStateChange
+    let isMounted = true;
+
+    // Step 1: Get initial session immediately
     const initSession = async () => {
       try {
         const { data: { session: initialSession } } = await supabase.auth.getSession();
-        setSession(initialSession);
-        const newUser = initialSession?.user ?? null;
-        setUser(newUser);
-        if (newUser) {
-          loadCachedData(newUser);
-          // If we have cached profile data, we can mark loading as complete immediately
-          if (sessionStorage.getItem(`profile_${newUser.id}`)) {
-            setLoading(false);
-          }
-          await fetchProfileAndRole(newUser);
+        
+        if (!isMounted) return;
+
+        if (initialSession?.user) {
+          setSession(initialSession);
+          setUser(initialSession.user);
+          loadCachedData(initialSession.user);
+          // Mark loading done immediately - profile data loads in background
+          setLoading(false);
+          // Fetch fresh profile data in background
+          fetchProfileAndRole(initialSession.user);
+        } else {
+          clearAuthState();
+          setLoading(false);
         }
       } catch (err) {
         console.error('Error fetching initial session:', err);
-      } finally {
-        setLoading(false);
+        if (isMounted) {
+          clearAuthState();
+          setLoading(false);
+        }
       }
     };
 
     initSession();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
+    // Step 2: Listen for auth changes (login, logout, token refresh)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, newSession) => {
+      if (!isMounted) return;
+      console.log('[Auth] Event:', event);
+
+      if (!newSession || event === 'SIGNED_OUT') {
+        clearAuthState();
+        setLoading(false);
+        return;
+      }
+
       setSession(newSession);
-      const newUser = newSession?.user ?? null;
+      const newUser = newSession.user;
       setUser(newUser);
-      
+
       if (newUser) {
         loadCachedData(newUser);
-        if (sessionStorage.getItem(`profile_${newUser.id}`)) {
-          setLoading(false);
-        }
-        await fetchProfileAndRole(newUser);
+        setLoading(false);
+        // Fetch fresh profile data in background
+        fetchProfileAndRole(newUser);
       } else {
-        setProfile(null);
-        setIsAdmin(false);
-        setIsSuspended(false);
+        setLoading(false);
       }
-      setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signOut = async () => {
-    setLoading(true);
     if (user) {
       sessionStorage.removeItem(`profile_${user.id}`);
       sessionStorage.removeItem(`isAdmin_${user.id}`);
     }
     await supabase.auth.signOut();
-    setUser(null);
-    setSession(null);
-    setProfile(null);
-    setIsAdmin(false);
-    setIsSuspended(false);
+    clearAuthState();
     setLoading(false);
   };
 

@@ -20,6 +20,7 @@ export const AdminLayout = () => {
   const menuItems = [
     { icon: 'analytics', label: 'Analytics', path: '/admin' },
     { icon: 'group', label: 'Users', path: '/admin/users' },
+    { icon: 'workspace_premium', label: 'Users Plans', path: '/admin/users-plans' },
     { icon: 'trending_up', label: 'Active Investments', path: '/admin/investments' },
     { icon: 'payments', label: 'Deposits', path: '/admin/deposits' },
     { icon: 'price_change', label: 'Withdrawals', path: '/admin/withdrawals' },

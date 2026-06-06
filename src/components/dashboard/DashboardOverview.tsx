@@ -19,6 +19,7 @@ const DashboardOverview = () => {
   const [loading, setLoading] = useState(true);
   const [balance, setBalance] = useState<any>(null);
   const [currentPlan, setCurrentPlan] = useState<string | null>(null);
+  const [allPlans, setAllPlans] = useState<any[]>([]);
   const [stats, setStats] = useState({
     totalInvested: 0,
     activeInvestments: 0,
@@ -41,7 +42,7 @@ const DashboardOverview = () => {
       setLoading(true);
       try {
         // Fetch all base data in parallel to avoid database query waterfalls
-        const [balanceRes, depositsRes, withdrawalsRes, investmentsRes] = await Promise.all([
+        const [balanceRes, depositsRes, withdrawalsRes, investmentsRes, plansRes] = await Promise.all([
           supabase
             .from('account_balances')
             .select('*')
@@ -60,13 +61,21 @@ const DashboardOverview = () => {
           supabase
             .from('investments')
             .select('*, investment_plans(name, min_amount)')
-            .eq('user_id', user.id)
+            .eq('user_id', user.id),
+          supabase
+            .from('investment_plans')
+            .select('*')
+            .eq('is_active', true)
+            .order('min_amount')
         ]);
 
         const balanceData = balanceRes.data;
         const deposits = depositsRes.data;
         const withdrawals = withdrawalsRes.data;
         const investments = investmentsRes.data;
+        const plansData = plansRes.data || [];
+
+        setAllPlans(plansData);
 
         if (balanceData) {
           setBalance(balanceData);
@@ -166,6 +175,11 @@ const DashboardOverview = () => {
           { event: '*', schema: 'public', table: 'investments', filter: `user_id=eq.${user.id}` },
           () => fetchData()
         )
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'investment_plans' },
+          () => fetchData()
+        )
         .subscribe();
 
       return () => {
@@ -229,12 +243,53 @@ const DashboardOverview = () => {
     }
   };
 
-  const getPlanProgress = (planName: string | null) => {
-    const plans = ['Starter', 'Platinum', 'Executive', 'Apex'];
-    const currentIndex = planName ? plans.findIndex(p => planName.includes(p)) : -1;
-    return { plans, currentIndex };
+  const getGrowthPlanStatus = () => {
+    if (allPlans.length === 0) {
+      return { 
+        unlocked: [], 
+        locked: [], 
+        currentPlanIndex: -1, 
+        progressToNext: 0, 
+        nextPlan: null,
+        planSteps: ['Starter', 'Platinum', 'Executive', 'Apex'] 
+      };
+    }
+
+    const unlocked = allPlans.filter(p => stats.totalDeposited >= p.min_amount);
+    const locked = allPlans.filter(p => stats.totalDeposited < p.min_amount);
+    
+    const currentIndex = currentPlan
+      ? allPlans.findIndex(p => p.name.toLowerCase() === currentPlan.toLowerCase() || currentPlan.toLowerCase().includes(p.name.toLowerCase()))
+      : -1;
+
+    const nextPlan = locked.length > 0 ? locked[0] : null;
+
+    let progressToNext = 0;
+    if (nextPlan) {
+      const currentMin = currentIndex >= 0 ? allPlans[currentIndex].min_amount : 0;
+      const range = nextPlan.min_amount - currentMin;
+      const currentProgress = stats.totalDeposited - currentMin;
+      progressToNext = range > 0 ? Math.min(100, Math.max(0, (currentProgress / range) * 100)) : 0;
+    }
+
+    return { 
+      unlocked, 
+      locked, 
+      currentPlanIndex: currentIndex, 
+      progressToNext, 
+      nextPlan,
+      planSteps: allPlans.map(p => p.name.replace(' PLAN', ''))
+    };
   };
-  const { plans: planSteps, currentIndex: currentPlanIndex } = getPlanProgress(currentPlan);
+
+  const { 
+    unlocked: unlockedPlans, 
+    locked: lockedPlans, 
+    currentPlanIndex, 
+    progressToNext, 
+    nextPlan,
+    planSteps
+  } = getGrowthPlanStatus();
 
   return (
     <>
@@ -383,10 +438,10 @@ const DashboardOverview = () => {
         </div>
       </section>
 
-      {/* Investment Plan Section */}
+      {/* Investment Plan / Growth Plan Section */}
       <section className="flex flex-col gap-3">
         <div className="flex justify-between items-center px-1">
-          <h3 className="text-sm font-bold text-primary">Active Plan</h3>
+          <h3 className="text-sm font-bold text-primary">Your Growth Plan</h3>
           <button onClick={() => window.location.href = '/dashboard/plans'} className="text-secondary font-bold text-[11px]">View All Plans</button>
         </div>
         
@@ -404,57 +459,104 @@ const DashboardOverview = () => {
             </div>
             <div className="h-10 w-full bg-white/10 rounded-full animate-pulse mt-2" />
           </div>
-        ) : currentPlan ? (
-          <div className="bg-primary-container text-on-primary-fixed-variant rounded-xl p-4 shadow-lg relative overflow-hidden flex flex-col gap-3">
+        ) : (
+          <div className="bg-primary-container text-on-primary-fixed-variant rounded-2xl p-5 shadow-lg relative overflow-hidden flex flex-col gap-4">
             <div className="absolute top-0 right-0 p-3 opacity-10">
               <span className="material-symbols-outlined text-5xl">military_tech</span>
             </div>
             
             <div className="flex justify-between items-start z-10">
               <div>
-                <span className="bg-secondary-container/20 text-on-secondary-container px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-widest border border-secondary-container/30">Current Tier</span>
-                <h4 className="text-white text-lg font-bold mt-1.5">{currentPlan}</h4>
+                <span className="bg-secondary-container/20 text-on-secondary-container px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-widest border border-secondary-container/35">
+                  Growth Status
+                </span>
+                <h4 className="text-white text-lg font-extrabold mt-2 font-['Plus_Jakarta_Sans']">
+                  Current: {currentPlan || 'No Active Plan'}
+                </h4>
               </div>
-              <div className="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center backdrop-blur-sm border border-white/10">
-                <span className="material-symbols-outlined text-white text-2xl">rocket_launch</span>
+              <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center backdrop-blur-sm border border-white/10">
+                <span className="material-symbols-outlined text-white text-xl">insights</span>
               </div>
             </div>
 
-            {/* Plan Progression Widget */}
-            <div className="mt-2 pt-4 border-t border-white/10 z-10">
-              <p className="text-[10px] font-bold uppercase tracking-widest opacity-80 mb-3 text-white">Tier Progression</p>
-              <div className="flex justify-between items-center relative px-2 mb-2">
-                <div className="absolute left-6 right-6 top-1/2 -translate-y-1/2 h-1 bg-white/10 rounded-full z-0"></div>
-                <div 
-                  className="absolute left-6 top-1/2 -translate-y-1/2 h-1 bg-primary rounded-full z-0 transition-all duration-500"
-                  style={{ width: `${currentPlanIndex >= 0 ? (currentPlanIndex / (planSteps.length - 1)) * 100 : 0}%`, left: '1.5rem', right: '1.5rem', maxWidth: 'calc(100% - 3rem)' }}
-                ></div>
-                
-                {planSteps.map((step, idx) => (
-                  <div key={step} className="flex flex-col items-center gap-1 z-10">
-                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold transition-colors ${idx <= currentPlanIndex ? 'bg-primary text-white shadow-lg shadow-primary/50 ring-2 ring-primary-container' : 'bg-white/10 text-white/50 ring-2 ring-primary-container'}`}>
-                      {idx < currentPlanIndex ? <span className="material-symbols-outlined text-[14px]">check</span> : idx + 1}
-                    </div>
+            {/* Deposit-Based Progress Bar to Next Plan */}
+            {nextPlan && (
+              <div className="space-y-1.5 z-10">
+                <div className="flex justify-between text-[10px] text-white/80 font-bold uppercase tracking-wide">
+                  <span>Upgrade Progress</span>
+                  <span>${stats.totalDeposited.toLocaleString()} / ${nextPlan.min_amount.toLocaleString()} deposited</span>
+                </div>
+                <div className="w-full bg-white/10 h-2 rounded-full overflow-hidden">
+                  <div 
+                    className="bg-secondary h-full rounded-full transition-all duration-700" 
+                    style={{ width: `${progressToNext}%` }}
+                  ></div>
+                </div>
+                <p className="text-[9px] text-white/60 leading-normal">
+                  Deposit another <strong>${(nextPlan.min_amount - stats.totalDeposited).toLocaleString()}</strong> to unlock the <strong>{nextPlan.name}</strong>.
+                </p>
+              </div>
+            )}
+
+            {/* Unlocked Tiers vs Locked Tiers list */}
+            <div className="pt-3.5 border-t border-white/10 z-10 space-y-3 font-['Plus_Jakarta_Sans']">
+              <div className="grid grid-cols-2 gap-4">
+                {/* Unlocked Plans */}
+                <div>
+                  <p className="text-[9px] font-extrabold uppercase tracking-widest text-white/60 mb-1.5">Unlocked Plans</p>
+                  <div className="flex flex-col gap-1">
+                    {unlockedPlans.length === 0 ? (
+                      <span className="text-[10px] text-white/40 italic">None (Min $200)</span>
+                    ) : (
+                      unlockedPlans.map((p: any) => (
+                        <div key={p.id} className="flex items-center gap-1 text-[10px] font-bold text-white">
+                          <span className="material-symbols-outlined text-green-400 text-sm">check_circle</span>
+                          {p.name.replace(' PLAN', '')}
+                        </div>
+                      ))
+                    )}
                   </div>
-                ))}
-              </div>
-              <div className="flex justify-between items-center px-1">
-                {planSteps.map((step, idx) => (
-                  <span key={step} className={`text-[9px] font-bold uppercase tracking-wider ${idx <= currentPlanIndex ? 'text-white' : 'text-white/50'}`}>{step}</span>
-                ))}
+                </div>
+
+                {/* Plans Yet To Unlock */}
+                <div>
+                  <p className="text-[9px] font-extrabold uppercase tracking-widest text-white/60 mb-1.5">Yet to Unlock</p>
+                  <div className="flex flex-col gap-1">
+                    {lockedPlans.length === 0 ? (
+                      <span className="text-[10px] text-green-300 font-bold flex items-center gap-1">
+                        <span className="material-symbols-outlined text-sm">military_tech</span>
+                        All plans unlocked!
+                      </span>
+                    ) : (
+                      lockedPlans.map((p: any) => (
+                        <div key={p.id} className="flex items-center gap-1 text-[10px] font-bold text-white/50" title={`Requires $${p.min_amount} total deposits`}>
+                          <span className="material-symbols-outlined text-white/30 text-sm">lock</span>
+                          <span>{p.name.replace(' PLAN', '')}</span>
+                          <span className="text-[8px] opacity-75 font-normal">(${p.min_amount.toLocaleString()})</span>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
 
-            <button onClick={() => window.location.href = '/dashboard/plans?upgrade=true'} className="w-full bg-white text-primary py-2.5 rounded-full font-bold text-xs active:scale-95 transition-all mt-1 z-10 hover:bg-slate-50">
-              Upgrade Plan
-            </button>
-          </div>
-        ) : (
-          <div className="glass-card rounded-2xl p-5 relative overflow-hidden">
-            <p className="text-sm text-on-surface-variant mb-4">You don't have any active investment plans yet.</p>
-            <button onClick={() => window.location.href = '/dashboard/plans'} className="w-full bg-primary text-white py-3 rounded-full font-bold text-sm active:scale-95 transition-all">
-              Choose a Plan
-            </button>
+            <div className="grid grid-cols-2 gap-2 mt-1 z-10">
+              <button 
+                onClick={() => window.location.href = '/dashboard/plans'} 
+                className="bg-white text-primary py-2.5 rounded-full font-bold text-xs active:scale-95 transition-all hover:bg-slate-50 flex items-center justify-center gap-1"
+              >
+                <span className="material-symbols-outlined text-sm">trending_up</span>
+                Invest
+              </button>
+              <button 
+                onClick={() => window.location.href = '/dashboard/plans?upgrade=true'} 
+                className="bg-white/10 text-white border border-white/20 py-2.5 rounded-full font-bold text-xs active:scale-95 transition-all hover:bg-white/15 flex items-center justify-center gap-1"
+              >
+                <span className="material-symbols-outlined text-sm">arrow_upward</span>
+                Upgrade
+              </button>
+            </div>
           </div>
         )}
       </section>

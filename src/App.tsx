@@ -48,6 +48,7 @@ const AdminPage = lazy(() => import("./pages/admin/Admin")); // Fallback/alias i
 const AdminAnalytics = lazy(() => import("./pages/admin/Analytics"));
 const AdminUsers = lazy(() => import("./pages/admin/Users"));
 const AdminUserDetail = lazy(() => import("./pages/admin/UserDetail"));
+const AdminUsersPlans = lazy(() => import("./pages/admin/UsersPlans"));
 const AdminDeposits = lazy(() => import("./pages/admin/Deposits"));
 const AdminWithdrawals = lazy(() => import("./pages/admin/Withdrawals"));
 const AdminKYC = lazy(() => import("./pages/admin/KYC"));
@@ -64,10 +65,11 @@ const SpaceXAdmin = lazy(() => import("./pages/admin/SpaceXAdmin"));
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes
+      staleTime: 1000 * 60 * 2, // 2 minutes
       gcTime: 1000 * 60 * 10,   // 10 minutes
-      refetchOnWindowFocus: false,
-      retry: 1,
+      refetchOnWindowFocus: true,
+      refetchOnMount: true,
+      retry: 2,
     },
   },
 });
@@ -83,7 +85,7 @@ const App = () => (
             <TooltipProvider>
               <Toaster />
               <Sonner />
-              <BrowserRouter>
+              <BrowserRouter future={{ v7_relativeSplatPath: true, v7_startTransition: true }}>
                 <Suspense fallback={<PageLoader />}>
                   <Routes>
               <Route path="/" element={<Index />} />
@@ -109,6 +111,7 @@ const App = () => (
                 <Route path="dashboard" element={<AdminAnalytics />} />
                 <Route path="users" element={<AdminUsers />} />
                 <Route path="users/:userId" element={<AdminUserDetail />} />
+                <Route path="users-plans" element={<AdminUsersPlans />} />
                 <Route path="deposits" element={<AdminDeposits />} />
                 <Route path="withdrawals" element={<AdminWithdrawals />} />
                 <Route path="bonus" element={<AdminBonus />} />

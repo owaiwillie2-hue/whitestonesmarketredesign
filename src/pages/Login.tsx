@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { toast as sonnerToast } from 'sonner';
 import { toast } from '@/lib/toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -17,15 +18,10 @@ import { useAuth } from '@/hooks/useAuth';
 
 const Login = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { t, language, setLanguage } = useLanguage();
   const { theme, toggleTheme } = useTheme();
 
-  useEffect(() => {
-    if (user) {
-      navigate('/dashboard', { replace: true });
-    }
-  }, [user, navigate]);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -36,47 +32,85 @@ const Login = () => {
   const [pendingUserId, setPendingUserId] = useState<string | null>(null);
   const [twoFactorSecret, setTwoFactorSecret] = useState<string | null>(null);
 
+  // Redirect already-authenticated users to dashboard
+  useEffect(() => {
+    if (!authLoading && user) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [user, authLoading, navigate]);
+
+  // On mount, clear any stale sessions that might interfere with fresh login
+  useEffect(() => {
+    const clearStaleSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          // Check if token is expired
+          const expiresAt = session.expires_at;
+          const now = Math.floor(Date.now() / 1000);
+          if (expiresAt && expiresAt < now) {
+            console.log('[Login] Clearing expired session from storage');
+            await supabase.auth.signOut();
+          }
+        }
+      } catch (e) {
+        console.error('[Login] Error checking session:', e);
+      }
+    };
+    clearStaleSession();
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
+      // Clear any existing stale session before attempting login
+      await supabase.auth.signOut();
+
       const { data, error } = await supabase.auth.signInWithPassword({
-        email,
+        email: email.trim(),
         password,
       });
 
       if (error) throw error;
 
       if (data.user) {
-        // Check 2FA immediately (fast query)
-        const { data: profile } = await supabase
+        // Check 2FA (fast query)
+        const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('two_factor_enabled, two_factor_secret')
           .eq('user_id', data.user.id)
           .maybeSingle();
+
+        if (profileError) {
+          console.error('[Login] Profile fetch error:', profileError);
+        }
 
         if (profile?.two_factor_enabled && profile?.two_factor_secret) {
           // Require 2FA verification
           setPendingUserId(data.user.id);
           setTwoFactorSecret(profile.two_factor_secret);
           setShow2FADialog(true);
+          setLoading(false);
           // Sign out temporarily until 2FA is verified
           await supabase.auth.signOut();
         } else {
-          // No 2FA, proceed with login (non-blocking)
+          // No 2FA - go directly to dashboard
           completeLogin(data.user.id);
         }
       }
     } catch (error: any) {
+      console.error('[Login] Error:', error);
+      setLoading(false);
       if (error.message?.includes('Email not confirmed')) {
         navigate('/email-confirmation', { state: { email } });
+      } else if (error.message?.includes('Invalid login credentials')) {
+        // Use sonner directly to avoid the blocking modal
+        sonnerToast.error('Invalid email or password. Please try again.');
       } else {
-        toast.error(error.message || 'Login failed');
+        sonnerToast.error(error.message || 'Login failed. Please try again.');
       }
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -84,13 +118,12 @@ const Login = () => {
     if (!pendingUserId || !twoFactorSecret) return;
 
     if (twoFactorCode.length !== 6) {
-      toast.error('Please enter a valid 6-digit code');
+      sonnerToast.error('Please enter a valid 6-digit code');
       return;
     }
 
     setLoading(true);
     try {
-      // Verify the TOTP code
       const totp = new OTPAuth.TOTP({
         issuer: 'Whitestones Markets',
         label: email,
@@ -103,35 +136,40 @@ const Login = () => {
       const isValid = totp.validate({ token: twoFactorCode, window: 1 }) !== null;
 
       if (!isValid) {
-        toast.error('Invalid verification code. Please try again.');
+        sonnerToast.error('Invalid verification code. Please try again.');
         setTwoFactorCode('');
+        setLoading(false);
         return;
       }
 
-      // Re-authenticate with password since we signed out
+      // Re-authenticate since we signed out for 2FA
       const { data, error } = await supabase.auth.signInWithPassword({
-        email,
+        email: email.trim(),
         password,
       });
 
       if (error) throw error;
 
       if (data.user) {
-        await completeLogin(data.user.id);
         setShow2FADialog(false);
         setTwoFactorCode('');
         setPendingUserId(null);
         setTwoFactorSecret(null);
+        completeLogin(data.user.id);
       }
     } catch (error: any) {
-      toast.error(error.message || '2FA verification failed');
-    } finally {
+      console.error('[Login] 2FA error:', error);
       setLoading(false);
+      sonnerToast.error(error.message || '2FA verification failed');
     }
   };
 
   const completeLogin = (userId: string) => {
-    toast.success('Login successful!');
+    // Navigate first - use sonner directly (not the modal wrapper) for non-blocking toast
+    navigate('/dashboard', { replace: true });
+    sonnerToast.success('Login successful!');
+    // Log activity in background (non-blocking)
+    saveLoginActivity(userId).catch(console.error);
   };
 
   const languages = [
@@ -257,14 +295,8 @@ const Login = () => {
                  disabled={loading}
                  className="w-full py-4 bg-primary text-white font-headline-md rounded-full shadow-lg shadow-primary/30 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-70"
               >
-                  {loading ? (
-                    <span>Logging in...</span>
-                  ) : (
-                    <>
-                      {t('cta.login')}
-                      <span className="material-symbols-outlined text-[20px]">login</span>
-                    </>
-                  )}
+                    {t('cta.login')}
+                    <span className="material-symbols-outlined text-[20px]">login</span>
               </button>
             </form>
 
