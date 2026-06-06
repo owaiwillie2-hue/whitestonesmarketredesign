@@ -27,6 +27,7 @@ const DashboardOverview = () => {
     daysActive: 0,
     totalDeposited: 0,
     totalWithdrawn: 0,
+    highestDeposit: 0,
   });
 
   // Transfer modal state
@@ -94,6 +95,7 @@ const DashboardOverview = () => {
 
         const totalDeposited = deposits?.reduce((sum, d) => sum + Number(d.amount), 0) || 0;
         const totalWithdrawn = withdrawals?.reduce((sum, w) => sum + Number(w.amount), 0) || 0;
+        const highestDeposit = deposits?.reduce((max, d) => Math.max(max, Number(d.amount)), 0) || 0;
 
         // Resolve current plan (override takes precedence)
         let resolvedPlanName = null;
@@ -137,12 +139,14 @@ const DashboardOverview = () => {
             totalProfit,
             totalDeposited,
             totalWithdrawn,
+            highestDeposit,
           }));
         } else {
           setStats(prev => ({
             ...prev,
             totalDeposited,
             totalWithdrawn,
+            highestDeposit,
           }));
         }
       } catch (error) {
@@ -255,8 +259,8 @@ const DashboardOverview = () => {
       };
     }
 
-    const unlocked = allPlans.filter(p => stats.totalDeposited >= p.min_amount);
-    const locked = allPlans.filter(p => stats.totalDeposited < p.min_amount);
+    const unlocked = allPlans.filter(p => stats.highestDeposit >= p.min_amount);
+    const locked = allPlans.filter(p => stats.highestDeposit < p.min_amount);
     
     const currentIndex = currentPlan
       ? allPlans.findIndex(p => p.name.toLowerCase() === currentPlan.toLowerCase() || currentPlan.toLowerCase().includes(p.name.toLowerCase()))
@@ -268,7 +272,7 @@ const DashboardOverview = () => {
     if (nextPlan) {
       const currentMin = currentIndex >= 0 ? allPlans[currentIndex].min_amount : 0;
       const range = nextPlan.min_amount - currentMin;
-      const currentProgress = stats.totalDeposited - currentMin;
+      const currentProgress = stats.highestDeposit - currentMin;
       progressToNext = range > 0 ? Math.min(100, Math.max(0, (currentProgress / range) * 100)) : 0;
     }
 
@@ -522,7 +526,7 @@ const DashboardOverview = () => {
               <div className="space-y-1.5 z-10 pt-2 border-t border-white/10">
                 <div className="flex justify-between text-[10px] text-white/80 font-bold uppercase tracking-wide">
                   <span>Upgrade Progress</span>
-                  <span>${stats.totalDeposited.toLocaleString()} / ${nextPlan.min_amount.toLocaleString()} deposited</span>
+                  <span>Max Deposit: ${stats.highestDeposit.toLocaleString()} / ${nextPlan.min_amount.toLocaleString()}</span>
                 </div>
                 <div className="w-full bg-white/10 h-2 rounded-full overflow-hidden">
                   <div 
@@ -531,7 +535,7 @@ const DashboardOverview = () => {
                   ></div>
                 </div>
                 <p className="text-[9px] text-white/60 leading-normal">
-                  Deposit another <strong>${(nextPlan.min_amount - stats.totalDeposited).toLocaleString()}</strong> to unlock the <strong>{nextPlan.name}</strong>.
+                  Make a single deposit of at least <strong>${nextPlan.min_amount.toLocaleString()}</strong> to unlock the <strong>{nextPlan.name}</strong>.
                 </p>
               </div>
             )}

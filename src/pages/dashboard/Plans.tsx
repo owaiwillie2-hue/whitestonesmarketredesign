@@ -16,7 +16,7 @@ const Plans = () => {
   const [investmentBalance, setInvestmentBalance] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(false);
   const [currentActivePlan, setCurrentActivePlan] = useState<any>(null);
-  const [totalDeposited, setTotalDeposited] = useState<number>(0);
+  const [highestSingleDeposit, setHighestSingleDeposit] = useState<number>(0);
   const { isApproved: kycApproved, isPending: kycPending, initialLoading: kycLoading } = useKYCStatus();
 
   useEffect(() => {
@@ -49,8 +49,8 @@ const Plans = () => {
         }
 
         const depositsData = results[2].data || [];
-        const totalDep = depositsData.reduce((sum: number, d: any) => sum + Number(d.amount), 0);
-        setTotalDeposited(totalDep);
+        const highestDep = depositsData.reduce((max: number, d: any) => Math.max(max, Number(d.amount)), 0);
+        setHighestSingleDeposit(highestDep);
 
         if (upgradeMode && results[3]) {
           const allInvestments = results[3].data || [];
@@ -74,7 +74,7 @@ const Plans = () => {
   }, [upgradeMode]);
 
   const isPlanDisabled = (plan: any) => {
-    if (totalDeposited < plan.min_amount) {
+    if (highestSingleDeposit < plan.min_amount) {
       return true;
     }
     if (upgradeMode && currentActivePlan) {
@@ -124,8 +124,8 @@ const Plans = () => {
 
   const getEligibilityMessage = () => {
     return {
-      title: `Cumulative Deposits: $${totalDeposited.toFixed(2)}`,
-      desc: "Your eligibility to invest in each plan is based on your total deposited amount. Make a deposit matching the plan's minimum to unlock it."
+      title: `Highest Single Deposit: $${highestSingleDeposit.toFixed(2)}`,
+      desc: "Your eligibility to invest in each plan is based on your highest single deposit amount. Make a single deposit matching the plan's minimum to unlock it."
     };
   };
 

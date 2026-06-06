@@ -65,9 +65,12 @@ export const AdminUsersPlans = () => {
 
       // Group deposits and investments by user_id
       const depositsByUser: Record<string, number> = {};
+      const highestDepositByUser: Record<string, number> = {};
       depositsData.forEach((d: any) => {
         const userId = d.user_id;
-        depositsByUser[userId] = (depositsByUser[userId] || 0) + Number(d.amount);
+        const amt = Number(d.amount);
+        depositsByUser[userId] = (depositsByUser[userId] || 0) + amt;
+        highestDepositByUser[userId] = Math.max(highestDepositByUser[userId] || 0, amt);
       });
 
       const investmentsByUser: Record<string, any[]> = {};
@@ -82,6 +85,7 @@ export const AdminUsersPlans = () => {
       // Combine user details, deposits, current plan, and eligibility
       const combined = profilesData.map((profile: any) => {
         const totalDeposited = depositsByUser[profile.user_id] || 0;
+        const highestDeposit = highestDepositByUser[profile.user_id] || 0;
         const userInvs = investmentsByUser[profile.user_id] || [];
 
         // 1. Determine natural highest plan based on active investments
@@ -104,22 +108,23 @@ export const AdminUsersPlans = () => {
           }
         }
 
-        // 3. Determine eligibility based ONLY on totalDeposited >= plan.min_amount
+        // 3. Determine eligibility based ONLY on highestDeposit >= plan.min_amount
         let highestEligiblePlan: any = null;
         activePlans.forEach((plan: any) => {
-          if (plan.is_active && totalDeposited >= plan.min_amount) {
+          if (plan.is_active && highestDeposit >= plan.min_amount) {
             if (!highestEligiblePlan || plan.min_amount > highestEligiblePlan.min_amount) {
               highestEligiblePlan = plan;
             }
           }
         });
 
-        // 4. Next Unlockable Plan
-        const nextPlan = activePlans.find((plan: any) => plan.is_active && totalDeposited < plan.min_amount);
+        // 4. Next Unlockable Plan based on highestDeposit
+        const nextPlan = activePlans.find((plan: any) => plan.is_active && highestDeposit < plan.min_amount);
 
         return {
           ...profile,
           totalDeposited,
+          highestDeposit,
           currentPlan: resolvedPlan,
           highestEligiblePlan,
           nextPlan,
@@ -218,7 +223,7 @@ export const AdminUsersPlans = () => {
               <TableHeader className="bg-slate-50 dark:bg-slate-800/50">
                 <TableRow className="hover:bg-transparent border-b border-slate-100 dark:border-slate-800">
                   <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 h-10 px-6">User</TableHead>
-                  <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 h-10 px-6">Cumulative Deposits</TableHead>
+                  <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 h-10 px-6">Deposits</TableHead>
                   <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 h-10 px-6">Current Plan</TableHead>
                   <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 h-10 px-6">Highest Eligible Plan</TableHead>
                   <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 h-10 px-6">Upgrade Target</TableHead>
@@ -260,8 +265,13 @@ export const AdminUsersPlans = () => {
                             <div className="text-[11px] text-slate-500 mt-0.5">{user.email}</div>
                           </div>
                         </TableCell>
-                        <TableCell className="text-xs font-bold text-slate-900 dark:text-white px-6 py-4">
-                          ${user.totalDeposited.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        <TableCell className="px-6 py-4">
+                          <div className="font-bold text-xs text-slate-900 dark:text-white">
+                            Total: ${user.totalDeposited.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </div>
+                          <div className="text-[11px] text-slate-500 mt-0.5">
+                            Highest: ${user.highestDeposit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </div>
                         </TableCell>
                         <TableCell className="px-6 py-4">
                           {user.currentPlan ? (
@@ -296,7 +306,7 @@ export const AdminUsersPlans = () => {
                             </span>
                           ) : user.nextPlan ? (
                             <div className="text-[10px] text-slate-500">
-                              Needs <span className="font-semibold text-slate-700 dark:text-slate-300">${(user.nextPlan.min_amount - user.totalDeposited).toLocaleString()}</span> more for <span className="font-semibold">{user.nextPlan.name}</span>
+                              Needs a single <span className="font-semibold text-slate-700 dark:text-slate-300">${(user.nextPlan.min_amount - user.highestDeposit).toLocaleString()}</span> more for <span className="font-semibold">{user.nextPlan.name}</span>
                             </div>
                           ) : (
                             <span className="text-[10px] text-slate-400">Max tier reached</span>

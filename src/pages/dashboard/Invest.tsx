@@ -24,7 +24,7 @@ const Invest = () => {
   const [submitting, setSubmitting] = useState(false);
   const [investmentBalance, setInvestmentBalance] = useState(0);
   const [currentActivePlan, setCurrentActivePlan] = useState<any>(null);
-  const [totalDeposited, setTotalDeposited] = useState(0);
+  const [highestSingleDeposit, setHighestSingleDeposit] = useState(0);
 
   useEffect(() => {
     const loadData = async () => {
@@ -59,8 +59,8 @@ const Invest = () => {
         }
 
         const depositsData = results[2].data || [];
-        const totalDep = depositsData.reduce((sum: number, d: any) => sum + Number(d.amount), 0);
-        setTotalDeposited(totalDep);
+        const highestDep = depositsData.reduce((max: number, d: any) => Math.max(max, Number(d.amount)), 0);
+        setHighestSingleDeposit(highestDep);
 
         if (upgradeMode && results[3]) {
           const allInvestments = results[3].data || [];
@@ -93,10 +93,10 @@ const Invest = () => {
     e.preventDefault();
     
     const investAmount = parseFloat(amount);
-    if (totalDeposited < plan.min_amount) {
+    if (highestSingleDeposit < plan.min_amount) {
       toast({
         title: 'Plan Locked',
-        description: `This plan requires a minimum cumulative deposit of $${plan.min_amount}. Your cumulative deposits are $${totalDeposited}.`,
+        description: `This plan requires a minimum single deposit of $${plan.min_amount}. Your highest single deposit is $${highestSingleDeposit}.`,
         variant: 'destructive',
       });
       return;
