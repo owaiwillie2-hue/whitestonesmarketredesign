@@ -355,6 +355,7 @@ export type Database = {
           user_id: string
           zip_code: string | null
           is_suspended: boolean | null
+          is_restricted: boolean | null
           current_plan_override_id: string | null
         }
         Insert: {
@@ -377,6 +378,7 @@ export type Database = {
           user_id: string
           zip_code?: string | null
           is_suspended?: boolean | null
+          is_restricted?: boolean | null
           current_plan_override_id?: string | null
         }
         Update: {
@@ -399,6 +401,7 @@ export type Database = {
           user_id?: string
           zip_code?: string | null
           is_suspended?: boolean | null
+          is_restricted?: boolean | null
           current_plan_override_id?: string | null
         }
         Relationships: []

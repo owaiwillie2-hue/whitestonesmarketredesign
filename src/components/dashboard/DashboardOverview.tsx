@@ -422,7 +422,7 @@ const DashboardOverview = () => {
             <span className="text-[11px]">Deposit</span>
           </button>
           <button 
-            onClick={() => navigate('/dashboard/invest')} 
+            onClick={() => navigate('/dashboard/plans')} 
             className="flex flex-col items-center justify-center gap-1.5 py-3 bg-primary text-white rounded-xl font-bold active:scale-95 transition-all duration-200 shadow-sm"
           >
             <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">

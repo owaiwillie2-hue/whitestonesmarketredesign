@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/lib/toast';
 import { formatDistanceToNow } from 'date-fns';
@@ -42,6 +43,9 @@ export const AdminUserDetail = () => {
   const [notes, setNotes] = useState('');
   const [adminNotes, setAdminNotes] = useState<any[]>([]);
   const [loadingNotes, setLoadingNotes] = useState(false);
+  const [deletingUser, setDeletingUser] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleteReason, setDeleteReason] = useState('');
 
   useEffect(() => {
     if (userId) {
@@ -55,22 +59,21 @@ export const AdminUserDetail = () => {
     try {
       const { data: profile } = await supabase
         .from('profiles')
-        .select('*, account_balances(*), kyc_documents(*)')
+        .select('*')
         .eq('id', userId)
         .single();
 
       if (profile) {
-        setUser(profile);
-        setFullName(profile.full_name || '');
-        setUserEmail(profile.email || '');
-        setPhone(profile.phone || profile.phone_number || '');
-        setCountry(profile.country || '');
-        setState(profile.state || '');
-        setCity(profile.city || '');
-        setAddress(profile.address || '');
-
-        // Fetch investments and withdrawals in parallel to avoid waterfalls
-        const [investmentsRes, withdrawalsRes] = await Promise.all([
+        // Fetch balances, KYC documents, investments and withdrawals in parallel to avoid waterfalls
+        const [balancesRes, kycDocsRes, investmentsRes, withdrawalsRes] = await Promise.all([
+          supabase
+            .from('account_balances')
+            .select('*')
+            .eq('user_id', profile.user_id),
+          supabase
+            .from('kyc_documents')
+            .select('*')
+            .eq('user_id', profile.user_id),
           supabase
             .from('investments')
             .select('*, investment_plans(name, min_amount)')
@@ -81,6 +84,21 @@ export const AdminUserDetail = () => {
             .eq('user_id', profile.user_id)
             .eq('status', 'completed')
         ]);
+
+        const fullProfile = {
+          ...profile,
+          account_balances: balancesRes.data || [],
+          kyc_documents: kycDocsRes.data || []
+        };
+
+        setUser(fullProfile);
+        setFullName(profile.full_name || '');
+        setUserEmail(profile.email || '');
+        setPhone(profile.phone || profile.phone_number || '');
+        setCountry(profile.country || '');
+        setState(profile.state || '');
+        setCity(profile.city || '');
+        setAddress(profile.address || '');
 
         const investments = investmentsRes.data;
         const withdrawals = withdrawalsRes.data;
@@ -232,6 +250,85 @@ export const AdminUserDetail = () => {
     }
   };
 
+  const handleToggleRestriction = async () => {
+    if (!user) return;
+    try {
+      setUpdatingControls(true);
+      const nextRestrictedState = !user.is_restricted;
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          is_restricted: nextRestrictedState,
+          updated_at: new Date().toISOString()
+        } as any)
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      toast.success(nextRestrictedState ? 'User account restricted' : 'User account restrictions removed');
+      await fetchUserDetails();
+    } catch (error: any) {
+      console.error('Error updating restriction:', error);
+      toast.error(error.message || 'Failed to update account restriction');
+    } finally {
+      setUpdatingControls(false);
+    }
+  };
+
+  const handleDeleteUser = async () => {
+    if (!user || !deleteReason.trim()) return;
+    setDeletingUser(true);
+
+    try {
+      const userId = user.user_id;
+
+      // Delete all associated data — parallel batch where no FK deps
+      await Promise.all([
+        supabase.from('admin_notes').delete().eq('user_id', user.id),
+        supabase.from('notifications').delete().eq('user_id', userId),
+        supabase.from('activity_logs').delete().eq('user_id', userId),
+        supabase.from('redeemable_bonuses').delete().eq('user_id', userId),
+        supabase.from('wallet_transfers').delete().eq('user_id', userId),
+      ]);
+
+      // Withdrawals depend on withdrawal_accounts FK
+      await supabase.from('withdrawals').delete().eq('user_id', userId);
+      await supabase.from('withdrawal_accounts').delete().eq('user_id', userId);
+
+      // Delete remaining user data
+      await Promise.all([
+        supabase.from('transactions').delete().eq('user_id', userId),
+        supabase.from('investments').delete().eq('user_id', userId),
+        supabase.from('deposits').delete().eq('user_id', userId),
+        supabase.from('kyc_documents').delete().eq('user_id', userId),
+        supabase.from('account_balances').delete().eq('user_id', userId),
+        supabase.from('referrals').delete().eq('referrer_id', userId),
+        supabase.from('referrals').delete().eq('referred_id', userId),
+      ]);
+
+      // Delete profile last
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', user.id);
+
+      if (profileError) throw profileError;
+
+      // Delete user role
+      await supabase.from('user_roles').delete().eq('user_id', userId);
+
+      toast.success(`${user.full_name || 'User'} permanently deleted`);
+      setShowDeleteDialog(false);
+      navigate('/admin/users');
+    } catch (error: any) {
+      console.error('Error deleting user:', error);
+      toast.error(error.message || 'Failed to delete user');
+    } finally {
+      setDeletingUser(false);
+    }
+  };
+
   const handleUpdatePlanOverride = async (planId: string) => {
     if (!user) return;
     try {
@@ -333,7 +430,10 @@ export const AdminUserDetail = () => {
               )}
             </h1>
             {user?.is_suspended && !loading && (
-              <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">Suspended / Banned</span>
+              <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">Banned</span>
+            )}
+            {user?.is_restricted && !user?.is_suspended && !loading && (
+              <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">Restricted</span>
             )}
           </div>
           <div className="text-xs text-slate-500 mt-1">
@@ -450,6 +550,14 @@ export const AdminUserDetail = () => {
               <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-400">Account Management</CardTitle>
             </CardHeader>
             <CardContent className="p-5 space-y-5">
+              {!user ? (
+                <div className="space-y-4">
+                  <div className="h-24 bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse" />
+                  <div className="h-24 bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse" />
+                  <div className="h-12 bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse" />
+                </div>
+              ) : (
+              <>
               {/* Account Status Control */}
               <div className="space-y-2.5">
                 <Label className="text-xs font-bold text-slate-900 dark:text-white">Account Status (Suspend / Ban)</Label>
@@ -489,6 +597,45 @@ export const AdminUserDetail = () => {
                 </div>
               </div>
 
+              {/* Account Restriction Control */}
+              <div className="space-y-2.5">
+                <Label className="text-xs font-bold text-slate-900 dark:text-white">Account Restrictions</Label>
+                <div className={`p-4 rounded-xl border flex flex-col gap-3 ${
+                  user.is_restricted 
+                    ? 'bg-amber-50/50 dark:bg-amber-950/10 border-amber-200 dark:border-amber-900/30' 
+                    : 'bg-slate-50/50 dark:bg-slate-850/10 border-slate-200 dark:border-slate-800'
+                }`}>
+                  <p className="text-[11px] leading-relaxed text-slate-500">
+                    {user.is_restricted 
+                      ? 'This account is restricted. The user can log in and view their dashboard but cannot create investments, make deposits, or withdraw funds.' 
+                      : 'No restrictions. The user has full transactional access (investments, deposits, withdrawals).'}
+                  </p>
+                  <Button
+                    onClick={handleToggleRestriction}
+                    disabled={updatingControls}
+                    className={`w-full rounded-xl text-xs font-bold h-10 ${
+                      user.is_restricted 
+                        ? 'bg-green-600 hover:bg-green-700 text-white' 
+                        : 'bg-amber-600 hover:bg-amber-700 text-white'
+                    }`}
+                  >
+                    {updatingControls ? (
+                      <span className="material-symbols-outlined animate-spin text-[18px]">progress_activity</span>
+                    ) : user.is_restricted ? (
+                      <>
+                        <span className="material-symbols-outlined text-[16px] mr-1.5">lock_open</span>
+                        Remove Restrictions
+                      </>
+                    ) : (
+                      <>
+                        <span className="material-symbols-outlined text-[16px] mr-1.5">block</span>
+                        Restrict Account
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+
               {/* Current Plan Override Control */}
               <div className="space-y-2.5">
                 <Label className="text-xs font-bold text-slate-900 dark:text-white">Active Plan Override</Label>
@@ -513,6 +660,30 @@ export const AdminUserDetail = () => {
                   </p>
                 </div>
               </div>
+              </>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Danger Zone — Delete Account */}
+          <Card className="border border-red-200 dark:border-red-900/40 shadow-soft bg-white dark:bg-slate-900 rounded-2xl overflow-hidden">
+            <CardHeader className="pb-3 border-b border-red-100 dark:border-red-900/30">
+              <CardTitle className="text-xs font-bold uppercase tracking-wider text-red-500 flex items-center gap-2">
+                <span className="material-symbols-outlined text-[16px]">warning</span>
+                Danger Zone
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-5 space-y-3">
+              <p className="text-[11px] text-slate-500 leading-relaxed">
+                Permanently delete this user and all associated data. This action is irreversible and will remove all transactions, investments, deposits, withdrawals, KYC documents, and balances.
+              </p>
+              <Button
+                onClick={() => { setDeleteReason(''); setShowDeleteDialog(true); }}
+                className="w-full rounded-xl text-xs font-bold h-10 bg-red-700 hover:bg-red-800 text-white"
+              >
+                <span className="material-symbols-outlined text-[16px] mr-1.5">delete_forever</span>
+                Delete User Permanently
+              </Button>
             </CardContent>
           </Card>
         </div>
@@ -753,6 +924,79 @@ export const AdminUserDetail = () => {
           </Card>
         </div>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={showDeleteDialog} onOpenChange={(open) => !deletingUser && setShowDeleteDialog(open)}>
+        <DialogContent className="max-w-md bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 rounded-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                <span className="material-symbols-outlined text-[20px] text-red-600 dark:text-red-400">delete_forever</span>
+              </div>
+              <span className="text-lg font-bold text-slate-900 dark:text-white">Permanently Delete Account</span>
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-1">
+            {/* Target User Info */}
+            <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800/50 p-3.5 rounded-xl border border-slate-200 dark:border-slate-700">
+              <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs">
+                {(user?.full_name || 'U').charAt(0).toUpperCase()}
+              </div>
+              <div>
+                <p className="text-xs font-bold text-slate-900 dark:text-white">{user?.full_name || 'Unnamed User'}</p>
+                <p className="text-[11px] text-slate-500">{user?.email}</p>
+              </div>
+            </div>
+
+            <div className="p-3.5 rounded-xl border bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-900/40 text-red-800 dark:text-red-300 text-xs leading-relaxed">
+              This will permanently delete this user's account and ALL associated data including transactions, investments, deposits, withdrawals, KYC documents, and balances. This action CANNOT be undone.
+            </div>
+
+            <div className="flex items-start gap-2.5 p-3 bg-red-100 dark:bg-red-900/30 rounded-xl border border-red-300 dark:border-red-800">
+              <span className="material-symbols-outlined text-red-600 dark:text-red-400 text-[18px] mt-0.5">warning</span>
+              <p className="text-[11px] font-bold text-red-700 dark:text-red-300">
+                This is a destructive and irreversible action. All user data will be permanently removed from the database.
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Reason for deletion (required)</label>
+              <Textarea
+                placeholder="Why are you deleting this account?"
+                value={deleteReason}
+                onChange={(e) => setDeleteReason(e.target.value)}
+                rows={2}
+                className="rounded-xl border-slate-200 dark:border-slate-700 text-xs bg-slate-50 dark:bg-slate-800"
+              />
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowDeleteDialog(false)}
+                disabled={deletingUser}
+                className="flex-1 rounded-xl h-10 text-xs font-bold border-slate-200 dark:border-slate-700"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleDeleteUser}
+                disabled={deletingUser || !deleteReason.trim()}
+                className="flex-1 rounded-xl h-10 text-xs font-bold bg-red-700 hover:bg-red-800 text-white"
+              >
+                {deletingUser ? (
+                  <span className="material-symbols-outlined animate-spin text-[18px]">progress_activity</span>
+                ) : (
+                  <>
+                    <span className="material-symbols-outlined text-[16px] mr-1.5">delete_forever</span>
+                    Delete Permanently
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

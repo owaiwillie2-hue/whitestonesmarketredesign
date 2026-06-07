@@ -8,6 +8,7 @@ export interface AuthContextType {
   loading: boolean;
   isAdmin: boolean;
   isSuspended: boolean;
+  isRestricted: boolean;
   profile: any | null;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
@@ -21,6 +22,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isSuspended, setIsSuspended] = useState(false);
+  const [isRestricted, setIsRestricted] = useState(false);
   const [profile, setProfile] = useState<any | null>(null);
 
   const clearAuthState = () => {
@@ -29,6 +31,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setProfile(null);
     setIsAdmin(false);
     setIsSuspended(false);
+    setIsRestricted(false);
   };
 
   const loadCachedData = (currentUser: User) => {
@@ -40,6 +43,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const cachedProfile = JSON.parse(cachedProfileStr);
         setProfile(cachedProfile);
         setIsSuspended(!!cachedProfile.is_suspended);
+        setIsRestricted(!!cachedProfile.is_restricted);
       }
       if (cachedIsAdminStr) {
         setIsAdmin(JSON.parse(cachedIsAdminStr));
@@ -64,10 +68,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (profileRes.data) {
         setProfile(profileRes.data);
         setIsSuspended(!!profileRes.data.is_suspended);
+        setIsRestricted(!!profileRes.data.is_restricted);
         sessionStorage.setItem(`profile_${currentUser.id}`, JSON.stringify(profileRes.data));
       } else {
         setProfile(null);
         setIsSuspended(false);
+        setIsRestricted(false);
         sessionStorage.removeItem(`profile_${currentUser.id}`);
       }
 
@@ -167,6 +173,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         loading,
         isAdmin,
         isSuspended,
+        isRestricted,
         profile,
         signOut,
         refreshProfile,
