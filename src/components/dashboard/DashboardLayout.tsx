@@ -95,14 +95,55 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` },
         (payload) => {
-          setNotifications((prev) => [payload.new, ...prev].slice(0, 10));
-          toast.info(payload.new.title, { description: payload.new.message });
+          const newNotif = payload.new as any;
+          setNotifications((prev) => [newNotif, ...prev].slice(0, 10));
+          
+          // Show a rich clickable popup notification
+          toast.info(newNotif.title || 'New Notification', {
+            description: newNotif.message || '',
+            duration: 8000,
+            action: {
+              label: 'View',
+              onClick: () => {
+                window.location.href = '/dashboard/notifications';
+              },
+            },
+          });
+        }
+      )
+      .subscribe();
+
+    // Also listen for global notifications (broadcast to all users)
+    const globalChannel = supabase
+      .channel('public:global-notifications')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'notifications', filter: `is_global=eq.true` },
+        (payload) => {
+          const newNotif = payload.new as any;
+          // Avoid duplicates if already matched by user_id filter
+          setNotifications((prev) => {
+            if (prev.find(n => n.id === newNotif.id)) return prev;
+            return [newNotif, ...prev].slice(0, 10);
+          });
+          
+          toast.info(newNotif.title || 'New Notification', {
+            description: newNotif.message || '',
+            duration: 8000,
+            action: {
+              label: 'View',
+              onClick: () => {
+                window.location.href = '/dashboard/notifications';
+              },
+            },
+          });
         }
       )
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
+      supabase.removeChannel(globalChannel);
     };
   }, [user]);
 
@@ -161,16 +202,21 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                       <div className="p-4 text-center text-xs text-slate-500">No notifications</div>
                     ) : (
                       notifications.map((notif) => (
-                        <div key={notif.id} className={`p-3 border-b border-outline-variant/20 cursor-pointer transition-colors ${notif.is_read ? 'opacity-70' : 'bg-primary/5 hover:bg-surface-variant/50'}`}>
+                        <div 
+                          key={notif.id} 
+                          onClick={() => { setShowNotifications(false); navigate('/dashboard/notifications'); }}
+                          className={`p-3 border-b border-outline-variant/20 cursor-pointer transition-colors ${notif.is_read ? 'opacity-70' : 'bg-primary/5 hover:bg-surface-variant/50'}`}
+                        >
                           <p className="font-label-md font-bold text-on-surface text-sm">{notif.title}</p>
-                          <p className="text-xs text-on-surface-variant mt-0.5 leading-relaxed">{notif.message || notif.desc}</p>
+                          <p className="text-xs text-on-surface-variant mt-0.5 leading-relaxed line-clamp-2">{notif.message || notif.desc}</p>
                           <p className="text-[9px] text-outline mt-1">{formatDistanceToNow(new Date(notif.created_at), { addSuffix: true })}</p>
                         </div>
                       ))
                     )}
                   </div>
-                  <div className="p-2 bg-surface-variant/30 border-t border-outline-variant/30 text-center">
-                    <button onClick={markAllAsRead} className="text-xs font-bold text-primary hover:underline">Mark all as read</button>
+                  <div className="p-2 bg-surface-variant/30 border-t border-outline-variant/30 flex justify-between items-center">
+                    <button onClick={markAllAsRead} className="text-xs font-bold text-primary hover:underline">Mark all read</button>
+                    <Link to="/dashboard/notifications" onClick={() => setShowNotifications(false)} className="text-xs font-bold text-secondary-container hover:underline">View all</Link>
                   </div>
                 </div>
               </>
@@ -293,9 +339,13 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                         <div className="p-4 text-center text-sm text-slate-500">No notifications</div>
                       ) : (
                         notifications.map((notif) => (
-                          <div key={notif.id} className={`p-4 border-b border-outline-variant/20 cursor-pointer transition-colors ${notif.is_read ? 'opacity-70 hover:bg-surface-variant/50' : 'bg-primary/5 hover:bg-primary/10'}`}>
+                          <div 
+                            key={notif.id} 
+                            onClick={() => { setShowNotifications(false); navigate('/dashboard/notifications'); }}
+                            className={`p-4 border-b border-outline-variant/20 cursor-pointer transition-colors ${notif.is_read ? 'opacity-70 hover:bg-surface-variant/50' : 'bg-primary/5 hover:bg-primary/10'}`}
+                          >
                             <p className="font-label-md font-bold text-on-surface">{notif.title}</p>
-                            <p className="text-xs text-on-surface-variant mt-1 leading-relaxed">{notif.message || notif.desc}</p>
+                            <p className="text-xs text-on-surface-variant mt-1 leading-relaxed line-clamp-2">{notif.message || notif.desc}</p>
                             <p className="text-[10px] text-outline mt-2">{formatDistanceToNow(new Date(notif.created_at), { addSuffix: true })}</p>
                           </div>
                         ))
@@ -303,7 +353,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                     </div>
                     <div className="p-3 flex justify-between items-center bg-surface-container-lowest">
                       <button onClick={markAllAsRead} className="text-xs font-bold text-primary hover:underline">Mark all read</button>
-                      <Link to="/dashboard/notifications" className="text-xs font-bold text-secondary-container hover:underline">View all</Link>
+                      <Link to="/dashboard/notifications" onClick={() => setShowNotifications(false)} className="text-xs font-bold text-secondary-container hover:underline">View all</Link>
                     </div>
                   </div>
                 </>

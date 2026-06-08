@@ -25,6 +25,7 @@ const Invest = () => {
   const [investmentBalance, setInvestmentBalance] = useState(0);
   const [currentActivePlan, setCurrentActivePlan] = useState<any>(null);
   const [highestSingleDeposit, setHighestSingleDeposit] = useState(0);
+  const [activeInvestment, setActiveInvestment] = useState<any>(null);
 
   useEffect(() => {
     const loadData = async () => {
@@ -34,7 +35,9 @@ const Invest = () => {
         const promises: Promise<any>[] = [
           supabase.from('investment_plans').select('*').eq('id', planId).single(),
           supabase.from('account_balances').select('investment_balance').eq('user_id', user.id).maybeSingle(),
-          supabase.from('deposits').select('amount').eq('user_id', user.id).eq('status', 'completed')
+          supabase.from('deposits').select('amount').eq('user_id', user.id).eq('status', 'completed'),
+          // Check for active non-matured investments
+          supabase.from('investments').select('*, investment_plans(name)').eq('user_id', user.id).eq('status', 'active')
         ];
 
         if (upgradeMode) {
@@ -62,8 +65,16 @@ const Invest = () => {
         const highestDep = depositsData.reduce((max: number, d: any) => Math.max(max, Number(d.amount)), 0);
         setHighestSingleDeposit(highestDep);
 
-        if (upgradeMode && results[3]) {
-          const allInvestments = results[3].data || [];
+        // Check for active non-matured investments (one-at-a-time rule)
+        const activeInvestments = results[3].data || [];
+        const runningInvestment = activeInvestments.find((inv: any) => {
+          const endDate = new Date(inv.end_date);
+          return endDate > new Date();
+        });
+        setActiveInvestment(runningInvestment || null);
+
+        if (upgradeMode && results[4]) {
+          const allInvestments = results[4].data || [];
           if (allInvestments.length > 0) {
             const highestTierInvestment = allInvestments.sort((a: any, b: any) => {
               const planA = a.investment_plans;
@@ -93,6 +104,17 @@ const Invest = () => {
     e.preventDefault();
     
     const investAmount = parseFloat(amount);
+
+    // Block if user already has an active investment
+    if (activeInvestment) {
+      toast({
+        title: 'Investment Active',
+        description: `You already have an active ${activeInvestment.investment_plans?.name || ''} investment. Please wait for it to mature before investing again.`,
+        variant: 'destructive',
+      });
+      return;
+    }
+
     if (highestSingleDeposit < plan.min_amount) {
       toast({
         title: 'Plan Locked',
@@ -254,6 +276,26 @@ const Invest = () => {
         </div>
       )}
 
+      {/* Active Investment Warning */}
+      {activeInvestment && (
+        <div className="bg-amber-50 border border-amber-300 rounded-xl p-4 flex items-start gap-3 animate-fade-in">
+          <span className="material-symbols-outlined text-amber-600 mt-0.5">hourglass_top</span>
+          <div className="space-y-1">
+            <p className="text-sm text-amber-800 font-bold">Investment Active</p>
+            <p className="text-xs text-amber-700 leading-relaxed">
+              You currently have an active <strong>{activeInvestment.investment_plans?.name}</strong> plan running. 
+              You can only invest in a new plan after your current investment matures.
+            </p>
+            <button
+              onClick={() => navigate('/dashboard/investments')}
+              className="mt-1 text-xs font-bold text-amber-800 underline underline-offset-2 hover:text-amber-900 transition-colors"
+            >
+              View Active Investment →
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Plan Summary Card */}
       <div className="glass-card border border-outline-variant rounded-2xl p-6 shadow-sm relative overflow-hidden">
         <div className="absolute top-0 right-0 w-32 h-32 bg-secondary opacity-5 rounded-full -mr-16 -mt-16"></div>
@@ -343,7 +385,7 @@ const Invest = () => {
 
           <button 
             type="submit" 
-            disabled={submitting || !amount || parseFloat(amount) < plan.min_amount || parseFloat(amount) > investmentBalance}
+            disabled={submitting || !amount || parseFloat(amount) < plan.min_amount || parseFloat(amount) > investmentBalance || !!activeInvestment}
             className="w-full bg-primary text-white py-4 rounded-full font-headline-md shadow-lg shadow-primary/20 active:scale-[0.98] transition-all disabled:opacity-50 flex justify-center items-center gap-2"
           >
             {submitting ? (

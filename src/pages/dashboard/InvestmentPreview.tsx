@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { ArrowLeft, Wallet, CheckCircle2, TrendingUp, Calendar, DollarSign, Sparkles } from 'lucide-react';
+import { ArrowLeft, Wallet, CheckCircle2, TrendingUp, Calendar, DollarSign, Sparkles, AlertCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 
@@ -19,6 +19,7 @@ const InvestmentPreview = () => {
   const [plan, setPlan] = useState<any>(null);
   const [amount, setAmount] = useState('');
   const [investmentBalance, setInvestmentBalance] = useState<number>(0);
+  const [activeInvestment, setActiveInvestment] = useState<any>(null);
 
   const planId = searchParams.get('planId');
 
@@ -29,7 +30,29 @@ const InvestmentPreview = () => {
     }
     fetchPlanDetails();
     fetchBalance();
+    fetchActiveInvestment();
   }, [planId]);
+
+  const fetchActiveInvestment = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data } = await supabase
+        .from('investments')
+        .select('*, investment_plans(name)')
+        .eq('user_id', user.id)
+        .eq('status', 'active');
+
+      const running = (data || []).find((inv: any) => {
+        const endDate = new Date(inv.end_date);
+        return endDate > new Date();
+      });
+      setActiveInvestment(running || null);
+    } catch (error) {
+      console.error('Error checking active investments:', error);
+    }
+  };
 
   const fetchPlanDetails = async () => {
     const { data } = await supabase
@@ -78,6 +101,15 @@ const InvestmentPreview = () => {
       return;
     }
 
+    if (activeInvestment) {
+      toast({
+        title: 'Investment Active',
+        description: `You already have an active ${activeInvestment.investment_plans?.name || ''} investment. Please wait for it to mature before investing again.`,
+        variant: 'destructive',
+      });
+      return;
+    }
+
     if (investAmount > investmentBalance) {
       toast({
         title: 'Insufficient Balance',
@@ -96,6 +128,11 @@ const InvestmentPreview = () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
+
+      // Double-check active investment restriction server-side
+      if (activeInvestment) {
+        throw new Error('You already have an active investment. Please wait for it to mature.');
+      }
 
       const investAmount = parseFloat(amount);
       const expectedProfit = (investAmount * plan.profit_percentage) / 100;
@@ -460,6 +497,20 @@ const InvestmentPreview = () => {
 
           <Separator />
 
+          {/* Active Investment Warning */}
+          {activeInvestment && (
+            <div className="bg-amber-50 border border-amber-300 rounded-lg p-4 flex items-start gap-3 animate-fade-in">
+              <AlertCircle className="w-5 h-5 text-amber-600 mt-0.5 shrink-0" />
+              <div className="space-y-1">
+                <p className="text-sm text-amber-800 font-bold">Investment Active</p>
+                <p className="text-xs text-amber-700 leading-relaxed">
+                  You currently have an active <strong>{activeInvestment.investment_plans?.name}</strong> plan running. 
+                  You can only invest in a new plan after your current investment matures.
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Payment Method */}
           <div className="space-y-3">
             <Label className="text-base font-semibold">Payment Method</Label>
@@ -487,7 +538,7 @@ const InvestmentPreview = () => {
               onClick={handleProceed} 
               className="w-full" 
               size="lg"
-              disabled={!amount || parseFloat(amount) < plan.min_amount}
+              disabled={!amount || parseFloat(amount) < plan.min_amount || !!activeInvestment}
             >
               Proceed to Confirmation
             </Button>

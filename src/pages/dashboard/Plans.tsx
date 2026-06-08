@@ -17,6 +17,7 @@ const Plans = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [currentActivePlan, setCurrentActivePlan] = useState<any>(null);
   const [highestSingleDeposit, setHighestSingleDeposit] = useState<number>(0);
+  const [activeInvestment, setActiveInvestment] = useState<any>(null);
   const { isApproved: kycApproved, isPending: kycPending, initialLoading: kycLoading } = useKYCStatus();
 
   useEffect(() => {
@@ -29,7 +30,9 @@ const Plans = () => {
         const promises: Promise<any>[] = [
           supabase.from('investment_plans').select('*').eq('is_active', true).order('min_amount'),
           supabase.from('account_balances').select('investment_balance').eq('user_id', user.id).maybeSingle(),
-          supabase.from('deposits').select('amount').eq('user_id', user.id).eq('status', 'completed')
+          supabase.from('deposits').select('amount').eq('user_id', user.id).eq('status', 'completed'),
+          // Check for any active (non-matured) investment
+          supabase.from('investments').select('*, investment_plans(name, min_amount, duration_days)').eq('user_id', user.id).eq('status', 'active')
         ];
 
         if (upgradeMode) {
@@ -52,8 +55,17 @@ const Plans = () => {
         const highestDep = depositsData.reduce((max: number, d: any) => Math.max(max, Number(d.amount)), 0);
         setHighestSingleDeposit(highestDep);
 
-        if (upgradeMode && results[3]) {
-          const allInvestments = results[3].data || [];
+        // Check for active investments (one-at-a-time enforcement)
+        const activeInvestments = results[3].data || [];
+        // Find any active investment that hasn't matured yet
+        const runningInvestment = activeInvestments.find((inv: any) => {
+          const endDate = new Date(inv.end_date);
+          return endDate > new Date(); // still running (not matured)
+        });
+        setActiveInvestment(runningInvestment || null);
+
+        if (upgradeMode && results[4]) {
+          const allInvestments = results[4].data || [];
           if (allInvestments.length > 0) {
             const highestTierInvestment = allInvestments.sort((a: any, b: any) => {
               const planA = a.investment_plans;
@@ -74,6 +86,10 @@ const Plans = () => {
   }, [upgradeMode]);
 
   const isPlanDisabled = (plan: any) => {
+    // Block if user has an active non-matured investment
+    if (activeInvestment) {
+      return true;
+    }
     if (highestSingleDeposit < plan.min_amount) {
       return true;
     }
@@ -189,6 +205,28 @@ const Plans = () => {
         </section>
       )}
 
+      {/* Active Investment Warning */}
+      {activeInvestment && (
+        <section className="bg-amber-50 p-4 rounded-xl border border-amber-300 flex items-start gap-4 animate-fade-in">
+          <div className="bg-amber-100 p-2 rounded-lg text-amber-600 shrink-0">
+            <span className="material-symbols-outlined">hourglass_top</span>
+          </div>
+          <div className="space-y-1">
+            <h3 className="font-headline-md text-sm font-bold text-amber-800">Active Investment Running</h3>
+            <p className="text-amber-700 text-xs leading-relaxed">
+              You currently have an active <strong>{activeInvestment.investment_plans?.name}</strong> investment that hasn't matured yet. 
+              You can only invest in a new plan after your current investment matures.
+            </p>
+            <button
+              onClick={() => window.location.href = '/dashboard/investments'}
+              className="mt-2 text-xs font-bold text-amber-800 underline underline-offset-2 hover:text-amber-900 transition-colors"
+            >
+              View Active Investment →
+            </button>
+          </div>
+        </section>
+      )}
+
       {/* Eligibility Status */}
       <section className="bg-surface-container-low p-4 rounded-xl border border-outline-variant flex items-start gap-4">
         <div className="bg-secondary-container/20 p-2 rounded-lg text-secondary">
@@ -264,7 +302,7 @@ const Plans = () => {
                   disabled={kycLoading || !kycApproved || isDisabled}
                   className={`w-full py-4 rounded-xl font-bold text-sm ${styles.buttonClass} relative z-10 disabled:opacity-70 disabled:cursor-not-allowed`}
                 >
-                  {kycLoading ? 'Loading...' : !kycApproved ? 'KYC Required' : isDisabled ? 'Locked' : upgradeMode ? (plan.min_amount === currentActivePlan?.investment_plans.min_amount ? 'Invest Again' : 'Upgrade to This Plan') : 'Invest Now'}
+                  {kycLoading ? 'Loading...' : !kycApproved ? 'KYC Required' : activeInvestment ? 'Investment Active' : isDisabled ? 'Locked' : upgradeMode ? (plan.min_amount === currentActivePlan?.investment_plans.min_amount ? 'Invest Again' : 'Upgrade to This Plan') : 'Invest Now'}
                 </button>
               </div>
             );

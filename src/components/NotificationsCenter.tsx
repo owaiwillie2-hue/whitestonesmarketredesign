@@ -58,7 +58,7 @@ export const NotificationsCenter: React.FC<NotificationsCenterProps> = ({
     if (!user) return;
 
     const channel = supabase
-      .channel('notifications-channel')
+      .channel('notifications-center-channel')
       .on(
         'postgres_changes',
         {
