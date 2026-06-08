@@ -15,10 +15,10 @@ const AdminLogin = () => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (user && isAdmin) {
+    if (user && isAdmin && email && password) {
       navigate('/admin/dashboard', { replace: true });
     }
-  }, [user, isAdmin, navigate]);
+  }, [user, isAdmin, navigate, email, password]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

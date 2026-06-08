@@ -27,6 +27,59 @@ export const AdminNotifications = () => {
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [sentNotifications, setSentNotifications] = useState<NotificationRecord[]>([]);
+  const [selectedTemplate, setSelectedTemplate] = useState('custom');
+
+  const templates = [
+    {
+      id: 'custom',
+      name: 'Custom Message (Blank)',
+      title: '',
+      message: '',
+      category: 'general'
+    },
+    {
+      id: 'maintenance',
+      name: 'Routine System Maintenance',
+      title: 'Scheduled System Maintenance',
+      message: 'Dear User, we will be performing scheduled system maintenance on our servers to improve performance. Some services may be temporarily unavailable. We apologize for any inconvenience caused.',
+      category: 'server_issues'
+    },
+    {
+      id: 'kyc_approved',
+      name: 'KYC Approved',
+      title: 'KYC Verification Approved',
+      message: 'Congratulations! Your identity verification (KYC) request has been successfully reviewed and approved. You now have full access to all withdrawal and investment features.',
+      category: 'general'
+    },
+    {
+      id: 'kyc_rejected',
+      name: 'KYC Rejected',
+      title: 'KYC Submission Update',
+      message: 'We were unable to approve your KYC verification because the uploaded documents were unclear or mismatched. Please re-upload clear copies of your ID document and selfie in the KYC page.',
+      category: 'general'
+    },
+    {
+      id: 'deposit_credited',
+      name: 'Deposit Approved',
+      title: 'Deposit Approved & Credited',
+      message: 'Your recent deposit has been approved by our billing team. The funds have been successfully credited to your main wallet balance.',
+      category: 'payment_updates'
+    },
+    {
+      id: 'withdrawal_processed',
+      name: 'Withdrawal Approved',
+      title: 'Withdrawal Request Processed',
+      message: 'Great news! Your withdrawal request has been approved and processed. Please allow a few minutes for the funds to arrive in your designated account.',
+      category: 'payment_updates'
+    },
+    {
+      id: 'plan_upgrade',
+      name: 'Investment Tier Eligible',
+      title: 'New Investment Tier Unlocked',
+      message: 'Based on your deposit history, you have successfully unlocked a higher investment plan tier! Make a deposit matching the plan minimum to start investing in this tier.',
+      category: 'investment_updates'
+    }
+  ];
 
   useEffect(() => {
     fetchUsers();
@@ -37,7 +90,7 @@ export const AdminNotifications = () => {
     try {
       const { data } = await supabase
         .from('profiles')
-        .select('id, full_name, email')
+        .select('id, user_id, full_name, email')
         .order('full_name', { ascending: true });
 
       setUsers(data || []);
@@ -149,6 +202,34 @@ export const AdminNotifications = () => {
           </CardHeader>
           <CardContent className="p-6">
             <form onSubmit={handleSend} className="space-y-5">
+              {/* Message Selection (Template) */}
+              <div className="space-y-2">
+                <Label htmlFor="template" className="text-xs font-bold text-slate-900 dark:text-white">Select Message (Preset Templates)</Label>
+                <Select 
+                  value={selectedTemplate} 
+                  onValueChange={(val) => {
+                    setSelectedTemplate(val);
+                    const tmpl = templates.find(t => t.id === val);
+                    if (tmpl) {
+                      setTitle(tmpl.title);
+                      setMessage(tmpl.message);
+                      setCategory(tmpl.category);
+                    }
+                  }}
+                >
+                  <SelectTrigger id="template" className="h-10 text-xs bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-xl focus:ring-1 focus:ring-primary">
+                    <SelectValue placeholder="Custom Message (Blank)" />
+                  </SelectTrigger>
+                  <SelectContent className="border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900">
+                    {templates.map((tmpl) => (
+                      <SelectItem key={tmpl.id} value={tmpl.id} className="text-xs">
+                        {tmpl.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
               {/* Send To Toggle */}
               <div className="space-y-2">
                 <Label className="text-xs font-bold text-slate-900 dark:text-white">Recipient Scope</Label>
@@ -187,7 +268,7 @@ export const AdminNotifications = () => {
                       </SelectTrigger>
                       <SelectContent className="border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900">
                         {users.map((user) => (
-                          <SelectItem key={user.id} value={user.id} className="text-xs">
+                          <SelectItem key={user.user_id || user.id} value={user.user_id || user.id} className="text-xs">
                             {user.full_name} ({user.email})
                           </SelectItem>
                         ))}
@@ -277,7 +358,17 @@ export const AdminNotifications = () => {
                 </div>
               ) : (
                 sentNotifications.map((notif) => (
-                  <div key={notif.id} className="text-xs border-b border-slate-100 dark:border-slate-800/60 pb-3 last:border-b-0 last:pb-0 space-y-2">
+                  <div 
+                    key={notif.id} 
+                    onClick={() => {
+                      setTitle(notif.title);
+                      setMessage(notif.message);
+                      setCategory(notif.type || 'general');
+                      setSelectedTemplate('custom');
+                      toast.success('Loaded message into form');
+                    }}
+                    className="text-xs border-b border-slate-100 dark:border-slate-800/60 pb-3 last:border-b-0 last:pb-0 space-y-2 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/40 p-2 rounded-xl transition-all"
+                  >
                     <div>
                       <p className="font-bold text-slate-900 dark:text-white line-clamp-1">{notif.title}</p>
                       <p className="text-[11px] text-slate-500 mt-1 line-clamp-2">{notif.message}</p>
