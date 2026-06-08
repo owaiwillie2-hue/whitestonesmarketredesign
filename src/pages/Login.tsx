@@ -32,12 +32,12 @@ const Login = () => {
   const [pendingUserId, setPendingUserId] = useState<string | null>(null);
   const [twoFactorSecret, setTwoFactorSecret] = useState<string | null>(null);
 
-  // Redirect already-authenticated users to dashboard only if credentials were entered
+  // Redirect already-authenticated users to dashboard
   useEffect(() => {
-    if (!authLoading && user && email && password) {
+    if (!authLoading && user) {
       navigate('/dashboard', { replace: true });
     }
-  }, [user, authLoading, navigate, email, password]);
+  }, [user, authLoading, navigate]);
 
   // On mount, clear any stale sessions that might interfere with fresh login
   useEffect(() => {
