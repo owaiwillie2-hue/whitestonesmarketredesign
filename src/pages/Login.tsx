@@ -32,12 +32,12 @@ const Login = () => {
   const [pendingUserId, setPendingUserId] = useState<string | null>(null);
   const [twoFactorSecret, setTwoFactorSecret] = useState<string | null>(null);
 
-  // Redirect already-authenticated users to dashboard only if credentials were entered
+  // Redirect already-authenticated users to dashboard
   useEffect(() => {
-    if (!authLoading && user && email && password) {
+    if (!authLoading && user) {
       navigate('/dashboard', { replace: true });
     }
-  }, [user, authLoading, navigate, email, password]);
+  }, [user, authLoading, navigate]);
 
   // On mount, clear any stale sessions that might interfere with fresh login
   useEffect(() => {
@@ -295,8 +295,14 @@ const Login = () => {
                  disabled={loading}
                  className="w-full py-4 bg-primary text-white font-headline-md rounded-full shadow-lg shadow-primary/30 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-70"
               >
-                    {t('cta.login')}
-                    <span className="material-symbols-outlined text-[20px]">login</span>
+                  {loading ? (
+                    <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
+                  ) : (
+                    <>
+                      {t('cta.login')}
+                      <span className="material-symbols-outlined text-[20px]">login</span>
+                    </>
+                  )}
               </button>
             </form>
 

@@ -94,6 +94,15 @@ export const AdminDeposits = () => {
         throw new Error(response.error.message || 'Failed to approve deposit');
       }
 
+      // Insert notification
+      await supabase.from('notifications').insert({
+        user_id: userId,
+        title: 'Deposit Approved',
+        message: `Your deposit of $${amount.toFixed(2)} has been successfully reviewed and approved. The funds have been credited to your main wallet balance.`,
+        type: 'payment_updates',
+        is_global: false
+      });
+
       toast.success(`Deposit approved! $${amount.toFixed(2)} credited to main wallet.`);
       fetchDeposits();
     } catch (error: any) {
@@ -112,6 +121,18 @@ export const AdminDeposits = () => {
 
       if (response.error) {
         throw new Error(response.error.message || 'Failed to reject deposit');
+      }
+
+      // Insert notification
+      const depositObj = deposits.find(d => d.id === depositId);
+      if (depositObj) {
+        await supabase.from('notifications').insert({
+          user_id: depositObj.user_id,
+          title: 'Deposit Rejected',
+          message: `Your deposit of $${parseFloat(depositObj.amount).toFixed(2)} was not approved by our compliance team. Please ensure your payment proof is valid and submit again.`,
+          type: 'payment_updates',
+          is_global: false
+        });
       }
 
       toast.success('Deposit request rejected');

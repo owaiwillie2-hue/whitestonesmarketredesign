@@ -87,6 +87,15 @@ const Deposit = () => {
 
       if (error) throw error;
 
+      // Insert client-side notification for pending deposit
+      await supabase.from('notifications').insert({
+        user_id: user.id,
+        title: 'Deposit Request Submitted',
+        message: `Your deposit request of $${parseFloat(amount).toFixed(2)} has been successfully submitted and is pending admin approval.`,
+        type: 'payment_updates',
+        is_global: false
+      });
+
       toast({
         title: 'Deposit Request Submitted',
         description: 'Your deposit is pending admin approval.',

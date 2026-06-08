@@ -72,6 +72,15 @@ export const AdminWithdrawals = () => {
 
       if (error) throw error;
 
+      // Insert notification
+      await supabase.from('notifications').insert({
+        user_id: userId,
+        title: 'Withdrawal Approved',
+        message: `Your withdrawal request of $${amount.toFixed(2)} has been successfully reviewed and approved. The funds have been sent to your withdrawal account.`,
+        type: 'payment_updates',
+        is_global: false
+      });
+
       toast.success('Withdrawal approved successfully');
       fetchWithdrawals();
     } catch (error: any) {
@@ -93,6 +102,18 @@ export const AdminWithdrawals = () => {
       });
 
       if (error) throw error;
+
+      // Insert notification
+      const withdrawalObj = withdrawals.find(w => w.id === withdrawalId);
+      if (withdrawalObj) {
+        await supabase.from('notifications').insert({
+          user_id: withdrawalObj.user_id,
+          title: 'Withdrawal Rejected',
+          message: `Your withdrawal request of $${parseFloat(withdrawalObj.amount).toFixed(2)} was rejected. Reason: ${reason}`,
+          type: 'payment_updates',
+          is_global: false
+        });
+      }
 
       toast.success('Withdrawal rejected');
       fetchWithdrawals();

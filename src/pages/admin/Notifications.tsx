@@ -113,6 +113,25 @@ export const AdminNotifications = () => {
     }
   };
 
+  const handleDeleteNotification = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const confirmDelete = window.confirm("Are you sure you want to delete this notification for all users?");
+    if (!confirmDelete) return;
+
+    try {
+      const { error } = await supabase
+        .from('notifications')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      toast.success('Notification deleted successfully');
+      fetchSentNotifications();
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to delete notification');
+    }
+  };
+
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -365,13 +384,24 @@ export const AdminNotifications = () => {
                       setMessage(notif.message);
                       setCategory(notif.type || 'general');
                       setSelectedTemplate('custom');
-                      toast.success('Loaded message into form');
+                      setSendToAll(notif.is_global ?? (notif.user_id === null));
+                      setSelectedUserId(notif.user_id || '');
+                      toast.success('Loaded message and recipient settings into form');
                     }}
                     className="text-xs border-b border-slate-100 dark:border-slate-800/60 pb-3 last:border-b-0 last:pb-0 space-y-2 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/40 p-2 rounded-xl transition-all"
                   >
-                    <div>
-                      <p className="font-bold text-slate-900 dark:text-white line-clamp-1">{notif.title}</p>
-                      <p className="text-[11px] text-slate-500 mt-1 line-clamp-2">{notif.message}</p>
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1 min-w-0 pr-2">
+                        <p className="font-bold text-slate-900 dark:text-white line-clamp-1">{notif.title}</p>
+                        <p className="text-[11px] text-slate-500 mt-1 line-clamp-2">{notif.message}</p>
+                      </div>
+                      <button
+                        onClick={(e) => handleDeleteNotification(notif.id, e)}
+                        className="text-slate-400 hover:text-red-500 p-1 rounded transition-colors shrink-0"
+                        title="Delete notification"
+                      >
+                        <span className="material-symbols-outlined text-[16px]">delete</span>
+                      </button>
                     </div>
                     <div className="flex items-center justify-between gap-2 mt-1">
                       <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold capitalize ${getCategoryColor(notif.type)}`}>

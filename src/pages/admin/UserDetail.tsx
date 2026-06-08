@@ -240,6 +240,17 @@ export const AdminUserDetail = () => {
 
       if (error) throw error;
 
+      // Insert notification for suspension toggle
+      await supabase.from('notifications').insert({
+        user_id: user.user_id,
+        title: nextSuspendedState ? 'Account Suspended' : 'Account Unsuspended',
+        message: nextSuspendedState 
+          ? 'Your account has been suspended by the administrator due to policy violations.' 
+          : 'Your account has been unsuspended by the administrator. You can now access the platform.',
+        type: 'general',
+        is_global: false
+      });
+
       toast.success(nextSuspendedState ? 'User account suspended / banned' : 'User account unsuspended / unbanned');
       await fetchUserDetails();
     } catch (error: any) {
@@ -265,6 +276,17 @@ export const AdminUserDetail = () => {
         .eq('id', user.id);
 
       if (error) throw error;
+
+      // Insert notification for restriction toggle
+      await supabase.from('notifications').insert({
+        user_id: user.user_id,
+        title: nextRestrictedState ? 'Account Restricted' : 'Account Restrictions Removed',
+        message: nextRestrictedState 
+          ? 'Your account has been restricted by the administrator. Access to deposits, withdrawals, and investments is disabled.' 
+          : 'Your account restrictions have been removed by the administrator. You now have full transactional access.',
+        type: 'general',
+        is_global: false
+      });
 
       toast.success(nextRestrictedState ? 'User account restricted' : 'User account restrictions removed');
       await fetchUserDetails();

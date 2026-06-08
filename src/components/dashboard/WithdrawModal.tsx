@@ -165,6 +165,15 @@ export const WithdrawModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: (
 
       if (error) throw error;
 
+      // Insert client-side notification for pending withdrawal
+      await supabase.from('notifications').insert({
+        user_id: user.id,
+        title: 'Withdrawal Request Submitted',
+        message: `Your withdrawal request of $${withdrawAmount.toFixed(2)} has been successfully submitted and is pending admin approval.`,
+        type: 'payment_updates',
+        is_global: false
+      });
+
       showSuccess('Withdrawal Submitted', 'Your withdrawal request is pending admin approval.');
       onClose();
     } catch (error: any) {

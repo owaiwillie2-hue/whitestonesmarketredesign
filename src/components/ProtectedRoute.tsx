@@ -8,7 +8,7 @@ interface ProtectedRouteProps {
 }
 
 export const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRouteProps) => {
-  const { user, loading, isAdmin, isSuspended } = useAuth();
+  const { user, loading, isAdmin, isSuspended, isRestricted } = useAuth();
   const location = useLocation();
 
   if (loading) {
@@ -21,6 +21,43 @@ export const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRout
 
   if (requireAdmin && !isAdmin) {
     return <Navigate to="/" replace />;
+  }
+
+  if (isRestricted && !isAdmin) {
+    return (
+      <div className="min-h-screen w-full flex items-center justify-center bg-slate-950 text-white font-['Plus_Jakarta_Sans'] p-6 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl -mr-32 -mt-32"></div>
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-primary/10 rounded-full blur-3xl -ml-32 -mb-32"></div>
+        
+        <div className="max-w-md w-full bg-slate-900/60 border border-white/10 backdrop-blur-xl p-8 rounded-3xl text-center space-y-6 shadow-2xl relative z-10">
+          <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500 mx-auto">
+            <span className="material-symbols-outlined text-[32px]">block</span>
+          </div>
+          <div className="space-y-2">
+            <h1 className="text-2xl font-black tracking-tight text-white">Account Restricted</h1>
+            <p className="text-sm text-slate-400 leading-relaxed">
+              Your account has been restricted by the administrator. Access to transactions, deposits, and withdrawals has been temporarily disabled.
+            </p>
+          </div>
+          
+          <div className="p-4 bg-white/5 rounded-2xl border border-white/5 text-left text-xs text-slate-400 leading-relaxed">
+            Please contact our support team at <a href="mailto:support@whitestonesmarkets.com" className="text-amber-400 font-bold hover:underline">support@whitestonesmarkets.com</a> to review your status.
+          </div>
+
+          <div className="flex gap-3">
+            <button
+              onClick={async () => {
+                await supabase.auth.signOut();
+                window.location.reload();
+              }}
+              className="w-full py-3 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-xl text-xs font-bold transition-all active:scale-95"
+            >
+              Sign Out
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (isSuspended && !isAdmin) {
