@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -25,6 +25,34 @@ export const ContactSection = () => {
     message: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [companyInfo, setCompanyInfo] = useState({
+    email: 'whitestonesmarkets@gmail.com',
+    phone: '+1 (555) 123-4567',
+    address: '123 Financial District, New York, NY 10004'
+  });
+
+  useEffect(() => {
+    fetchCompanyInfo();
+  }, []);
+
+  const fetchCompanyInfo = async () => {
+    try {
+      const { data } = await supabase
+        .from('website_settings')
+        .select('*')
+        .in('key', ['company_email', 'company_phone', 'company_address']);
+
+      if (data) {
+        const settings: any = {};
+        data.forEach(item => {
+          settings[item.key.replace('company_', '')] = item.value;
+        });
+        setCompanyInfo(prev => ({ ...prev, ...settings }));
+      }
+    } catch (error) {
+      console.error('Error fetching company info:', error);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -149,8 +177,9 @@ export const ContactSection = () => {
               </div>
               <div>
                 <h4 className="font-semibold mb-1">Email</h4>
-                <p className="text-muted-foreground text-sm">whitestonesmarkets@gmail.com</p>
-                <p className="text-muted-foreground text-sm">support@whitestonesmarkets.com</p>
+                <p className="text-muted-foreground text-sm">
+                  <a href={`mailto:${companyInfo.email}`} className="hover:underline">{companyInfo.email}</a>
+                </p>
               </div>
             </div>
 
@@ -160,7 +189,9 @@ export const ContactSection = () => {
               </div>
               <div>
                 <h4 className="font-semibold mb-1">Phone</h4>
-                <p className="text-muted-foreground text-sm">+1 (555) 123-4567</p>
+                <p className="text-muted-foreground text-sm">
+                  <a href={`tel:${companyInfo.phone}`} className="hover:underline">{companyInfo.phone}</a>
+                </p>
               </div>
             </div>
 
@@ -170,10 +201,8 @@ export const ContactSection = () => {
               </div>
               <div>
                 <h4 className="font-semibold mb-1">Address</h4>
-                <p className="text-muted-foreground text-sm">
-                  123 Financial District<br />
-                  New York, NY 10004<br />
-                  United States
+                <p className="text-muted-foreground text-sm whitespace-pre-line">
+                  {companyInfo.address}
                 </p>
               </div>
             </div>

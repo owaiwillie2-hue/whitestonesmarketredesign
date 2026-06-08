@@ -6,6 +6,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
 import { useKYCStatus } from '@/hooks/useKYCStatus';
 import { KYCGuard, KYCStatusBadge } from '@/components/KYCGuard';
+import { useCompanyEmail } from '@/hooks/useCompanyEmail';
 import { AlertCircle, TrendingUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -19,6 +20,7 @@ const Plans = () => {
   const [highestSingleDeposit, setHighestSingleDeposit] = useState<number>(0);
   const [activeInvestment, setActiveInvestment] = useState<any>(null);
   const { isApproved: kycApproved, isPending: kycPending, initialLoading: kycLoading } = useKYCStatus();
+  const { email: supportEmail } = useCompanyEmail();
 
   useEffect(() => {
     const loadData = async () => {
@@ -314,7 +316,7 @@ const Plans = () => {
       <section className="bg-primary-container rounded-2xl p-6 text-center space-y-3">
         <h3 className="text-white font-headline-md text-lg">Custom Strategy?</h3>
         <p className="text-on-primary-container text-xs">For investments over $100,000, speak with a dedicated wealth advisor.</p>
-        <button onClick={() => window.location.href = 'mailto:support@whitestonesmarkets.com'} className="bg-primary text-white px-6 py-2 rounded-full text-sm font-bold active:scale-95 transition-all">Contact Us</button>
+        <button onClick={() => window.location.href = `mailto:${supportEmail}`} className="bg-primary text-white px-6 py-2 rounded-full text-sm font-bold active:scale-95 transition-all">Contact Us</button>
       </section>
     </div>
   );

@@ -84,8 +84,23 @@ const handler = async (req: Request): Promise<Response> => {
       // Continue anyway - don't block the email
     }
 
+    // Fetch the support email dynamically from website_settings
+    let supportEmail = "whitestonesmarkets@gmail.com";
+    try {
+      const { data: settingsData } = await supabase
+        .from("website_settings")
+        .select("value")
+        .eq("key", "company_email")
+        .maybeSingle();
+      if (settingsData?.value) {
+        supportEmail = settingsData.value;
+      }
+    } catch (err) {
+      console.error("Error fetching support email from DB in function:", err);
+    }
+
     // Send email to both support addresses
-    const supportEmails = ["whitestonesmarkets@gmail.com", "tgramstore@gmail.com"];
+    const supportEmails = [supportEmail, "tgramstore@gmail.com"];
 
     const emailResponse = await resend.emails.send({
       from: "Whitestones Markets <no-reply@whitestonesmarkets.com>",

@@ -1,6 +1,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
+import { useCompanyEmail } from '@/hooks/useCompanyEmail';
 
 interface TermsModalProps {
   open: boolean;
@@ -8,6 +9,7 @@ interface TermsModalProps {
 }
 
 export const TermsModal = ({ open, onOpenChange }: TermsModalProps) => {
+  const { email: supportEmail } = useCompanyEmail();
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[80vh]">
@@ -190,7 +192,7 @@ export const TermsModal = ({ open, onOpenChange }: TermsModalProps) => {
             <section>
               <h3 className="font-semibold text-base mb-2">25. Contact Information</h3>
               <p className="text-muted-foreground">
-                If you have any questions about these Terms, please contact us at support@whitestonesmarkets.com. We will make reasonable efforts to respond to your inquiries within 48 hours.
+                If you have any questions about these Terms, please contact us at <a href={`mailto:${supportEmail}`} className="text-primary hover:underline font-bold">{supportEmail}</a>. We will make reasonable efforts to respond to your inquiries within 48 hours.
               </p>
             </section>
           </div>

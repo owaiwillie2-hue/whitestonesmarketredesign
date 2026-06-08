@@ -32,7 +32,7 @@ export const handler: Handler = async (event) => {
       from: "Whitestones Markets <no-reply@whitestonesmarkets.com>",
       to: email,
       templateId: templateId,  // FIXED
-      reply_to: "support@whitestonesmarkets.com",
+      reply_to: "whitestonesmarkets@gmail.com",
 
       // Resend SMTP variables must be lowercase & simple
       // FIXED VARIABLES:

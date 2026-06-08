@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -10,6 +11,25 @@ interface ProtectedRouteProps {
 export const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRouteProps) => {
   const { user, loading, isAdmin, isSuspended, isRestricted } = useAuth();
   const location = useLocation();
+  const [supportEmail, setSupportEmail] = useState('whitestonesmarkets@gmail.com');
+
+  useEffect(() => {
+    const fetchSupportEmail = async () => {
+      try {
+        const { data } = await supabase
+          .from('website_settings')
+          .select('value')
+          .eq('key', 'company_email')
+          .maybeSingle();
+        if (data?.value) {
+          setSupportEmail(data.value);
+        }
+      } catch (err) {
+        console.error('Error fetching support email:', err);
+      }
+    };
+    fetchSupportEmail();
+  }, []);
 
   if (loading) {
     return null;
@@ -41,7 +61,7 @@ export const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRout
           </div>
           
           <div className="p-4 bg-white/5 rounded-2xl border border-white/5 text-left text-xs text-slate-400 leading-relaxed">
-            Please contact our support team at <a href="mailto:support@whitestonesmarkets.com" className="text-amber-400 font-bold hover:underline">support@whitestonesmarkets.com</a> to review your status.
+            Please contact our support team at <a href={`mailto:${supportEmail}`} className="text-amber-400 font-bold hover:underline">{supportEmail}</a> to review your status.
           </div>
 
           <div className="flex gap-3">
@@ -78,12 +98,12 @@ export const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRout
           </div>
           
           <div className="p-4 bg-white/5 rounded-2xl border border-white/5 text-left text-xs text-slate-400 leading-relaxed">
-            Please contact our compliance team at <a href="mailto:compliance@whitestonesmarkets.com" className="text-red-400 font-bold hover:underline">compliance@whitestonesmarkets.com</a> to review your status and initiate an appeal.
+            Please contact our compliance team at <a href={`mailto:${supportEmail}`} className="text-red-400 font-bold hover:underline">{supportEmail}</a> to review your status and initiate an appeal.
           </div>
 
           <div className="flex gap-3">
             <button
-              onClick={() => window.location.href = 'mailto:compliance@whitestonesmarkets.com'}
+              onClick={() => window.location.href = `mailto:${supportEmail}`}
               className="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-red-600/25 active:scale-95"
             >
               Contact Compliance
