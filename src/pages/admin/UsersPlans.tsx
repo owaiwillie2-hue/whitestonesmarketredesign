@@ -166,6 +166,30 @@ export const AdminUsersPlans = () => {
 
       if (error) throw error;
 
+      // Find user in local state to retrieve auth user_id
+      const targetUser = users.find(u => u.id === userId);
+      const authUserId = targetUser?.user_id;
+
+      if (authUserId) {
+        // Fetch plan name
+        let planName = 'Automatic (Compute)';
+        if (overrideVal) {
+          const selectedPlan = plans.find(p => p.id === overrideVal);
+          if (selectedPlan) {
+            planName = selectedPlan.name;
+          }
+        }
+
+        // Insert notification
+        await supabase.from('notifications').insert({
+          user_id: authUserId,
+          title: 'Investment Plan Updated',
+          message: `Your investment plan has been updated to "${planName}" by the administrator. Please note that you do not have access to other plans until you make an eligible deposit.`,
+          category: 'investment_updates',
+          is_global: false
+        });
+      }
+
       toast.success('User plan override updated successfully');
       await loadData();
     } catch (error: any) {

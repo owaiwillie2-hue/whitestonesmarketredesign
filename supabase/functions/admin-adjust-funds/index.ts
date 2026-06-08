@@ -9,7 +9,7 @@ const supabase = createClient(
 interface AdminAdjustFundsRequest {
   user_id: string;
   admin_id: string;
-  wallet: "main" | "investment";
+  wallet: "main" | "investment" | "profit";
   amount: number; // positive = add, negative = remove
   reason: string;
   notes?: string;
@@ -58,7 +58,7 @@ serve(async (req: Request) => {
     // Get current balances
     const { data: balances } = await supabase
       .from("account_balances")
-      .select("main_balance, investment_balance")
+      .select("main_balance, investment_balance, profit_balance")
       .eq("user_id", user_id)
       .single();
 
@@ -71,19 +71,23 @@ serve(async (req: Request) => {
 
     const currentMainBalance = parseFloat(balances.main_balance || "0");
     const currentInvestmentBalance = parseFloat(balances.investment_balance || "0");
+    const currentProfitBalance = parseFloat(balances.profit_balance || "0");
 
     // Calculate new balances
     let newMainBalance = currentMainBalance;
     let newInvestmentBalance = currentInvestmentBalance;
+    let newProfitBalance = currentProfitBalance;
 
     if (wallet === "main") {
       newMainBalance = Math.max(0, currentMainBalance + amount);
     } else if (wallet === "investment") {
       newInvestmentBalance = Math.max(0, currentInvestmentBalance + amount);
+    } else if (wallet === "profit") {
+      newProfitBalance = Math.max(0, currentProfitBalance + amount);
     }
 
     // Prevent negative balances
-    if (newMainBalance < 0 || newInvestmentBalance < 0) {
+    if (newMainBalance < 0 || newInvestmentBalance < 0 || newProfitBalance < 0) {
       return new Response(
         JSON.stringify({ error: "Adjustment would result in negative balance" }),
         { status: 400, headers: { "Content-Type": "application/json" } }
@@ -96,12 +100,16 @@ serve(async (req: Request) => {
       .update({
         main_balance: newMainBalance,
         investment_balance: newInvestmentBalance,
+        profit_balance: newProfitBalance,
         updated_at: new Date().toISOString(),
       })
       .eq("user_id", user_id);
 
     // Log transaction
-    const balanceAfter = wallet === "main" ? newMainBalance : newInvestmentBalance;
+    const balanceAfter = wallet === "main" 
+      ? newMainBalance 
+      : (wallet === "investment" ? newInvestmentBalance : newProfitBalance);
+
     await supabase.from("transactions").insert({
       user_id,
       type: "bonus",
@@ -138,7 +146,9 @@ serve(async (req: Request) => {
         user_id,
         wallet,
         amount_adjusted: amount,
-        previous_balance: wallet === "main" ? currentMainBalance : currentInvestmentBalance,
+        previous_balance: wallet === "main" 
+          ? currentMainBalance 
+          : (wallet === "investment" ? currentInvestmentBalance : currentProfitBalance),
         new_balance: balanceAfter,
         reason,
       }),

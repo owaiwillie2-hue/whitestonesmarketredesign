@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Bell, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { formatDistanceToNow } from 'date-fns';
+import { useSearchParams } from 'react-router-dom';
 
 interface Notification {
   id: string;
@@ -25,6 +26,20 @@ export const NotificationsCenter: React.FC<NotificationsCenterProps> = ({
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [searchParams] = useSearchParams();
+  const highlightId = searchParams.get('highlight');
+
+  useEffect(() => {
+    if (highlightId && !loading) {
+      const timer = setTimeout(() => {
+        const element = document.getElementById(`notification-${highlightId}`);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [highlightId, loading, notifications]);
 
   useEffect(() => {
     fetchNotifications();
@@ -151,7 +166,12 @@ export const NotificationsCenter: React.FC<NotificationsCenterProps> = ({
           {notifications.map((notification) => (
             <div
               key={notification.id}
-              className={`glass-card border border-outline-variant p-4 rounded-xl flex items-start gap-4 shadow-sm transition-opacity ${notification.is_read ? 'opacity-70 bg-surface-container-lowest' : 'bg-white'}`}
+              id={`notification-${notification.id}`}
+              className={`glass-card border p-4 rounded-xl flex items-start gap-4 shadow-sm transition-all duration-500 ${
+                notification.id === highlightId
+                  ? 'border-primary ring-2 ring-primary/25 bg-primary/5 scale-[1.01] shadow-md'
+                  : 'border-outline-variant'
+              } ${notification.is_read ? 'opacity-70 bg-surface-container-lowest' : 'bg-white'}`}
             >
               <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${notification.is_read ? 'bg-surface-container-highest text-on-surface-variant' : 'bg-primary-container text-on-primary-container'}`}>
                 <span className="material-symbols-outlined text-[20px]">

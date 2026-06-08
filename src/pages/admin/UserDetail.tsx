@@ -37,7 +37,7 @@ export const AdminUserDetail = () => {
   const [updatingProfile, setUpdatingProfile] = useState(false);
 
   // Form state for adjustments
-  const [wallet, setWallet] = useState<'main' | 'investment'>('main');
+  const [wallet, setWallet] = useState<'main' | 'investment' | 'profit'>('main');
   const [amount, setAmount] = useState('');
   const [reason, setReason] = useState('');
   const [notes, setNotes] = useState('');
@@ -344,6 +344,24 @@ export const AdminUserDetail = () => {
         .eq('id', user.id);
 
       if (error) throw error;
+
+      // Fetch plan name
+      let planName = 'Automatic (Compute)';
+      if (overrideVal) {
+        const selectedPlan = plans.find(p => p.id === overrideVal);
+        if (selectedPlan) {
+          planName = selectedPlan.name;
+        }
+      }
+
+      // Insert notification
+      await supabase.from('notifications').insert({
+        user_id: user.user_id,
+        title: 'Investment Plan Updated',
+        message: `Your investment plan has been updated to "${planName}" by the administrator. Please note that you do not have access to other plans until you make an eligible deposit.`,
+        category: 'investment_updates',
+        is_global: false
+      });
 
       toast.success('Current plan override updated successfully');
       await fetchUserDetails();
@@ -809,6 +827,7 @@ export const AdminUserDetail = () => {
                       <SelectContent className="rounded-xl border-slate-200 dark:border-slate-800">
                         <SelectItem value="main">Main Wallet</SelectItem>
                         <SelectItem value="investment">Investment Wallet</SelectItem>
+                        <SelectItem value="profit">Profit Wallet</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

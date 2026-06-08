@@ -6,6 +6,7 @@ import logo from '@/assets/logo.png';
 import { useTheme } from '@/contexts/ThemeContext';
 import { supabase } from '@/integrations/supabase/client';
 import { formatDistanceToNow } from 'date-fns';
+import { useNotificationCount } from '@/hooks/useNotificationCount';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -54,6 +55,8 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   ];
 
   const [notifications, setNotifications] = useState<any[]>([]);
+  const { unreadCount, refetch: refetchUnreadCount } = useNotificationCount();
+  const [activeNotificationModal, setActiveNotificationModal] = useState<any | null>(null);
 
   useEffect(() => {
     if (profile?.date_of_birth && user?.id) {
@@ -97,18 +100,8 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         (payload) => {
           const newNotif = payload.new as any;
           setNotifications((prev) => [newNotif, ...prev].slice(0, 10));
-          
-          // Show a rich clickable popup notification
-          toast.info(newNotif.title || 'New Notification', {
-            description: newNotif.message || '',
-            duration: 8000,
-            action: {
-              label: 'View',
-              onClick: () => {
-                window.location.href = '/dashboard/notifications';
-              },
-            },
-          });
+          setActiveNotificationModal(newNotif);
+          refetchUnreadCount();
         }
       )
       .subscribe();
@@ -126,17 +119,8 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             if (prev.find(n => n.id === newNotif.id)) return prev;
             return [newNotif, ...prev].slice(0, 10);
           });
-          
-          toast.info(newNotif.title || 'New Notification', {
-            description: newNotif.message || '',
-            duration: 8000,
-            action: {
-              label: 'View',
-              onClick: () => {
-                window.location.href = '/dashboard/notifications';
-              },
-            },
-          });
+          setActiveNotificationModal(newNotif);
+          refetchUnreadCount();
         }
       )
       .subscribe();
@@ -147,12 +131,11 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     };
   }, [user]);
 
-  const unreadCount = notifications.filter(n => !n.is_read).length;
-
   const markAllAsRead = async () => {
     if (!user?.id) return;
     await supabase.from('notifications').update({ is_read: true }).eq('user_id', user.id).eq('is_read', false);
     setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+    refetchUnreadCount();
   };
 
   return (
@@ -181,10 +164,14 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           <div className="relative">
             <button 
               onClick={() => setShowNotifications(!showNotifications)}
-              className="w-8 h-8 rounded-full flex items-center justify-center text-on-surface-variant hover:text-primary active:scale-95 transition-all"
+              className="w-8 h-8 rounded-full flex items-center justify-center text-on-surface-variant hover:text-primary active:scale-95 transition-all relative"
             >
               <span className="material-symbols-outlined text-[20px]">notifications</span>
-              {unreadCount > 0 && <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-red-500 rounded-full"></span>}
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center animate-pulse">
+                  {unreadCount}
+                </span>
+              )}
             </button>
             {/* Mobile Dropdown Menu */}
             {showNotifications && (
@@ -317,10 +304,14 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             <div className="relative">
               <button 
                 onClick={() => setShowNotifications(!showNotifications)}
-                className="w-10 h-10 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95 transition-all"
+                className="w-10 h-10 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95 transition-all relative"
               >
                 <span className="material-symbols-outlined">notifications</span>
-                {unreadCount > 0 && <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full"></span>}
+                {unreadCount > 0 && (
+                  <span className="absolute top-1 right-1 bg-red-500 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center animate-pulse">
+                    {unreadCount}
+                  </span>
+                )}
               </button>
 
               {/* Dropdown Menu */}
@@ -405,6 +396,59 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                 className="w-full py-4 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white rounded-2xl font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
               >
                 Maybe Later
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {activeNotificationModal && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 max-w-md w-full shadow-2xl relative animate-in zoom-in-95 duration-200 font-['Plus_Jakarta_Sans']">
+            <button 
+              onClick={() => setActiveNotificationModal(null)} 
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 active:scale-95 transition-transform"
+            >
+              <span className="material-symbols-outlined text-[20px]">close</span>
+            </button>
+            <div className="w-12 h-12 bg-primary/10 text-primary rounded-full flex items-center justify-center mb-4">
+              <span className="material-symbols-outlined text-[24px]">notifications_active</span>
+            </div>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2 pr-6 leading-tight">
+              {activeNotificationModal.title}
+            </h3>
+            <p className="text-slate-600 dark:text-slate-400 text-xs mb-6 leading-relaxed max-h-48 overflow-y-auto pr-1 custom-scrollbar">
+              {activeNotificationModal.message}
+            </p>
+            <div className="flex gap-3">
+              <button 
+                onClick={async () => {
+                  const notifId = activeNotificationModal.id;
+                  setActiveNotificationModal(null);
+                  await supabase
+                    .from('notifications')
+                    .update({ is_read: true })
+                    .eq('id', notifId);
+                  refetchUnreadCount();
+                  navigate(`/dashboard/notifications?highlight=${notifId}`);
+                }}
+                className="flex-1 py-3 bg-primary text-white rounded-2xl font-bold text-xs active:scale-[0.98] transition-transform shadow-md"
+              >
+                Open Notification
+              </button>
+              <button 
+                onClick={async () => {
+                  const notifId = activeNotificationModal.id;
+                  setActiveNotificationModal(null);
+                  await supabase
+                    .from('notifications')
+                    .update({ is_read: true })
+                    .eq('id', notifId);
+                  refetchUnreadCount();
+                  setNotifications(prev => prev.map(n => n.id === notifId ? { ...n, is_read: true } : n));
+                }}
+                className="py-3 px-5 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white rounded-2xl font-bold text-xs hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+              >
+                Dismiss
               </button>
             </div>
           </div>
