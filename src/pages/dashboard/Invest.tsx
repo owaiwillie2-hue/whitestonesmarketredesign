@@ -26,6 +26,7 @@ const Invest = () => {
   const [currentActivePlan, setCurrentActivePlan] = useState<any>(null);
   const [highestSingleDeposit, setHighestSingleDeposit] = useState(0);
   const [activeInvestment, setActiveInvestment] = useState<any>(null);
+  const [overrideMinAmount, setOverrideMinAmount] = useState(0);
 
   useEffect(() => {
     const loadData = async () => {
@@ -37,7 +38,8 @@ const Invest = () => {
           supabase.from('account_balances').select('investment_balance').eq('user_id', user.id).maybeSingle(),
           supabase.from('deposits').select('amount').eq('user_id', user.id).eq('status', 'completed'),
           // Check for active non-matured investments
-          supabase.from('investments').select('*, investment_plans(name)').eq('user_id', user.id).eq('status', 'active')
+          supabase.from('investments').select('*, investment_plans(name)').eq('user_id', user.id).eq('status', 'active'),
+          supabase.from('profiles').select('current_plan_override_id').eq('user_id', user.id).maybeSingle()
         ];
 
         if (upgradeMode) {
@@ -73,8 +75,23 @@ const Invest = () => {
         });
         setActiveInvestment(runningInvestment || null);
 
-        if (upgradeMode && results[4]) {
-          const allInvestments = results[4].data || [];
+        // Fetch override plan min_amount if present
+        const profileData = results[4]?.data;
+        let overrideMinAmt = 0;
+        if (profileData?.current_plan_override_id) {
+          const { data: overridePlan } = await supabase
+            .from('investment_plans')
+            .select('min_amount')
+            .eq('id', profileData.current_plan_override_id)
+            .maybeSingle();
+          if (overridePlan) {
+            overrideMinAmt = Number(overridePlan.min_amount);
+          }
+        }
+        setOverrideMinAmount(overrideMinAmt);
+
+        if (upgradeMode && results[5]) {
+          const allInvestments = results[5].data || [];
           if (allInvestments.length > 0) {
             const highestTierInvestment = allInvestments.sort((a: any, b: any) => {
               const planA = a.investment_plans;
@@ -115,7 +132,9 @@ const Invest = () => {
       return;
     }
 
-    if (highestSingleDeposit < plan.min_amount) {
+    const isEligible = highestSingleDeposit >= plan.min_amount || (overrideMinAmount > 0 && plan.min_amount <= overrideMinAmount);
+
+    if (!isEligible) {
       toast({
         title: 'Plan Locked',
         description: `This plan requires a minimum single deposit of $${plan.min_amount}. Your highest single deposit is $${highestSingleDeposit}.`,

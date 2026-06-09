@@ -18,6 +18,19 @@ const Investments = () => {
   const [completingId, setCompletingId] = useState<string | null>(null);
   const { toast } = useToast();
   const { isApproved: kycApproved, isPending: kycPending, initialLoading: kycLoading } = useKYCStatus();
+  
+  const getInvestmentStatus = () => {
+    const activeInvs = investments.filter(i => i.status === 'active');
+    if (activeInvs.length === 0) return 'Inactive';
+    
+    const now = new Date();
+    const hasSettlementPending = activeInvs.some(i => new Date(i.end_date) <= now);
+    if (hasSettlementPending) return 'Settlement Pending';
+    
+    return 'Active';
+  };
+
+  const investmentStatus = getInvestmentStatus();
 
   useEffect(() => {
     fetchInvestments();
@@ -284,6 +297,38 @@ const Investments = () => {
         </div>
       </section>
 
+      {/* Investment Status Banner */}
+      {!loading && (
+        <div className={`p-4 rounded-2xl border flex items-center justify-between transition-all duration-300 ${
+          investmentStatus === 'Active' 
+            ? 'bg-emerald-50/50 border-emerald-200/50 text-emerald-800 dark:bg-emerald-950/20 dark:border-emerald-800/50 dark:text-emerald-400' 
+            : investmentStatus === 'Settlement Pending'
+              ? 'bg-amber-50/50 border-amber-200/50 text-amber-800 dark:bg-amber-950/20 dark:border-amber-800/50 dark:text-amber-400'
+              : 'bg-slate-50 border-slate-200 text-slate-700 dark:bg-slate-800/30 dark:border-slate-700 dark:text-slate-400'
+        }`}>
+          <div className="flex items-center gap-2.5">
+            <span className={`w-2.5 h-2.5 rounded-full ${
+              investmentStatus === 'Active' 
+                ? 'bg-emerald-500 animate-pulse' 
+                : investmentStatus === 'Settlement Pending'
+                  ? 'bg-amber-500 animate-pulse'
+                  : 'bg-slate-400'
+            }`}></span>
+            <div>
+              <p className="text-[10px] uppercase font-bold tracking-wider opacity-75">Investment Status</p>
+              <p className="text-xs font-semibold mt-0.5">
+                {investmentStatus === 'Active' && 'Your investment is currently active and generating returns.'}
+                {investmentStatus === 'Settlement Pending' && 'Your investment term has concluded and proceeds are available for claim'}
+                {investmentStatus === 'Inactive' && 'There are currently no active investment positions in your portfolio'}
+              </p>
+            </div>
+          </div>
+          <span className="text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full bg-white/80 dark:bg-slate-800 border border-slate-200/50 dark:border-slate-700 shadow-sm">
+            {investmentStatus}
+          </span>
+        </div>
+      )}
+
       {/* Tabs Navigation */}
       <div className="sticky top-16 z-40 bg-background/95 backdrop-blur-sm py-4 -mx-4 px-4 mb-2">
         <div className="bg-surface-container-low p-1 rounded-xl flex gap-1">
@@ -306,7 +351,11 @@ const Investments = () => {
       <div className="flex flex-col gap-4">
         {filteredInvestments.length === 0 ? (
           <div className="glass-card border border-slate-200 rounded-2xl p-8 text-center mt-4">
-            <p className="text-on-surface-variant font-label-md">No {activeTab} investments found.</p>
+            <p className="text-on-surface-variant font-label-md">
+              {activeTab === 'active' 
+                ? 'There are currently no active investment positions in your portfolio'
+                : 'No completed investments found.'}
+            </p>
             {activeTab === 'active' && (
               <button 
                 onClick={() => window.location.href = '/dashboard/plans'}

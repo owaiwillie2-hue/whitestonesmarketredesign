@@ -19,6 +19,7 @@ const Plans = () => {
   const [currentActivePlan, setCurrentActivePlan] = useState<any>(null);
   const [highestSingleDeposit, setHighestSingleDeposit] = useState<number>(0);
   const [activeInvestment, setActiveInvestment] = useState<any>(null);
+  const [profileOverridePlanId, setProfileOverridePlanId] = useState<string | null>(null);
   const { isApproved: kycApproved, isPending: kycPending, initialLoading: kycLoading } = useKYCStatus();
   const { email: supportEmail } = useCompanyEmail();
 
@@ -34,7 +35,9 @@ const Plans = () => {
           supabase.from('account_balances').select('investment_balance').eq('user_id', user.id).maybeSingle(),
           supabase.from('deposits').select('amount').eq('user_id', user.id).eq('status', 'completed'),
           // Check for any active (non-matured) investment
-          supabase.from('investments').select('*, investment_plans(name, min_amount, duration_days)').eq('user_id', user.id).eq('status', 'active')
+          supabase.from('investments').select('*, investment_plans(name, min_amount, duration_days)').eq('user_id', user.id).eq('status', 'active'),
+          // Fetch current plan override from profile
+          supabase.from('profiles').select('current_plan_override_id').eq('user_id', user.id).maybeSingle()
         ];
 
         if (upgradeMode) {
@@ -66,8 +69,14 @@ const Plans = () => {
         });
         setActiveInvestment(runningInvestment || null);
 
-        if (upgradeMode && results[4]) {
-          const allInvestments = results[4].data || [];
+        // Process profile current_plan_override_id
+        const profileData = results[4]?.data;
+        if (profileData) {
+          setProfileOverridePlanId(profileData.current_plan_override_id || null);
+        }
+
+        if (upgradeMode && results[5]) {
+          const allInvestments = results[5].data || [];
           if (allInvestments.length > 0) {
             const highestTierInvestment = allInvestments.sort((a: any, b: any) => {
               const planA = a.investment_plans;
@@ -92,6 +101,15 @@ const Plans = () => {
     if (activeInvestment) {
       return true;
     }
+
+    // Bypass deposit lock if admin has overridden plan to this tier or higher
+    if (profileOverridePlanId) {
+      const overridePlan = plans.find(p => p.id === profileOverridePlanId);
+      if (overridePlan && plan.min_amount <= overridePlan.min_amount) {
+        return false;
+      }
+    }
+
     if (highestSingleDeposit < plan.min_amount) {
       return true;
     }

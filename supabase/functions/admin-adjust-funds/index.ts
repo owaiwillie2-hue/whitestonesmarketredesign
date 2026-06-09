@@ -9,7 +9,7 @@ const supabase = createClient(
 interface AdminAdjustFundsRequest {
   user_id: string;
   admin_id: string;
-  wallet: "main" | "investment" | "profit";
+  wallet: "main" | "investment" | "profit" | "total_investment";
   amount: number; // positive = add, negative = remove
   reason: string;
   notes?: string;
@@ -73,43 +73,162 @@ serve(async (req: Request) => {
     const currentInvestmentBalance = parseFloat(balances.investment_balance || "0");
     const currentProfitBalance = parseFloat(balances.profit_balance || "0");
 
-    // Calculate new balances
-    let newMainBalance = currentMainBalance;
-    let newInvestmentBalance = currentInvestmentBalance;
-    let newProfitBalance = currentProfitBalance;
+    let previousBalance = 0;
+    let balanceAfter = 0;
 
-    if (wallet === "main") {
-      newMainBalance = Math.max(0, currentMainBalance + amount);
-    } else if (wallet === "investment") {
-      newInvestmentBalance = Math.max(0, currentInvestmentBalance + amount);
-    } else if (wallet === "profit") {
-      newProfitBalance = Math.max(0, currentProfitBalance + amount);
+    if (wallet === "total_investment") {
+      // 1. Fetch user's active investment
+      const { data: activeInv, error: fetchInvErr } = await supabase
+        .from("investments")
+        .select("*, investment_plans(*)")
+        .eq("user_id", user_id)
+        .eq("status", "active")
+        .maybeSingle();
+
+      if (fetchInvErr) throw fetchInvErr;
+
+      if (activeInv) {
+        const currentAmount = parseFloat(activeInv.amount || "0");
+        previousBalance = currentAmount;
+        const newAmount = Math.max(0, currentAmount + amount);
+        balanceAfter = newAmount;
+
+        const profitPct = parseFloat(activeInv.investment_plans?.profit_percentage || "0");
+        const newExpectedProfit = newAmount * (profitPct / 100);
+
+        // Update active investment
+        const { error: updateInvErr } = await supabase
+          .from("investments")
+          .update({
+            amount: newAmount,
+            expected_profit: newExpectedProfit,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", activeInv.id);
+
+        if (updateInvErr) throw updateInvErr;
+      } else {
+        // If amount is negative, prevent since there's no active investment to subtract from
+        if (amount < 0) {
+          return new Response(
+            JSON.stringify({ error: "Cannot subtract from non-existent active investment" }),
+            { status: 400, headers: { "Content-Type": "application/json" } }
+          );
+        }
+
+        previousBalance = 0;
+        balanceAfter = amount;
+
+        // Determine plan to use: override or first active plan
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("current_plan_override_id")
+          .eq("user_id", user_id)
+          .single();
+
+        let planId = profile?.current_plan_override_id;
+        let planData = null;
+
+        if (planId) {
+          const { data } = await supabase
+            .from("investment_plans")
+            .select("*")
+            .eq("id", planId)
+            .single();
+          planData = data;
+        }
+
+        if (!planData) {
+          // Fallback: get the lowest active plan
+          const { data: fallbackPlans } = await supabase
+            .from("investment_plans")
+            .select("*")
+            .eq("is_active", true)
+            .order("min_amount", { ascending: true })
+            .limit(1);
+          
+          if (fallbackPlans && fallbackPlans.length > 0) {
+            planData = fallbackPlans[0];
+            planId = planData.id;
+          }
+        }
+
+        if (!planData) {
+          return new Response(
+            JSON.stringify({ error: "No active investment plans found" }),
+            { status: 400, headers: { "Content-Type": "application/json" } }
+          );
+        }
+
+        const durationInDays = Number(planData.duration_days);
+        const startDate = new Date();
+        const endDate = new Date();
+        if (durationInDays < 1) {
+          endDate.setHours(endDate.getHours() + (durationInDays * 24));
+        } else {
+          endDate.setDate(endDate.getDate() + durationInDays);
+        }
+
+        const expectedProfit = amount * (parseFloat(planData.profit_percentage) / 100);
+
+        // Insert new active investment
+        const { error: insertInvErr } = await supabase
+          .from("investments")
+          .insert({
+            user_id,
+            plan_id: planId,
+            amount: amount,
+            expected_profit: expectedProfit,
+            status: "active",
+            start_date: startDate.toISOString(),
+            end_date: endDate.toISOString(),
+          });
+
+        if (insertInvErr) throw insertInvErr;
+      }
+    } else {
+      // Calculate new balances for standard wallets
+      let newMainBalance = currentMainBalance;
+      let newInvestmentBalance = currentInvestmentBalance;
+      let newProfitBalance = currentProfitBalance;
+
+      if (wallet === "main") {
+        previousBalance = currentMainBalance;
+        newMainBalance = Math.max(0, currentMainBalance + amount);
+        balanceAfter = newMainBalance;
+      } else if (wallet === "investment") {
+        previousBalance = currentInvestmentBalance;
+        newInvestmentBalance = Math.max(0, currentInvestmentBalance + amount);
+        balanceAfter = newInvestmentBalance;
+      } else if (wallet === "profit") {
+        previousBalance = currentProfitBalance;
+        newProfitBalance = Math.max(0, currentProfitBalance + amount);
+        balanceAfter = newProfitBalance;
+      }
+
+      // Prevent negative balances
+      if (newMainBalance < 0 || newInvestmentBalance < 0 || newProfitBalance < 0) {
+        return new Response(
+          JSON.stringify({ error: "Adjustment would result in negative balance" }),
+          { status: 400, headers: { "Content-Type": "application/json" } }
+        );
+      }
+
+      // Update balances
+      const { error: updateBalErr } = await supabase
+        .from("account_balances")
+        .update({
+          main_balance: newMainBalance,
+          investment_balance: newInvestmentBalance,
+          profit_balance: newProfitBalance,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("user_id", user_id);
+
+      if (updateBalErr) throw updateBalErr;
     }
-
-    // Prevent negative balances
-    if (newMainBalance < 0 || newInvestmentBalance < 0 || newProfitBalance < 0) {
-      return new Response(
-        JSON.stringify({ error: "Adjustment would result in negative balance" }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
-      );
-    }
-
-    // Update balances
-    await supabase
-      .from("account_balances")
-      .update({
-        main_balance: newMainBalance,
-        investment_balance: newInvestmentBalance,
-        profit_balance: newProfitBalance,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("user_id", user_id);
 
     // Log transaction
-    const balanceAfter = wallet === "main" 
-      ? newMainBalance 
-      : (wallet === "investment" ? newInvestmentBalance : newProfitBalance);
-
     await supabase.from("transactions").insert({
       user_id,
       type: "bonus",
@@ -122,7 +241,7 @@ serve(async (req: Request) => {
     await supabase.from("admin_notes").insert({
       admin_id,
       user_id,
-      note: `Adjusted ${wallet} wallet by $${Math.abs(amount).toFixed(2)}. Reason: ${reason}`,
+      note: `Adjusted ${wallet === "total_investment" ? "total investment" : wallet + " wallet"} by $${Math.abs(amount).toFixed(2)}. Reason: ${reason}`,
       metadata: {
         amount,
         wallet,
@@ -136,7 +255,7 @@ serve(async (req: Request) => {
     await supabase.from("notifications").insert({
       user_id,
       title: "Account Adjustment",
-      message: `Your ${wallet} wallet has been adjusted by $${Math.abs(amount).toFixed(2)}. Reason: ${reason}`,
+      message: `Your ${wallet === "total_investment" ? "total investment" : wallet + " wallet"} has been adjusted by $${Math.abs(amount).toFixed(2)}. Reason: ${reason}`,
       category: "general",
     });
 
@@ -146,9 +265,7 @@ serve(async (req: Request) => {
         user_id,
         wallet,
         amount_adjusted: amount,
-        previous_balance: wallet === "main" 
-          ? currentMainBalance 
-          : (wallet === "investment" ? currentInvestmentBalance : currentProfitBalance),
+        previous_balance: previousBalance,
         new_balance: balanceAfter,
         reason,
       }),

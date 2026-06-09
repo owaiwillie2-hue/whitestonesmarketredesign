@@ -37,7 +37,7 @@ export const AdminUserDetail = () => {
   const [updatingProfile, setUpdatingProfile] = useState(false);
 
   // Form state for adjustments
-  const [wallet, setWallet] = useState<'main' | 'investment' | 'profit'>('main');
+  const [wallet, setWallet] = useState<'main' | 'investment' | 'profit' | 'total_investment'>('main');
   const [amount, setAmount] = useState('');
   const [reason, setReason] = useState('');
   const [notes, setNotes] = useState('');
@@ -209,7 +209,8 @@ export const AdminUserDetail = () => {
       }
 
       if (data?.success) {
-        toast.success(`Adjusted ${wallet} wallet by $${adjustmentAmount.toFixed(2)}`);
+        const walletLabel = wallet === 'total_investment' ? 'total investment portfolio' : `${wallet} wallet`;
+        toast.success(`Adjusted ${walletLabel} by $${adjustmentAmount.toFixed(2)}`);
         setAmount('');
         setReason('');
         setNotes('');
@@ -850,6 +851,7 @@ export const AdminUserDetail = () => {
                         <SelectItem value="main">Main Wallet</SelectItem>
                         <SelectItem value="investment">Investment Wallet</SelectItem>
                         <SelectItem value="profit">Profit Wallet</SelectItem>
+                        <SelectItem value="total_investment">Total Investment Portfolio</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

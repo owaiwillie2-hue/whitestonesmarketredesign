@@ -20,6 +20,7 @@ const DashboardOverview = () => {
   const [balance, setBalance] = useState<any>(null);
   const [currentPlan, setCurrentPlan] = useState<string | null>(null);
   const [allPlans, setAllPlans] = useState<any[]>([]);
+  const [investmentStatus, setInvestmentStatus] = useState<'Active' | 'Settlement Pending' | 'Inactive'>('Inactive');
   const [stats, setStats] = useState({
     totalInvested: 0,
     activeInvestments: 0,
@@ -121,6 +122,7 @@ const DashboardOverview = () => {
 
         setCurrentPlan(resolvedPlanName);
 
+        let resolvedStatus: 'Active' | 'Settlement Pending' | 'Inactive' = 'Inactive';
         if (investments) {
           const activeInvs = investments.filter(i => i.status === 'active');
           
@@ -131,6 +133,16 @@ const DashboardOverview = () => {
             }
             return sum;
           }, 0);
+
+          const now = new Date();
+          const hasSettlementPending = activeInvs.some(i => new Date(i.end_date) <= now);
+          const hasRunningActive = activeInvs.some(i => new Date(i.end_date) > now);
+
+          if (hasSettlementPending) {
+            resolvedStatus = 'Settlement Pending';
+          } else if (hasRunningActive) {
+            resolvedStatus = 'Active';
+          }
 
           setStats(prev => ({
             ...prev,
@@ -149,6 +161,7 @@ const DashboardOverview = () => {
             highestDeposit,
           }));
         }
+        setInvestmentStatus(resolvedStatus);
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
       } finally {
@@ -397,6 +410,80 @@ const DashboardOverview = () => {
             </div>
           </div>
         </div>
+      </section>
+
+      {/* Investment Status Card */}
+      <section className="glass-card rounded-2xl p-5 relative overflow-hidden transition-all duration-300 hover:shadow-md">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-bold text-primary flex items-center gap-2">
+            <span className="material-symbols-outlined text-slate-500 text-lg">donut_large</span>
+            Investment Status
+          </h3>
+          {loading ? (
+            <span className="h-6 w-20 bg-slate-200 dark:bg-slate-800 rounded animate-pulse" />
+          ) : (
+            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+              investmentStatus === 'Active' 
+                ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400 border border-emerald-200/50' 
+                : investmentStatus === 'Settlement Pending'
+                  ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400 border border-amber-200/50'
+                  : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border border-slate-200/50'
+            }`}>
+              <span className={`w-2 h-2 rounded-full ${
+                investmentStatus === 'Active' 
+                  ? 'bg-emerald-500 animate-pulse' 
+                  : investmentStatus === 'Settlement Pending'
+                    ? 'bg-amber-500 animate-pulse'
+                    : 'bg-slate-400'
+              }`}></span>
+              {investmentStatus}
+            </span>
+          )}
+        </div>
+
+        <p className="text-xs md:text-sm text-on-surface-variant leading-relaxed mb-4">
+          {loading ? (
+            <span className="h-4 w-full bg-slate-200 dark:bg-slate-800 rounded animate-pulse block" />
+          ) : (
+            <>
+              {investmentStatus === 'Active' && 'Your investment is currently active and generating returns.'}
+              {investmentStatus === 'Settlement Pending' && 'Your investment term has concluded and proceeds are available for claim'}
+              {investmentStatus === 'Inactive' && 'There are currently no active investment positions in your portfolio'}
+            </>
+          )}
+        </p>
+
+        {!loading && (
+          <div className="flex gap-2">
+            {investmentStatus === 'Active' && (
+              <Button 
+                onClick={() => navigate('/dashboard/investments')} 
+                className="w-full bg-primary hover:bg-primary/90 text-white rounded-xl py-2.5 text-xs font-bold transition-all flex items-center justify-center gap-1.5"
+              >
+                <span className="material-symbols-outlined text-sm">trending_up</span>
+                Manage Investments
+              </Button>
+            )}
+            {investmentStatus === 'Settlement Pending' && (
+              <Button 
+                onClick={() => navigate('/dashboard/investments')} 
+                className="w-full bg-amber-600 hover:bg-amber-700 text-white rounded-xl py-2.5 text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-md shadow-amber-600/10"
+              >
+                <span className="material-symbols-outlined text-sm">account_balance_wallet</span>
+                Claim Proceeds
+              </Button>
+            )}
+            {investmentStatus === 'Inactive' && (
+              <Button 
+                onClick={() => navigate('/dashboard/plans')} 
+                className="w-full bg-primary hover:bg-primary/90 text-white rounded-xl py-2.5 text-xs font-bold transition-all flex items-center justify-center gap-1.5"
+              >
+                <span className="material-symbols-outlined text-sm">add_circle</span>
+                Start Investing
+              </Button>
+            )}
+          </div>
+        )}
       </section>
 
       {/* Quick Actions - BELOW THE CARD */}
